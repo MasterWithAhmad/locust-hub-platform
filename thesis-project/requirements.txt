@@ -1,0 +1,7 @@
+# requirements.txt (Cleaned)
+joblib>=1.3.2
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.4.0 # Ensure this matches the version used for training/saving
+
+Flask-MySQLdb==2.0.0 # Added for MySQL integration

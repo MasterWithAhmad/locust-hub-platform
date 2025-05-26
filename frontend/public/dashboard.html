@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Dashboard - LocustHub</title>
+  <meta name="description" content="User dashboard for the ML Project.">
+  <meta name="keywords" content="ML, Machine Learning, Prediction, Locust, Dashboard">
+
+  <!-- Favicons -->
+  <link href="assets/img/logo.webp" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,800;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --primary-color: #4e73df;
+      --primary-light: #9bb8ff;
+      --secondary-color: #1cc88a;
+      --secondary-light: #7ae0b7;
+      --warning-color: #f6c23e;
+      --warning-light: #f9d78c;
+      --info-color: #36b9cc;
+      --info-light: #80d6e5;
+      --danger-color: #e74a3b;
+      --dark-color: #2c3e50;
+      --light-color: #f8f9fc;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    body {
+      background-color: var(--light-color);
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
+      min-height: 100vh;
+      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      padding: 1rem;
+      margin: 0.2rem 0;
+      border-radius: 0.35rem;
+      transition: all 0.3s;
+    }
+
+    .sidebar .nav-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar .nav-link.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .sidebar .nav-link i {
+      margin-right: 0.5rem;
+    }
+
+    .sidebar .nav-link.text-danger {
+      color: #fff !important;
+    }
+
+    .sidebar .text-center h6, .sidebar .text-center small {
+      color: white !important;
+    }
+
+    .initials-circle {
+      width: 80px;
+      height: 80px;
+      background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white */
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem auto;
+    }
+
+    .stat-card {
+      border: none;
+      border-radius: 16px;
+      transition: var(--transition);
+      overflow: hidden;
+      position: relative;
+      background: white;
+      box-shadow: var(--card-shadow);
+      border-left: 4px solid transparent;
+      height: 100%;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      opacity: 0;
+      transition: var(--transition);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12) !important;
+    }
+    
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+    
+    .stat-card.primary {
+      border-left-color: var(--primary-color);
+    }
+    
+    .stat-card.warning {
+      border-left-color: var(--warning-color);
+    }
+    
+    .stat-card.info {
+      border-left-color: var(--info-color);
+    }
+    
+    .stat-card .card-body {
+      padding: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .stat-card .flex-shrink-0 i {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      transition: var(--transition);
+    }
+    
+    .stat-card.primary .flex-shrink-0 i {
+      background: rgba(78, 115, 223, 0.1);
+      color: var(--primary-color);
+    }
+    
+    .stat-card.warning .flex-shrink-0 i {
+      background: rgba(246, 194, 62, 0.1);
+      color: var(--warning-color);
+    }
+    
+    .stat-card.info .flex-shrink-0 i {
+      background: rgba(54, 185, 204, 0.1);
+      color: var(--info-color);
+    }
+    
+    .stat-card:hover .flex-shrink-0 i {
+      transform: scale(1.1);
+    }
+    
+    .stat-card .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+      color: #6c757d;
+    }
+    
+    .stat-card .card-text {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0;
+      color: var(--dark-color);
+      line-height: 1.2;
+    }
+    
+    .stat-card.primary .card-text {
+      color: var(--primary-color);
+    }
+    
+    .stat-card.warning .card-text {
+      color: var(--warning-color);
+    }
+    
+    .stat-card.info .card-text {
+      color: var(--info-color);
+    }
+
+    .stat-card.info {
+      border-left-color: var(--info-color);
+    }
+
+    .card {
+      border: none;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .table {
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .table thead th {
+      background-color: var(--light-color);
+      border-bottom: 2px solid #e3e6f0;
+    }
+
+    .badge {
+      padding: 0.5em 0.75em;
+      font-weight: 500;
+    }
+
+    .profile-card {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+      color: white;
+    }
+
+    .profile-card h4, .profile-card p, .profile-card .text-muted {
+        color: white !important;
+    }
+
+    .profile-card .btn-outline-primary {
+      color: white;
+      border-color: white;
+    }
+
+    .profile-card .btn-outline-primary:hover {
+      background: white;
+      color: var(--primary-color);
+    }
+
+    /* Custom styles for prediction details card */
+    .prediction-details-modal {
+      max-width: 95vw !important;
+      width: 95vw !important;
+    }
+
+    .prediction-details-modal .swal2-popup {
+      padding: 2rem !important;
+      width: 95vw !important;
+    }
+
+    .prediction-details-modal .card {
+      margin: 0 !important;
+    }
+
+    .prediction-details-modal .card-body {
+      padding: 2rem !important;
+    }
+
+    .prediction-details-modal .row {
+      margin: 0 -1rem;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .prediction-details-modal .col-md-6 {
+      padding: 0 1rem;
+      flex: 1;
+    }
+
+    .prediction-details-modal .alert {
+      font-size: 1.2rem;
+      padding: 1.5rem 2rem;
+      margin-top: 2rem;
+    }
+
+    .prediction-details-modal .location-info {
+      font-size: 1.2rem;
+    }
+
+    .prediction-details-modal .location-info h6 {
+      font-size: 1rem;
+    }
+
+    .prediction-details-modal .input-params {
+      height: 100%;
+    }
+
+    .prediction-details-modal .input-params .card {
+      height: 100%;
+    }
+
+    .prediction-details-modal .input-params .card-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .prediction-details-modal .input-params .d-flex {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .prediction-details-modal .input-params strong {
+      font-size: 1.2rem;
+    }
+
+    .prediction-details-modal .card-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      border-bottom: none;
+    }
+
+    .prediction-details-modal .card-header h5 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .prediction-details-modal .card-header .subtitle {
+      opacity: 0.9;
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Custom styles for the month select dropdown */
+    .form-floating > .form-select {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .form-floating > label {
+        padding: 1rem .75rem;
+    }
+
+    .input-group .form-select {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .input-group-text + .form-floating > .form-select {
+        border-top-left-radius: var(--bs-border-radius);
+        border-bottom-left-radius: var(--bs-border-radius);
+        border-left-width: 0;
+    }
+
+     .input-group-text {
+        height: calc(3.5rem + 2px);
+    }
+
+    /* Adjust margin for the profile card row to reach the top */
+    .profile-card-row {
+        margin-top: -3rem; /* Adjust this value as needed to align with the top */
+    }
+  </style>
+
+  <!-- =======================================================
+  * Template Name: Invent
+  * Template URL: https://bootstrapmade.com/invent-bootstrap-business-template/
+  * Updated: May 12 2025 with Bootstrap v5.3.6
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="starter-page-page">
+
+  <main class="main">
+    <div class="container-fluid">
+      <div class="row">        
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse pt-3">
+          <div class="position-sticky">
+            <div class="text-center mb-4">
+              <div id="userInitials" class="initials-circle"></div>
+              <h6 id="userName" class="mb-0"></h6>              
+            </div>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">
+                  <i class="bi bi-house-door me-2"></i>
+                  Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="analytics.html">
+                  <i class="bi bi-graph-up me-2"></i>
+                  Analytics
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="reports.html">
+                  <i class="bi bi-bar-chart me-2"></i>
+                  Reports
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="settings.html">
+                  <i class="bi bi-gear me-2"></i>
+                  Settings
+                </a>
+              </li>
+              <li class="nav-item mt-4">
+                <a class="nav-link text-danger" href="#" onclick="api.auth.logout()">
+                  <i class="bi bi-box-arrow-right me-2"></i>
+                  Logout
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-5">
+          <!-- User Profile Section -->
+          <div class="row mb-4 profile-card-row">
+            <div class="col-12">
+              <div class="card profile-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div>
+                      <h4 class="mb-1" id="welcomeMessage">Welcome back!</h4>
+                      <p class="mb-0 opacity-75">Make predictions and track your results</p>
+                    </div>
+                    <div class="ms-auto">
+                      <button class="btn btn-outline-primary me-2">
+                        <i class="bi bi-person me-2"></i><a href="settings.html" style="color: inherit; text-decoration: none;">Profile</a>
+                      </button>
+                      <button class="btn btn-outline-danger" onclick="api.auth.logout()">
+                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="row g-4 mb-4">
+            <!-- Total Predictions Card -->
+            <div class="col-md-3">
+              <div class="stat-card primary h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <div class="card-title">TOTAL PREDICTIONS</div>
+                      <div class="card-text">N/A</div>
+                      <div class="text-muted small mt-1">
+                        <i class="bi bi-arrow-up-circle-fill text-success me-1"></i>
+                        <span>N/A</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Last Prediction Card -->
+            <div class="col-md-3">
+              <div class="stat-card primary h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <div class="card-title">LAST PREDICTION</div>
+                      <div class="card-text">N/A</div>
+                      <div class="text-muted small mt-1">
+                        <i class="bi bi-arrow-up-circle-fill text-success me-1"></i>
+                        <span>N/A</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Last Updated Card -->
+            <div class="col-md-3">
+              <div class="stat-card warning h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <div class="card-title">LAST UPDATED</div>
+                      <div class="card-text">N/A</div>
+                      <div class="text-muted small mt-1">
+                        <i class="bi bi-clock-history me-1"></i>
+                        <span>N/A</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Model Accuracy Card -->
+            <div class="col-md-3">
+              <div class="stat-card info h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <div class="card-title">MODEL ACCURACY</div>
+                      <div class="card-text">99.37%</div>
+                      <div class="text-muted small mt-1">
+                        <i class="bi bi-check-circle-fill text-success me-1"></i>
+                        <span>Excellent performance</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prediction Form and Results -->
+          <div class="row mb-4">
+            <div class="col-lg-12">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-graph-up-arrow text-primary fs-4 me-2"></i>
+                    <h5 class="card-title mb-0">Make a New Prediction</h5>
+                  </div>
+                  <form id="predictionForm" onsubmit="return handlePredictionSubmit(event)">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="input-group mb-3">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-geo-alt text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="text" class="form-control" id="REGION" list="regionList" placeholder="Select Region" required>
+                            <label for="REGION" class="text-muted">Region</label>
+                          </div>
+                          <datalist id="regionList">
+                            <!-- Will be populated by JavaScript -->
+                          </datalist>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="input-group mb-3">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-globe text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="text" class="form-control" id="COUNTRYNAME" list="countryList" placeholder="Select Country" required>
+                            <label for="COUNTRYNAME" class="text-muted">Country</label>
+                          </div>
+                          <datalist id="countryList">
+                          <!-- Will be populated by JavaScript -->
+                        </datalist>
+                      </div>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-calendar3 text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="number" class="form-control" id="STARTYEAR" min="1960" max="2050" placeholder="e.g., 2023" required>
+                            <label for="STARTYEAR" class="text-muted">Start Year</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-calendar-month text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <select class="form-select" id="STARTMONTH" required>
+                              <option value="">Select Month</option>
+                              <option value="1">January</option>
+                              <option value="2">February</option>
+                              <option value="3">March</option>
+                              <option value="4">April</option>
+                              <option value="5">May</option>
+                              <option value="6">June</option>
+                              <option value="7">July</option>
+                              <option value="8">August</option>
+                              <option value="9">September</option>
+                              <option value="10">October</option>
+                              <option value="11">November</option>
+                              <option value="12">December</option>
+                            </select>
+                            <label for="STARTMONTH" class="text-muted">Start Month</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-cloud-rain text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="number" step="0.01" min="18" max="3200" class="form-control" id="PPT" placeholder="18.00 - 3200.00" required
+                              onchange="this.value = Math.min(3200, Math.max(18, parseFloat(this.value) || 18)).toFixed(2)">
+                            <label for="PPT" class="text-muted">Precipitation (PPT) in mm</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-thermometer-high text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="number" step="0.01" min="-24" max="58" class="form-control" id="TMAX" placeholder="-24.00 - 58.00" required
+                              onchange="this.value = Math.min(58, Math.max(-24, parseFloat(this.value) || 0)).toFixed(2)">
+                            <label for="TMAX" class="text-muted">Max Temperature (TMAX) in °C</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-droplet text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="number" step="0.01" min="0" max="1" class="form-control" id="SOILMOISTURE" placeholder="0.00 - 1.00" required
+                              onchange="this.value = Math.min(1, Math.max(0, parseFloat(this.value) || 0)).toFixed(2)">
+                            <label for="SOILMOISTURE" class="text-muted">Soil Moisture (0-1 scale)</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="d-grid mt-4">
+                      <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-lightning-charge-fill me-2"></i>
+                        <span id="predictButtonText">Predict</span>
+                        <span id="predictButtonLoading" class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+                        <span id="predictButtonLoadingText" class="d-none">Predicting...</span>
+                      </button>
+                    </div>
+                    <div id="predictionResult" class="mt-3 text-center fw-bold" style="display: none;"></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prediction History and Charts -->
+          <div class="row" style="display: none;"></div>
+            <div class="col-md-4 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Latest Prediction</h5>
+                  <div class="text-center">
+                    <div class="display-4" id="latestPredictionValue">--%</div>
+                    <p class="text-muted">Probability of locust presence</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/api.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Check login status
+      if (!api.auth.isLoggedIn()) {
+        window.location.href = '/login.html';
+        return;
+      }
+      
+      // Load user info if logged in
+      const user = api.auth.getCurrentUser();
+      if (!user) {
+         window.location.href = '/login.html';
+         return;
+      }
+
+      // Update user profile
+      const initials = user.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('userInitials').innerText = initials;
+      document.getElementById('userName').innerText = user.full_name;
+      document.getElementById('welcomeMessage').innerText = `Welcome back, ${user.full_name}!`;
+      // You can add user email if you want:
+      // document.querySelector('.profile-card p').innerText = user.email;
+
+      // Fetch and populate region and country options
+      try {
+        const options = await api.options.getOptions();
+        const regionList = document.getElementById('regionList');
+        const countryList = document.getElementById('countryList');
+        const startYearInput = document.getElementById('STARTYEAR');
+
+        // Clear existing options (except the default)
+        regionList.innerHTML = '<option value="">Select Region</option>';
+        countryList.innerHTML = '<option value="">Select Country</option>';
+
+        // Populate regions
+        options.regions.forEach(region => {
+          const optionElement = document.createElement('option');
+          optionElement.value = region;
+          optionElement.textContent = region;
+          regionList.appendChild(optionElement);
+        });
+
+        // Populate countries
+        options.countries.forEach(country => {
+          const optionElement = document.createElement('option');
+          optionElement.value = country;
+          optionElement.textContent = country;
+          countryList.appendChild(optionElement);
+        });
+
+        // Set the minimum year for the input field based on API options
+        if (options.minYear) {
+          startYearInput.min = options.minYear;
+        }
+        // Optionally, you could also set a max year if the API provides it
+        if (options.maxYear) {
+           startYearInput.max = options.maxYear;
+        }
+        // Optionally, set a default value like the min year or current year
+        // startYearInput.value = options.minYear || new Date().getFullYear();
+
+      } catch (error) {
+        console.error('Error fetching options:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error loading options',
+          text: 'Could not load region and country options. Please try again later.'
+        });
+      }
+
+      // Helper function to format date as relative time (e.g., '2 hours ago')
+      function formatRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return interval + ' year' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return interval + ' month' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval + ' day' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval + ' hour' + (interval === 1 ? '' : 's') + ' ago';
+        
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval + ' minute' + (interval === 1 ? '' : 's') + ' ago';
+        
+        return 'Just now';
+      }
+
+      // Helper function to get start and end of current week
+      function getWeekRange() {
+        const now = new Date();
+        const dayOfWeek = now.getDay() || 7; // Convert Sunday (0) to 7
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - dayOfWeek + 1); // Start from Monday
+        startOfWeek.setHours(0, 0, 0, 0);
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+        
+        return { start: startOfWeek, end: endOfWeek };
+      }
+
+      // Fetch and populate prediction stats
+      async function fetchPredictionStats() {
+        try {
+          const response = await api.predictions.getAll();
+          const predictions = response.data || [];
+          const now = new Date();
+          
+          // Calculate week range for "this week" metrics
+          const { start: weekStart, end: weekEnd } = getWeekRange();
+          
+          // Process predictions
+          const totalPredictions = predictions.length;
+          const predictionsThisWeek = predictions.filter(p => {
+            const predDate = new Date(p.prediction_date || p.created_at);
+            return predDate >= weekStart && predDate <= weekEnd;
+          }).length;
+          
+          // Get predictions from last week for comparison
+          const lastWeekStart = new Date(weekStart);
+          lastWeekStart.setDate(weekStart.getDate() - 7);
+          const lastWeekEnd = new Date(weekStart);
+          lastWeekEnd.setDate(weekStart.getDate() - 1);
+          
+          const predictionsLastWeek = predictions.filter(p => {
+            const predDate = new Date(p.prediction_date || p.created_at);
+            return predDate >= lastWeekStart && predDate <= lastWeekEnd;
+          }).length;
+          
+          // Calculate week-over-week change
+          let weekOverWeekChange = 0;
+          if (predictionsLastWeek > 0) {
+            weekOverWeekChange = ((predictionsThisWeek - predictionsLastWeek) / predictionsLastWeek) * 100;
+          } else if (predictionsThisWeek > 0) {
+            weekOverWeekChange = 100; // 100% increase from 0
+          }
+          
+          // Sort predictions by date to find the latest
+          const sortedPredictions = [...predictions].sort((a, b) => 
+            new Date(b.prediction_date || b.created_at) - new Date(a.prediction_date || a.created_at)
+          );
+          
+          const latestPrediction = sortedPredictions[0];
+          
+          // Update UI with real data
+          // Total Predictions Card
+          document.querySelector('.stat-card.primary .card-text').textContent = totalPredictions;
+          document.querySelector('.stat-card.primary .small span').textContent = `${predictionsThisWeek} this week`;
+          
+          // Last Prediction Card
+          if (latestPrediction) {
+            const predictionValue = latestPrediction.locust_present ? 'Yes' : 'No';
+            document.querySelectorAll('.stat-card.primary')[1].querySelector('.card-text').textContent = predictionValue;
+            
+            // Update trend indicator
+            const trendIcon = document.querySelectorAll('.stat-card.primary')[1].querySelector('i');
+            trendIcon.className = `bi ${weekOverWeekChange >= 0 ? 'bi-arrow-up-circle-fill text-success' : 'bi-arrow-down-circle-fill text-danger'} me-1`;
+            document.querySelectorAll('.stat-card.primary')[1].querySelector('.small span').textContent = 
+              `${Math.abs(weekOverWeekChange)}% from last week`;
+          }
+          
+          // Last Updated Card
+          if (latestPrediction) {
+            const lastUpdate = latestPrediction.prediction_date || latestPrediction.created_at;
+            const updateDate = new Date(lastUpdate);
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            
+            document.querySelector('.stat-card.warning .card-text').textContent = 
+              updateDate.toLocaleDateString(undefined, options);
+            document.querySelector('.stat-card.warning .small span').textContent = 
+              formatRelativeTime(lastUpdate);
+          }
+          
+          // Model Accuracy Card (this would typically come from your model metrics)
+          // For now, we'll calculate accuracy based on predictions with known outcomes
+          if (predictions.length > 0) {
+            // This is a placeholder - you would typically get this from your model metrics
+            // or calculate based on predictions with known outcomes
+            const accuracy = 99.37; // Replace with actual accuracy calculation
+            document.querySelector('.stat-card.info .card-text').textContent = `${accuracy}%`;
+            
+            // Update status text based on accuracy
+            let statusText = 'Excellent performance';
+            let statusClass = 'text-success';
+            if (accuracy < 80) {
+              statusText = 'Needs improvement';
+              statusClass = 'text-warning';
+            } else if (accuracy < 90) {
+              statusText = 'Good performance';
+              statusClass = 'text-info';
+            }
+            
+            const statusIcon = document.querySelector('.stat-card.info i');
+            statusIcon.className = `bi ${statusClass.includes('success') ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'} ${statusClass} me-1`;
+            document.querySelector('.stat-card.info .small span').textContent = statusText;
+          }
+          
+        } catch (error) {
+          console.error('Error fetching prediction stats:', error);
+          // Show error in console but don't break the UI
+        }
+      }
+      
+      // Call the fetch function
+      fetchPredictionStats();
+    });
+
+    async function handlePredictionSubmit(event) {
+      event.preventDefault();
+
+      const predictButton = document.querySelector('#predictionForm button[type="submit"]');
+      const predictButtonText = document.getElementById('predictButtonText');
+      const predictButtonLoading = document.getElementById('predictButtonLoading');
+      const predictButtonLoadingText = document.getElementById('predictButtonLoadingText');
+
+      // Show loading state
+      predictButton.disabled = true;
+      predictButtonText.style.display = 'none';
+      predictButtonLoading.style.display = 'inline-block';
+      predictButtonLoadingText.style.display = 'inline-block';
+
+      // Basic client-side validation
+      const form = document.getElementById('predictionForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        // Hide loading state on validation failure
+        predictButton.disabled = false;
+        predictButtonText.style.display = 'inline-block';
+        predictButtonLoading.style.display = 'none';
+        predictButtonLoadingText.style.display = 'none';
+        return;
+      }
+
+      // Get values from the input types
+      const startYear = parseInt(document.getElementById('STARTYEAR').value); // Read year directly from number input
+      const startMonth = parseInt(document.getElementById('STARTMONTH').value); // format 1-12
+
+      const formData = {
+        REGION: document.getElementById('REGION').value.trim(),
+        COUNTRYNAME: document.getElementById('COUNTRYNAME').value.trim(),
+        STARTYEAR: startYear,
+        STARTMONTH: startMonth,
+        PPT: parseFloat(document.getElementById('PPT').value),
+        TMAX: parseFloat(document.getElementById('TMAX').value),
+        SOILMOISTURE: parseFloat(document.getElementById('SOILMOISTURE').value)
+      };
+
+      console.log('Prediction data:', formData);
+
+      try {
+        const result = await api.predict(formData);
+        console.log('Prediction API result:', result);
+
+        // Hide loading state
+        predictButton.disabled = false;
+        predictButtonText.style.display = 'inline-block';
+        predictButtonLoading.style.display = 'none';
+        predictButtonLoadingText.style.display = 'none';
+
+        // Update the latest prediction card
+        const latestPredictionValue = document.getElementById('latestPredictionValue');
+        if (latestPredictionValue) {
+          latestPredictionValue.textContent = `${(result.probability * 100).toFixed(1)}%`;
+        }
+
+        // Show simple result first
+        Swal.fire({
+          title: result.prediction === 'yes' ? '⚠️ YES ⚠️' : '✅ NO',
+          html: `
+            <div style="text-align: center;">
+              <div style="font-size: 3.2em; margin: 15px 0;">
+                ${result.prediction === 'yes' ? 'High Risk of Locust Presence' : 'Low Risk of Locust Presence'}
+              </div>
+              <div style="font-size: 1.1em; margin-bottom: 15px;">
+                Probability: <strong>${(result.probability * 100).toFixed(1)}%</strong>
+              </div>
+            </div>
+          `,
+          icon: result.prediction === 'yes' ? 'warning' : 'success',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#198754',
+          customClass: {
+            title: 'prediction-title',
+            htmlContainer: 'prediction-content',
+            confirmButton: 'btn btn-primary'
+          }
+        }).then(() => {
+          // After clicking OK, show detailed card
+          const formattedDate = `${getMonthName(parseInt(formData.STARTMONTH))} ${formData.STARTYEAR}`;
+          
+          Swal.fire({
+            title: 'Prediction Details',
+            html: `
+              
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="location-info">
+                        <div class="d-flex align-items-center mb-4">
+                          <i class="bi bi-geo-alt fs-2 text-primary me-3"></i>
+                        <div>
+                            <h6 class="mb-1 text-muted">Location</h6>
+                          <p class="mb-0">${result.matched_country}, ${result.matched_region}</p>
+                        </div>
+                      </div>
+                        <div class="d-flex align-items-center mb-4">
+                          <i class="bi bi-calendar3-fill fs-2 text-primary me-3"></i>
+                        <div>
+                            <h6 class="mb-1 text-muted">Date</h6>
+                          <p class="mb-0">${formattedDate}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="input-params">
+                      <div class="card bg-light">
+                          <div class="card-body p-4">
+                            <h6 class="card-title text-muted mb-4">Input Parameters</h6>
+                            <div class="d-flex justify-content-between mb-3">
+                            <span><i class="bi bi-cloud-rain text-primary me-2"></i>Precipitation:</span>
+                            <strong>${formData.PPT} mm</strong>
+                          </div>
+                            <div class="d-flex justify-content-between mb-3">
+                            <span><i class="bi bi-thermometer-high text-primary me-2"></i>Max Temp:</span>
+                            <strong>${formData.TMAX} °C</strong>
+                          </div>
+                          <div class="d-flex justify-content-between">
+                            <span><i class="bi bi-droplet text-primary me-2"></i>Soil Moisture:</span>
+                            <strong>${formData.SOILMOISTURE}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+                  <div class="text-center mt-4">
+                    <div class="alert ${result.prediction === 'yes' ? 'alert-warning' : 'alert-success'} d-inline-flex align-items-center" role="alert">
+                      <i class="bi ${result.prediction === 'yes' ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'} me-3 fs-4"></i>
+                      <div>
+                        <strong>${(result.probability * 100).toFixed(1)}% Probability</strong> of locust presence
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-save"></i> SAVE PREDICTION',
+            cancelButtonText: '<i class="bi bi-x-lg"></i> CLOSE',
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true,
+            focusConfirm: false,
+            showCloseButton: true,
+            showClass: {
+              popup: 'animate__animated animate__fadeInDown animate__faster'
+            },
+            hideClass: {
+              popup: 'animate__animated animate__fadeOutUp animate__faster'
+            },
+            customClass: {
+              popup: 'prediction-details-modal'
+            }
+          }).then((saveResult) => {
+            if (saveResult.isConfirmed) {
+              // Format data for saving
+              const predictionToSave = {
+                region_name: formData.REGION.trim().toUpperCase(),
+                country_name: formData.COUNTRYNAME.trim().toUpperCase(),
+                start_year: parseInt(formData.STARTYEAR),
+                start_month: parseInt(formData.STARTMONTH),
+                precipitation_mm: parseFloat(formData.PPT),
+                temperature_celsius: parseFloat(formData.TMAX),
+                soil_moisture_percent: parseFloat(formData.SOILMOISTURE),
+                prediction_result: result.probability > 0.5 ? 1 : 0
+              };
+
+              // Save the prediction
+              api.predictions.save(predictionToSave)
+                .then(() => {
+                  Swal.fire({
+                    title: 'Saved!',
+                    text: 'Your prediction has been saved.',
+                    icon: 'success',
+                    confirmButtonColor: '#198754'
+                  });
+                })
+                .catch((error) => {
+                  console.error('Error saving prediction:', error);
+                  Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to save prediction. Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                  });
+                });
+            }
+          });
+        });
+
+      } catch (error) {
+        console.error('Prediction error:', error);
+        // Hide loading state
+        predictButton.disabled = false;
+        predictButtonText.style.display = 'inline-block';
+        predictButtonLoading.style.display = 'none';
+        predictButtonLoadingText.style.display = 'none';
+
+        let errorMessage = 'An error occurred during prediction.';
+        if (error.response && error.response.data && error.response.data.error) {
+          errorMessage = error.response.data.error;
+          if (error.response.data.suggestions) {
+            errorMessage += '\nSuggestions: ' + error.response.data.suggestions.join(', ');
+          }
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Prediction Failed',
+          text: errorMessage
+        });
+      }
+
+      return false; // Prevent default form submission
+    }
+
+    // Helper function to get month name from number (1-12)
+    function getMonthName(monthNumber) {
+      if (!monthNumber) return 'N/A';
+      const date = new Date(2000, monthNumber - 1, 1);
+      return date.toLocaleString('default', { month: 'long' });
+    }
+  </script>
+
+</body>
+
+</html> 

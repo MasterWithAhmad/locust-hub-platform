@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>ML Project - Home</title>
+  <meta name="description" content="A Machine Learning Project to predict locust presence.">
+  <meta name="keywords" content="ML, Machine Learning, Prediction, Locust, Agriculture">
+
+  <!-- Favicons -->
+  <link href="assets/img/logo.webp" rel="icon" type="image/webp">
+  <link href="assets/img/logo.webp" rel="apple-touch-icon" type="image/webp">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+
+  <!-- Custom styles for header -->
+  <style>
+    #header {
+      background-color: #ffffff; /* White background */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
+    }
+
+    /*--------------------------------------------------------------
+    # Footer
+    --------------------------------------------------------------*/
+    .footer {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      color: #fff;
+      font-size: 14px;
+      padding: 70px 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 50%, #8b5cf6 100%);
+    }
+
+    .footer .footer-top {
+      padding-bottom: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer .footer-info {
+      margin-bottom: 30px;
+    }
+
+    .footer .footer-info .sitename {
+      font-size: 28px;
+      margin: 0 0 15px 0;
+      padding: 0;
+      line-height: 1;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .footer .footer-info p {
+      font-size: 14px;
+      line-height: 24px;
+      margin-bottom: 0;
+      color: #e6e6e6;
+    }
+
+    .footer .social-links {
+      margin: 0 0 20px 0;
+    }
+
+    .footer .social-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      font-size: 16px;
+      color: #fff;
+      margin-right: 10px;
+      transition: 0.3s;
+    }
+
+    .footer .social-links a:hover {
+      background: #4e73df;
+      transform: translateY(-3px);
+    }
+
+    .footer h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      position: relative;
+      padding-bottom: 12px;
+      margin-bottom: 25px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .footer h4::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 50px;
+      height: 3px;
+      background: #4e73df;
+      border-radius: 2px;
+    }
+
+    .footer .footer-links {
+      margin-bottom: 30px;
+    }
+
+    .footer .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer .footer-links li {
+      padding: 6px 0;
+      margin-bottom: 2px;
+    }
+
+    .footer a,
+    .footer .footer-links a,
+    .footer .footer-links a:visited {
+      color: #ffffff !important;
+      display: inline-block;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-weight: 500;
+      position: relative;
+      font-size: 15px;
+      padding: 4px 0;
+      text-shadow: 0 0 1px rgba(0,0,0,0.3);
+    }
+
+    .footer a:hover,
+    .footer .footer-links a:hover {
+      color: #4e73df !important;
+      padding-left: 8px;
+      text-decoration: none;
+    }
+    
+    .footer a::before,
+    .footer .footer-links a::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #4e73df;
+      transition: width 0.3s ease;
+    }
+    
+    .footer a:hover::before,
+    .footer .footer-links a:hover::before {
+      width: 100%;
+    }
+
+    .footer .footer-links i {
+      color: #4e73df;
+      margin-right: 5px;
+      font-size: 12px;
+    }
+
+    .footer .footer-newsletter p {
+      color: #e6e6e6;
+      margin-bottom: 15px;
+    }
+
+    .footer .copyright {
+      padding: 20px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 30px;
+    }
+
+    .footer .copyright p {
+      margin: 0;
+      color: #e6e6e6;
+    }
+
+    .footer .copyright a {
+      color: #4e73df;
+      text-decoration: none;
+    }
+
+    .footer .copyright a:hover {
+      text-decoration: underline;
+    }
+
+    /* Back to top button */
+    .back-to-top {
+      position: fixed;
+      visibility: hidden;
+      opacity: 0;
+      right: 15px;
+      bottom: 15px;
+      z-index: 996;
+      background: #4e73df;
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      transition: all 0.4s;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .back-to-top i {
+      font-size: 24px;
+      line-height: 0;
+    }
+
+    .back-to-top:hover {
+      background: #2e59d9;
+      color: #fff;
+      transform: translateY(-3px);
+    }
+
+    .back-to-top.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Hover effects */
+    .btn-outline-light:hover {
+      color: #1a237e !important;
+    }
+
+    /* Custom styles for team section images */
+    .team-card .team-image {
+      height: 350px; /* Increased from 250px to 350px */
+      overflow: hidden; /* Hide any overflowing parts of the image */
+    }
+
+    .team-card .team-image img {
+      width: 100%; /* Make image take full width of container */
+      height: 100%; /* Make image take full height of container */
+      object-fit: cover; /* Ensure image covers the area without distortion */
+    }
+
+    /* Add styles for team card to make it larger */
+    .team-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .team-card .team-content {
+      padding: 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .team-card .team-content h4 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .team-card .team-content .position {
+      font-size: 1rem;
+      color: #6c757d;
+    }
+  </style>
+
+  <!-- =======================================================
+  * Template Name: Invent
+  * Template URL: https://bootstrapmade.com/invent-bootstrap-business-template/
+  * Updated: May 12 2025 with Bootstrap v5.3.6
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container position-relative d-flex align-items-center justify-content-between">
+
+      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <img src="assets/img/logo.webp" alt="ML Project Logo" style="max-height: 40px; margin-right: 10px;">
+        <h1 class="sitename">LocustHub</h1><span>.</span>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="index.html" class="active">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#portfolio">Visualizations</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <div class="d-flex align-items-center gap-3">
+        <a class="btn btn-sm btn-outline-primary" href="login.html"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+        <a class="btn btn-sm btn-outline-primary" href="signup.html"><i class="bi bi-person-plus"></i> Sign Up</a>
+        <a class="btn-getstarted" href="dashboard.html">Get Started</a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row align-items-center mb-5">
+          <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="badge-wrapper mb-3">
+              <div class="d-inline-flex align-items-center rounded-pill border border-accent-light">
+                <div class="icon-circle me-2">
+                  <i class="bi bi-robot"></i>
+                </div>
+                <span class="badge-text me-3">Advanced ML Capabilities</span>
+              </div>
+            </div>
+
+            <h1 class="hero-title mb-4">Leveraging Machine Learning for Locust Presence Prediction</h1>
+
+            <p class="hero-description mb-4">Utilize our powerful ML model to predict locust presence based on environmental factors and historical data. Make informed decisions to protect crops and livelihoods.</p>
+
+            <div class="cta-wrapper">
+              <a href="dashboard.html" class="btn btn-primary">Get Prediction</a>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="hero-image">
+              <img src="assets/img/illustration/illustration-16.webp" alt="Business Growth" class="img-fluid" loading="lazy">
+            </div>
+          </div>
+        </div>
+
+        <div class="row feature-boxes">
+          <div class="col-lg-4 mb-4 mb-lg-0" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-box">
+              <div class="feature-icon me-sm-4 mb-3 mb-sm-0">
+                <i class="bi bi-gpu-card"></i>
+              </div>
+              <div class="feature-content">
+                <h3 class="feature-title">Accurate Predictions</h3>
+                <p class="feature-text">Leverage our machine learning model for reliable locust presence predictions based on robust data analysis.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4 mb-4 mb-lg-0" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-box">
+              <div class="feature-icon me-sm-4 mb-3 mb-sm-0">
+                <i class="bi bi-bar-chart"></i>
+              </div>
+              <div class="feature-content">
+                <h3 class="feature-title">Data-Driven Insights</h3>
+                <p class="feature-text">Gain valuable insights from environmental factors and historical patterns influencing locust outbreaks.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="400">
+            <div class="feature-box">
+              <div class="feature-icon me-sm-4 mb-3 mb-sm-0">
+                <i class="bi bi-lightbulb"></i>
+              </div>
+              <div class="feature-content">
+                <h3 class="feature-title">Informed Decision Making</h3>
+                <p class="feature-text">Use timely predictions and insights to make proactive decisions and protect agricultural resources.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Hero Section -->
+
+    <!-- About Section -->
+    <section id="about" class="about section">
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
+            <p class="who-we-are">About the Project</p>
+            <h3>Predicting Locust Presence to Protect Agriculture</h3>
+            <p class="fst-italic">
+              This project leverages advanced machine learning techniques to analyze environmental factors and historical data for predicting the likelihood of locust presence in specific regions.
+            </p>
+            <ul>
+              <li><i class="bi bi-check-circle"></i> <span>Utilize a powerful ML model trained on comprehensive datasets.</span></li>
+              <li><i class="bi bi-check-circle"></i> <span>Gain insights into key environmental indicators influencing locust outbreaks.</span></li>
+              <li><i class="bi bi-check-circle"></i> <span>Make proactive decisions to mitigate risks and protect agricultural resources.</span></li>
+            </ul>
+            <a href="dashboard.html" class="read-more"><span>Get Prediction</span><i class="bi bi-arrow-right"></i></a>
+          </div>
+
+          <div class="col-lg-6 about-images" data-aos="fade-up" data-aos-delay="200">
+            <div class="row gy-4">
+              <div class="col-lg-6">
+                <img src="assets/img/about/about-portrait-1.webp" class="img-fluid" alt="">
+              </div>
+              <div class="col-lg-6">
+                <div class="row gy-4">
+                  <div class="col-lg-12">
+                    <img src="assets/img/about/about-8.webp" class="img-fluid" alt="">
+                  </div>
+                  <div class="col-lg-12">
+                    <img src="assets/img/about/about-12.webp" class="img-fluid" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section><!-- /About Section -->
+
+    <!-- How We Work Section -->
+    <section id="how-we-work" class="how-we-work section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>How It Works</h2>
+        <p>Predicting locust presence in a few simple steps.</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="steps-5">
+          <div class="process-container">
+
+            <div class="process-item" data-aos="fade-up" data-aos-delay="200">
+              <div class="content">
+                <span class="step-number">01</span>
+                <div class="card-body">
+                  <div class="step-icon">
+                    <i class="bi bi-database"></i>
+                  </div>
+                  <div class="step-content">
+                    <h3>Provide Input Data</h3>
+                    <p>Enter relevant environmental factors and historical information through our user-friendly interface.</p>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Process Item -->
+
+            <div class="process-item" data-aos="fade-up" data-aos-delay="300">
+              <div class="content">
+                <span class="step-number">02</span>
+                <div class="card-body">
+                  <div class="step-icon">
+                    <i class="bi bi-gpu-card"></i>
+                  </div>
+                  <div class="step-content">
+                    <h3>Run Prediction</h3>
+                    <p>Our powerful machine learning model processes your data to generate a prediction on locust presence likelihood.</p>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Process Item -->
+
+            <div class="process-item" data-aos="fade-up" data-aos-delay="400">
+              <div class="content">
+                <span class="step-number">03</span>
+                <div class="card-body">
+                  <div class="step-icon">
+                    <i class="bi bi-bar-chart"></i>
+                  </div>
+                  <div class="step-content">
+                    <h3>View Results & Insights</h3>
+                    <p>Get clear prediction results, confidence scores, and data visualizations to understand the factors influencing the outcome.</p>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Process Item -->
+
+            <div class="process-item" data-aos="fade-up" data-aos-delay="500">
+              <div class="content">
+                <span class="step-number">04</span>
+                <div class="card-body">
+                  <div class="step-icon">
+                    <i class="bi bi-lightbulb"></i>
+                  </div>
+                  <div class="step-content">
+                    <h3>Take Action</h3>
+                    <p>Use the prediction and insights to make informed decisions and implement timely measures for locust control.</p>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Process Item -->
+
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /How We Work Section -->
+
+    <!-- Services Section -->
+    <section id="services" class="services section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Project Capabilities</h2>
+        <p>Key features and aspects of our Machine Learning Project.</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row justify-content-center g-5">
+
+          <div class="col-md-6" data-aos="fade-right" data-aos-delay="100">
+            <div class="service-item">
+              <div class="service-icon">
+                <i class="bi bi-database"></i>
+              </div>
+              <div class="service-content">
+                <h3>Data Handling & Preprocessing</h3>
+                <p>Efficiently collects, cleans, and prepares environmental and historical data for accurate modeling.</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-md-6" data-aos="fade-left" data-aos-delay="100">
+            <div class="service-item">
+              <div class="service-icon">
+                <i class="bi bi-robot"></i>
+              </div>
+              <div class="service-content">
+                <h3>Advanced ML Models</h3>
+                <p>Utilizes state-of-the-art machine learning algorithms for robust and reliable predictions.</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-md-6" data-aos="fade-right" data-aos-delay="200">
+            <div class="service-item">
+              <div class="service-icon">
+                <i class="bi bi-gpu-card"></i>
+              </div>
+              <div class="service-content">
+                <h3>Accurate Prediction Engine</h3>
+                <p>Provides timely and precise predictions on locust presence likelihood in targeted areas.</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-md-6" data-aos="fade-left" data-aos-delay="200">
+            <div class="service-item">
+              <div class="service-icon">
+                <i class="bi bi-bar-chart"></i>
+              </div>
+              <div class="service-content">
+                <h3>Interactive Data Visualization</h3>
+                <p>Offers clear and insightful visualizations of data trends and prediction factors.</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-md-6" data-aos="fade-right" data-aos-delay="300">
+            <div class="service-item">
+              <div class="service-icon">
+                <i class="bi bi-laptop"></i>
+              </div>
+              <div class="service-content">
+                <h3>User-Friendly Interface</h3>
+                <p>An intuitive and easy-to-navigate web application for seamless user experience.</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-md-6" data-aos="fade-left" data-aos-delay="300">
+            <div class="service-item">
+              <div class="service-icon">
+                <i class="bi bi-file-code"></i>
+              </div>
+              <div class="service-content">
+                <h3>Technology Stack</h3>
+                <p>Built using modern and efficient technologies like Python, scikit-learn, Node.js, and Bootstrap.</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Services Section -->
+
+    <!-- Call To Action 2 Section -->
+    <section id="call-to-action-2" class="call-to-action-2 section light-background">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row g-5 align-items-center">
+          <div class="col-lg-6" data-aos="fade-right" data-aos-delay="200">
+            <div class="cta-image-wrapper">
+              <img src="assets/img/cta/cta-4.webp" alt="Call to Action" class="img-fluid rounded-4">
+              <div class="cta-pattern"></div>
+            </div>
+          </div>
+
+          <div class="col-lg-6" data-aos="fade-left" data-aos-delay="300">
+            <div class="cta-content">
+              <h2>Ready to Predict Locust Presence?</h2>
+              <p class="lead">Utilize our advanced ML model to get accurate predictions and protect your crops and livelihood.</p>
+
+              <div class="cta-features">
+                <div class="feature-item" data-aos="zoom-in" data-aos-delay="400">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Make informed decisions with data-driven predictions</span>
+                </div>
+                <div class="feature-item" data-aos="zoom-in" data-aos-delay="450">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Mitigate risks associated with locust outbreaks</span>
+                </div>
+                <div class="feature-item" data-aos="zoom-in" data-aos-delay="500">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Access insightful data visualizations</span>
+                </div>
+              </div>
+
+              <div class="cta-action mt-5 d-flex gap-3">
+                <a href="dashboard.html" class="btn btn-primary btn-lg">Get Prediction Now</a>
+                <a href="#about" class="btn btn-outline-primary btn-lg">Learn More About the Project</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Call To Action 2 Section -->
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="portfolio section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Portfolio</h2>
+        <p>Data Visualizations and Model Insights</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row g-4 isotope-container" data-aos="fade-up" data-aos-delay="300">
+
+          <div class="col-lg-6 col-md-6 portfolio-item isotope-item filter-web">
+            <div class="portfolio-card">
+              <div class="portfolio-image">
+                <img src="assets/img/plots/som_tmax_distr.png" class="img-fluid" alt="Somalia Maximum Temperature Distribution Plot" loading="lazy">
+                <div class="portfolio-overlay">
+                  <div class="portfolio-actions">
+                    <a href="assets/img/plots/som_tmax_distr.png" class="glightbox preview-link" data-gallery="portfolio-gallery-plots"><i class="bi bi-eye"></i></a>
+                    <a href="predict.html" class="details-link" title="View Prediction Details"><i class="bi bi-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="portfolio-content">
+                <span class="category">Data Visualization</span>
+                <h3>Maximum Temperature Distribution in Somalia</h3>
+                <p>Analysis of maximum temperature distribution patterns relevant to locust habitats.</p>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+
+          <div class="col-lg-6 col-md-6 portfolio-item isotope-item filter-graphics">
+            <div class="portfolio-card">
+              <div class="portfolio-image">
+                <img src="assets/img/plots/soma_distr_of_month.png" class="img-fluid" alt="Somalia Data Distribution by Month Plot" loading="lazy">
+                <div class="portfolio-overlay">
+                  <div class="portfolio-actions">
+                    <a href="assets/img/plots/soma_distr_of_month.png" class="glightbox preview-link" data-gallery="portfolio-gallery-plots"><i class="bi bi-eye"></i></a>
+                    <a href="predict.html" class="details-link" title="View Prediction Details"><i class="bi bi-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="portfolio-content">
+                <span class="category">Data Visualization</span>
+                <h3>Data Distribution by Month in Somalia</h3>
+                <p>Monthly trends in data availability and its correlation with locust patterns.</p>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+
+          <div class="col-lg-6 col-md-6 portfolio-item isotope-item filter-motion">
+            <div class="portfolio-card">
+              <div class="portfolio-image">
+                <img src="assets/img/plots/tmax_distr.png" class="img-fluid" alt="Global Maximum Temperature Distribution Plot" loading="lazy">
+                <div class="portfolio-overlay">
+                  <div class="portfolio-actions">
+                    <a href="assets/img/plots/tmax_distr.png" class="glightbox preview-link" data-gallery="portfolio-gallery-plots"><i class="bi bi-eye"></i></a>
+                    <a href="predict.html" class="details-link" title="View Prediction Details"><i class="bi bi-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="portfolio-content">
+                <span class="category">Data Visualization</span>
+                <h3>Global Maximum Temperature Distribution</h3>
+                <p>Global temperature patterns and their potential impact on locust movements.</p>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+
+          <div class="col-lg-6 col-md-6 portfolio-item isotope-item filter-brand">
+            <div class="portfolio-card">
+              <div class="portfolio-image">
+                <img src="assets/img/plots/som_locust_presence_over_months.png" class="img-fluid" alt="Somalia Locust Presence Over Months Plot" loading="lazy">
+                <div class="portfolio-overlay">
+                  <div class="portfolio-actions">
+                    <a href="assets/img/plots/som_locust_presence_over_months.png" class="glightbox preview-link" data-gallery="portfolio-gallery-plots"><i class="bi bi-eye"></i></a>
+                    <a href="predict.html" class="details-link" title="View Prediction Details"><i class="bi bi-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="portfolio-content">
+                <span class="category">Data Visualization</span>
+                <h3>Locust Presence in Somalia Over Months</h3>
+                <p>Monthly distribution of recorded locust presence in Somalia.</p>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+
+          <div class="col-lg-6 col-md-6 portfolio-item isotope-item filter-web">
+            <div class="portfolio-card">
+              <div class="portfolio-image">
+                <img src="assets/img/plots/locust_presence_accross_somalia_regiions.png" class="img-fluid" alt="Locust Presence Across Somalia Regions Plot" loading="lazy">
+                <div class="portfolio-overlay">
+                  <div class="portfolio-actions">
+                    <a href="assets/img/plots/locust_presence_accross_somalia_regiions.png" class="glightbox preview-link" data-gallery="portfolio-gallery-plots"><i class="bi bi-eye"></i></a>
+                    <a href="predict.html" class="details-link" title="View Prediction Details"><i class="bi bi-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="portfolio-content">
+                <span class="category">Data Visualization</span>
+                <h3>Locust Presence Across Somalia Regions</h3>
+                <p>Geographical distribution of locust presence records within Somalia.</p>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+
+          <div class="col-lg-6 col-md-6 portfolio-item isotope-item filter-graphics">
+            <div class="portfolio-card">
+              <div class="portfolio-image">
+                <img src="assets/img/plots/som_distr_of_year.png" class="img-fluid" alt="Somalia Data Distribution by Year Plot" loading="lazy">
+                <div class="portfolio-overlay">
+                  <div class="portfolio-actions">
+                    <a href="assets/img/plots/som_distr_of_year.png" class="glightbox preview-link" data-gallery="portfolio-gallery-plots"><i class="bi bi-eye"></i></a>
+                    <a href="predict.html" class="details-link" title="View Prediction Details"><i class="bi bi-arrow-right"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="portfolio-content">
+                <span class="category">Data Visualization</span>
+                <h3>Data Distribution by Year in Somalia</h3>
+                <p>Annual distribution of data points used for training and analysis in Somalia.</p>
+              </div>
+            </div>
+          </div><!-- End Portfolio Item -->
+
+        </div><!-- End Portfolio Container -->
+
+      </div>
+
+    </section><!-- /Portfolio Section -->
+
+    <!-- Faq Section -->
+    <section id="faq" class="faq section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-5">
+          <div class="col-lg-6" data-aos="zoom-out" data-aos-delay="200">
+            <div class="faq-contact-card">
+              <div class="card-icon">
+                <i class="bi bi-question-circle"></i>
+              </div>
+              <div class="card-content">
+                <h3>Still Have Questions?</h3>
+                <p>If you have questions about the project, the machine learning model, data, or potential collaborations, feel free to reach out.</p>
+                <div class="contact-options">
+                  <a href="#" class="contact-option">
+                    <i class="bi bi-envelope"></i>
+                    <span>Email Support</span>
+                  </a>
+                  <a href="#" class="contact-option">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>Live Chat</span>
+                  </a>
+                  <a href="#" class="contact-option">
+                    <i class="bi bi-telephone"></i>
+                    <span>Call Us</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="faq-accordion">
+              <div class="faq-item faq-active">
+                <div class="faq-header">
+                  <h3>What is the main goal of this project?</h3>
+                  <i class="bi bi-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-content">
+                  <p>The primary goal is to predict the presence of locusts using machine learning models trained on environmental factors and historical data, aiming to help protect agricultural resources.</p>
+                </div>
+              </div><!-- End FAQ Item-->
+
+              <div class="faq-item" data-aos="zoom-in" data-aos-delay="200">
+                <div class="faq-header">
+                  <h3>What kind of data is used for the predictions?</h3>
+                  <i class="bi bi-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-content">
+                  <p>The model utilizes various data inputs, including historical locust presence records and relevant environmental data such as temperature, precipitation, and soil moisture.</p>
+                </div>
+              </div><!-- End FAQ Item-->
+
+              <div class="faq-item">
+                <div class="faq-header">
+                  <h3>How accurate are the predictions?</h3>
+                  <i class="bi bi-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-content">
+                  <p>The accuracy of the predictions depends on the quality and completeness of the input data and the performance of the trained ML model. We aim to provide the most reliable predictions possible based on the available data.</p>
+                </div>
+              </div><!-- End FAQ Item-->
+
+              <div class="faq-item">
+                <div class="faq-header">
+                  <h3>Can I trust the prediction results for taking action?</h3>
+                  <i class="bi bi-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-content">
+                  <p>The predictions serve as a valuable tool for informing decision-making regarding locust control measures. However, they should be used in conjunction with local expertise and on-the-ground observations.</p>
+                </div>
+              </div><!-- End FAQ Item-->
+
+              <div class="faq-item">
+                <div class="faq-header">
+                  <h3>Where can I find more details about the methodology or contribute to the project?</h3>
+                  <i class="bi bi-chevron-down faq-toggle"></i>
+                </div>
+                <div class="faq-content">
+                  <p>You can find more technical details and the source code on the project's GitHub repository, linked in the Contact and Footer sections. We welcome contributions!</p>
+                </div>
+              </div><!-- End FAQ Item-->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Faq Section -->
+
+    <!-- Team Section -->
+    <section id="team" class="team section light-background">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Our Team</h2>
+        <p>Meet the dedicated students behind this project.</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row g-5 justify-content-center">
+
+          <!-- Team Member 1: Ahmed Ibrahim Ahmed -->
+          <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="100">
+            <div class="team-card">
+              <div class="team-image">
+                <img src="assets/img/person/person-m-1.jpg" class="img-fluid" alt="Team Member Image">
+                <div class="team-overlay">
+                  <p>Role: ML Project, EDA Part</p>
+                  <div class="team-social">
+                    <a href="https://github.com/MasterWithAhmad" target="_blank"><i class="bi bi-github"></i></a>
+                    <a href="https://www.linkedin.com/in/ahmed-ibrahim-401567206"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="team-content">
+                <h4>Ahmed Ibrahim Ahmed</h4>
+                <span class="position">ML Project, EDA Part</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+          <!-- Team Member 2: Abdulahi Hashi Abdi -->
+          <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="200">
+            <div class="team-card">
+              <div class="team-image">
+                <img src="assets/img/cta/cta-4.webp" class="img-fluid" alt="Team Member Image">
+                <div class="team-overlay">
+                  <p>Role: Creative Director</p>
+                  <div class="team-social">
+                    <a href="https://github.com/Eng-Aglad"><i class="bi bi-github"></i></a>
+                    <a href="https://www.linkedin.com/in/abdalla-hashi-aglad-1480642bb"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="team-content">
+                <h4>Abdulahi Hashi Abdi</h4>
+                <span class="position">Creative Director</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+          <!-- Team Member 3: Suleiman Ali Abshir -->
+          <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="300">
+            <div class="team-card">
+              <div class="team-image">
+                <img src="assets/img/person/suleyman.png" class="img-fluid" alt="Team Member Image">
+                <div class="team-overlay">
+                  <p>Role: UI, UX Designer</p>
+                  <div class="team-social">
+                    <a href="#"><i class="bi bi-github"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="team-content">
+                <h4>Suleiman Ali Abshir</h4>
+                <span class="position">UI, UX Designer</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+          <!-- Team Member 4: Ayanle Haji Adow -->
+          <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="400">
+            <div class="team-card">
+              <div class="team-image">
+                <img src="assets/img/person/ayanle.png" class="img-fluid" alt="Team Member Image">
+                <div class="team-overlay">
+                  <p>Role: Lead Developer</p>
+                  <div class="team-social">
+                    <a href="#"><i class="bi bi-github"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="team-content">
+                <h4>Ayanle Haji Adow</h4>
+                <span class="position">Lead Developer</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Team Section -->
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Contact</h2>
+        <p>Get in touch with the project team or explore the code.</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-4 mb-5">
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="info-card">
+              <div class="icon-box">
+                <i class="bi bi-geo-alt"></i>
+              </div>
+              <h3>Our Address</h3>
+              <p>Km4, Mogadishu, Somalia</p>
+            </div>
+          </div>
+
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="info-card">
+              <div class="icon-box">
+                <i class="bi bi-telephone"></i>
+              </div>
+              <h3>Contact Information</h3>
+              <p>Mobile: 0617042931<br>
+                Email: ahmad.netdev@gmail.com</p>
+            </div>
+          </div>
+
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="info-card">
+              <div class="icon-box">
+                <i class="bi bi-github"></i>
+              </div>
+              <h3>Project Repository</h3>
+              <p>Explore the source code and contribute on GitHub.</p>
+              <a href="https://github.com/MasterWithAhmad/locust-hub-platform.git" target="_blank">Visit GitHub</a>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="form-wrapper" data-aos="fade-up" data-aos-delay="400">
+              <form action="forms/contact.php" method="post" role="form" class="php-email-form">
+                <div class="row">
+                  <div class="col-md-6 form-group">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <input type="text" name="name" class="form-control" placeholder="Your name*" required="">
+                    </div>
+                  </div>
+                  <div class="col-md-6 form-group">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                      <input type="email" class="form-control" name="email" placeholder="Email address*" required="">
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-12 form-group">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                      <input type="text" class="form-control" name="phone" placeholder="Phone number*" required="">
+                    </div>
+                  </div>
+                  <div class="form-group mt-3">
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-chat-dots"></i></span>
+                      <textarea class="form-control" name="message" rows="6" placeholder="Write a message*" required=""></textarea>
+                    </div>
+                  </div>
+                  <div class="my-3">
+                    <div class="loading">Loading</div>
+                    <div class="error-message"></div>
+                    <div class="sent-message">Your message has been sent. Thank you!</div>
+                  </div>
+                  <div class="text-center">
+                    <button type="submit">Submit Message</button>
+                  </div>
+
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section><!-- /Contact Section -->
+
+  </main>
+
+  <footer id="footer" class="footer">
+    <div class="footer-top">
+      <div class="container">
+      <div class="row gy-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+          <a href="index.html" class="logo d-flex align-items-center">
+            <span class="sitename">ML Project</span>
+          </a>
+              <p class="mt-3">
+                Km4, Mogadishu, Somalia<br>
+                <strong>Phone:</strong> +252 617 042 931<br>
+                <strong>Email:</strong> ahmad.netdev@gmail.com
+              </p>
+              <div class="social-links mt-3">
+                <a href="https://github.com/MasterWithAhmad" target="_blank" class="github"><i class="bi bi-github"></i></a>
+                <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+                <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
+          </div>
+          </div>
+        </div>
+
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Quick Links</h4>
+            <ul>
+              <li><i class="bi bi-chevron-right"></i> <a href="index.html">Home</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#about">About</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="predict.html">Predict</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#contact">Contact</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#team">Our Team</a></li>
+          </ul>
+        </div>
+
+          <div class="col-lg-3 col-md-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Locust Prediction</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Data Analysis</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Risk Assessment</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Research Support</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Consulting</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6 footer-newsletter">
+          <h4>About the Project</h4>
+          <p>This project leverages machine learning to predict locust presence, helping protect agricultural resources. It analyzes environmental data and historical patterns to provide timely and accurate predictions.</p>
+            <div class="mt-3">
+              <a href="#" class="btn btn-outline-light btn-sm">Learn More</a>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="copyright">
+        <div class="row">
+          <div class="col-md-6 text-start">
+            &copy; <script>document.write(new Date().getFullYear())</script> <strong>ML Project</strong>. All Rights Reserved
+          </div>
+          <!-- <div class="col-md-6 text-end">
+      <div class="credits">
+              Designed by <a href="https://bootstrapmade.com/" class="text-decoration-underline">BootstrapMade</a>
+            </div> -->
+      </div>
+    </div>
+      </div>
+    </div>
+  </footer>
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>
