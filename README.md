@@ -12,6 +12,52 @@ A comprehensive Locust Prediction System developed as a final year thesis projec
 - **Data Analysis**: Tools for analyzing environmental factors affecting locust behavior
 - **Responsive Design**: Accessible on desktop and mobile devices
 
+## 📸 Screenshots
+
+<div align="center">
+  <h3>Landing Page</h3>
+  <img src="./screenshots/landing-page.png" alt="Landing Page" width="90%">
+  
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px;">
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+      <h4>Login</h4>
+      <img src="./screenshots/login.png" alt="Login Page" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </div>
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+      <h4>Sign Up</h4>
+      <img src="./screenshots/sign-up.png" alt="Sign Up Page" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </div>
+  </div>
+
+  <div style="margin-top: 30px;">
+    <h3>Dashboard</h3>
+    <img src="./screenshots/dashboard.png" alt="Dashboard" style="width: 100%; max-width: 1200px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px;">
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+      <h4>Analytics</h4>
+      <img src="./screenshots/analytics.png" alt="Analytics" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </div>
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+      <h4>Reports</h4>
+      <img src="./screenshots/reports.png" alt="Reports" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px;">
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+      <h4>Prediction Result</h4>
+      <img src="./screenshots/result.png" alt="Prediction Result" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </div>
+    <div style="flex: 1; min-width: 300px; max-width: 48%;">
+      <h4>Settings</h4>
+      <img src="./screenshots/settings.png" alt="Settings" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </div>
+  </div>
+</div>
+
+
 ## 📁 Project Structure
 
 ```
