@@ -100,5 +100,14 @@ Project Link: [https://github.com/MasterWithAhmad/locust-hub-platform](https://g
 
 ## 🙏 Acknowledgments
 
-- [List any references or resources used in your project]
-- [Mention any advisors or collaborators]
+### Technologies & Libraries
+- [Flask](https://flask.palletsprojects.com/) - Python web framework
+- [Express.js](https://expressjs.com/) - Node.js web application framework
+- [Bootstrap 5](https://getbootstrap.com/) - Frontend component library
+- [SQLite](https://www.sqlite.org/) - Database engine
+- [Chart.js](https://www.chartjs.org/) - Data visualization
+- [Font Awesome](https://fontawesome.com/) - Icons and UI components
+
+### Data & Research
+- [FAO Locust Watch](http://www.fao.org/ag/locusts/en/info/info/faq/index.html) - For locust behavior and prediction methodologies
+- [Meteorological data sources](https://www.ncdc.noaa.gov/) - Weather and climate data

@@ -1,33 +1,60 @@
-# News Recommendation System Thesis Project
+# Locust Prediction System - Thesis Project
 
-## Project Overview
-This repository contains the implementation and documentation of a News Recommendation System developed as part of a final year thesis project. The system leverages machine learning techniques to provide personalized news recommendations to users based on their reading history and preferences.
+## 📝 Project Overview
+This repository contains the implementation and documentation of a Locust Prediction System developed as a final year thesis project at Jamhuriya University. The system leverages machine learning techniques to predict locust swarms, providing early warnings to agricultural communities and helping mitigate potential crop damage.
 
-## Project Structure
+## 🏛️ Academic Information
+- **University**: Jamhuriya University of Science and Technology
+- **Faculty**: Faculty of Computing and ICT
+- **Department**: Information Technology
+- **Supervisor**: Eng. Suldaanka (Abdi Rahman Omar Mohamud)
+- **Thesis Committee**:
+  - Eng. Abdulahi Hashi Abdi
+  - Eng. Ayanle Ahmed Adow
+  - Eng. Sulieman Ali Abshir
+
+## 📁 Project Structure
 ```
 thesis-project/
 ├── data/               # Datasets and processed data
-├── models/             # Trained model files and model definitions
-├── notebooks/          # Jupyter notebooks for analysis and experimentation
-├── plots/              # Generated visualizations and plots
-├── reports/            # Project reports and documentation
-├── .gitignore          # Git ignore file
-├── LICENSE             # License information
-└── requirements.txt    # Python dependencies
+│   ├── raw/           # Raw datasets
+│   └── processed/     # Processed and cleaned data
+├── models/            # Trained model files and model definitions
+│   ├── saved_models/  # Serialized model files
+│   └── training/      # Training scripts and logs
+├── notebooks/         # Jupyter notebooks for analysis
+│   ├── EDA.ipynb      # Exploratory Data Analysis
+│   └── model_training.ipynb  # Model development
+├── reports/           # Project reports and documentation
+│   ├── final/        # Final thesis document
+│   └── presentations/ # Presentation materials
+├── .gitignore         # Git ignore file
+├── LICENSE            # MIT License
+└── requirements.txt   # Python dependencies
 ```
 
-## Setup and Installation
+## 🛠️ Setup and Installation
+
+### Prerequisites
+- Python 3.8+
+- pip (Python package manager)
+- Jupyter Notebook (for running analysis)
+
+### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd thesis-project
+   git clone https://github.com/MasterWithAhmad/locust-hub-platform.git
+   cd locust-hub-platform/thesis-project
    ```
 
-2. **Create a virtual environment**
+2. **Create and activate virtual environment**
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
    ```
 
 3. **Install dependencies**
@@ -35,57 +62,76 @@ thesis-project/
    pip install -r requirements.txt
    ```
 
-4. **Set up the database**
-   - Create a new SQLite database
-   - Update the database configuration in the appropriate configuration files
+## 🚀 Usage
 
-## Usage
-
-### Running the Jupyter Notebooks
+### Running Jupyter Notebooks
 ```bash
 jupyter notebook notebooks/
 ```
 
 ### Training Models
 ```bash
-python train.py --config config/training_config.yaml
+python models/train.py --config config/training_config.yaml
 ```
 
 ### Generating Reports
 ```bash
-python generate_reports.py
+python reports/generate_reports.py
 ```
 
-## Features
-- Personalized news recommendations
-- Content-based filtering
-- Collaborative filtering
-- Model evaluation and comparison
-- Interactive visualizations
+## 📊 Features
+- **Data Collection**: Automated data gathering from various environmental sources
+- **Preprocessing**: Data cleaning and feature engineering pipelines
+- **ML Models**: Implementation of various prediction models
+- **Evaluation**: Comprehensive model evaluation metrics
+- **Visualization**: Interactive plots and dashboards
 
-## Data
-- The dataset used in this project is stored in the `data/` directory
-- Preprocessing scripts are available in `notebooks/data_preprocessing.ipynb`
+## 📂 Data
+- **Sources**:
+  - Meteorological data
+  - Historical locust swarm data
+  - Satellite imagery
+- **Location**: Primarily focused on the Horn of Africa region
+- **Preprocessing**: See `notebooks/data_preprocessing.ipynb` for data cleaning steps
 
-## Models
-- Implemented models are stored in the `models/` directory
-- Each model includes training and evaluation scripts
+## 🤖 Models
+- **Implemented Algorithms**:
+  - Random Forest Classifier
+  - XGBoost
+  - Time Series Forecasting (ARIMA)
+- **Model Persistence**: All trained models are saved in `models/saved_models/`
+- **Evaluation**: Performance metrics and comparison reports in `reports/`
 
-## Contributing
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## 📚 Related Documents
+- [Thesis Document](./reports/final/thesis.pdf)
+- [Project Proposal](./reports/proposal.pdf)
+- [Final Presentation](./reports/presentations/final_presentation.pdf)
 
-## License
+## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
 
-## Contact
-[Your Name] - [Your Email]
+## 📧 Contact
+Ahmad - [ahmad.netdev@gmail.com](mailto:ahmad.netdev@gmail.com)
 
-Project Link: [https://github.com/yourusername/news-recommendation-system](https://github.com/yourusername/news-recommendation-system)
+Project Link: [https://github.com/MasterWithAhmad/locust-hub-platform](https://github.com/MasterWithAhmad/locust-hub-platform)
 
-## Acknowledgments
-- [List any references, libraries, or resources used in the project]
-- [Mention any advisors or collaborators]
+## 🙏 Acknowledgments
+
+### Academic Support
+- **Supervisor**: Eng. Suldaanka (Abdi Rahman Omar Mohamud) - Jamhuriya University
+- **Thesis Committee**:
+  - Eng. Abdulahi Hashi Abdi
+  - Eng. Ayanle Ahmed Adow
+  - Eng. Sulieman Ali Abshir
+- Special thanks to the faculty of Jamhuriya University for their guidance and support
+
+### Data Sources
+- [FAO Locust Watch](http://www.fao.org/ag/locusts/)
+- [NOAA Climate Data](https://www.ncdc.noaa.gov/)
+- [NASA EarthData](https://earthdata.nasa.gov/)
+
+### Technologies Used
+- Python Data Stack (Pandas, NumPy, Scikit-learn)
+- Jupyter Notebooks
+- Matplotlib/Seaborn for visualizations
+- Git for version control
