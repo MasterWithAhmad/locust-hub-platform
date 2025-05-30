@@ -34,3 +34,20 @@ CREATE TABLE IF NOT EXISTS predictions (
 CREATE INDEX idx_user_email ON users(email);
 CREATE INDEX idx_prediction_user ON predictions(user_id);
 CREATE INDEX idx_prediction_date ON predictions(prediction_date); 
+
+-- Create blog_posts table for public event/blog posts
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    region VARCHAR(100),
+    country VARCHAR(100),
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    author VARCHAR(100),
+    tags VARCHAR(255),
+    image_url VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_blog_date ON blog_posts(date); 

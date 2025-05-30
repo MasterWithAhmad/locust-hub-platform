@@ -1313,6 +1313,87 @@ def reset_password():
         if conn:
             conn.close()
 
+# --- BLOG POSTS API ---
+@app.route('/api/blogposts', methods=['GET'])
+def get_blog_posts():
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, user_id, title, content, region, country, date, author, image_url FROM blog_posts ORDER BY date DESC LIMIT 20")
+        posts = cursor.fetchall()
+        # Format date to ISO string
+        for post in posts:
+            if post['date'] and hasattr(post['date'], 'isoformat'):
+                post['date'] = post['date'].isoformat()
+        return jsonify(posts), 200
+    except Exception as e:
+        print(f"Error fetching blog posts: {str(e)}")
+        return jsonify({'error': 'Failed to fetch blog posts'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@app.route('/api/blogposts', methods=['POST'])
+def create_blog_post():
+    conn = None
+    cursor = None
+    try:
+        # Accept multipart/form-data
+        title = request.form.get('title')
+        content = request.form.get('content')
+        tags = request.form.get('tags')
+        region = request.form.get('region')
+        country = request.form.get('country')
+        author = request.form.get('author')
+        user_id = request.form.get('user_id')
+        image_file = request.files.get('image')
+        image_url = None
+        if image_file:
+            # Save image ONLY to frontend/public/assets/blog_images
+            img_dir = os.path.join(os.path.dirname(__file__), '../frontend/public/assets/blog_images')
+            img_dir = os.path.abspath(img_dir)
+            os.makedirs(img_dir, exist_ok=True)
+            ext = os.path.splitext(image_file.filename)[-1]
+            img_name = f"blog_{uuid.uuid4().hex}{ext}"
+            img_path = os.path.join(img_dir, img_name)
+            image_file.save(img_path)
+            image_url = f"/assets/blog_images/{img_name}"
+            print(f"[BLOG IMAGE] Saved to: {img_path}")
+            print(f"[BLOG IMAGE] URL: {image_url}")
+        if not title or not content:
+            return jsonify({'error': 'Title and content are required'}), 400
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO blog_posts (user_id, title, content, region, country, author, tags, image_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (user_id, title, content, region, country, author, tags, image_url)
+        )
+        conn.commit()
+        return jsonify({'message': 'Blog post created successfully'}), 201
+    except Exception as e:
+        print(f"Error creating blog post: {str(e)}")
+        return jsonify({'error': 'Failed to create blog post'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+import glob
+
+@app.route('/api/debug/blog_images')
+def debug_blog_images():
+    static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../frontend/public'))
+    img_dir = os.path.join(static_dir, 'assets/blog_images')
+    files = glob.glob(os.path.join(img_dir, '*'))
+    files = [os.path.basename(f) for f in files]
+    return {
+        'static_dir': static_dir,
+        'img_dir': img_dir,
+        'files': files,
+        'url_example': '/assets/blog_images/' + files[0] if files else None
+    }
+
 if __name__ == '__main__':
     # Initialize database on startup
     try:

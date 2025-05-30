@@ -319,6 +319,7 @@
           <li><a href="index.html" class="active">Home</a></li>
           <li><a href="#about">About</a></li>
           <li><a href="#portfolio">Visualizations</a></li>
+          <li><a href="blogs.html">Blogs</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -334,6 +335,8 @@
   </header>
 
   <main class="main">
+
+    <!-- Blog/Event Section removed -->
 
     <!-- Hero Section -->
     <section id="hero" class="hero section">
@@ -1185,6 +1188,39 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    // Fetch and display blog posts in the public view
+    document.addEventListener('DOMContentLoaded', function () {
+      fetch('/api/blogposts')
+        .then(res => res.json())
+        .then(posts => {
+          const container = document.getElementById('blog-posts-list');
+          if (!Array.isArray(posts) || posts.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted">No public blog posts yet.</div>';
+            return;
+          }
+          container.innerHTML = posts.map(post => `
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title mb-2">${post.title}</h5>
+                  <div class="mb-2 text-muted" style="font-size: 0.95em;">
+                    <i class="bi bi-person-circle"></i> ${post.author || 'Anonymous'} &nbsp;|
+                    <i class="bi bi-geo-alt"></i> ${post.region || ''}, ${post.country || ''} &nbsp;|
+                    <i class="bi bi-calendar"></i> ${post.date ? new Date(post.date).toLocaleDateString() : ''}
+                  </div>
+                  <p class="card-text flex-grow-1">${post.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        })
+        .catch(() => {
+          document.getElementById('blog-posts-list').innerHTML = '<div class="col-12 text-center text-danger">Failed to load blog posts.</div>';
+        });
+    });
+  </script>
 
 </body>
 

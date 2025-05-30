@@ -410,6 +410,12 @@
                 </a>
               </li>
               <li class="nav-item">
+                <a class="nav-link" href="manage_blogs.html">
+                  <i class="bi bi-journal-text me-2"></i>
+                  My Blogs
+                </a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link" href="analytics.html">
                   <i class="bi bi-graph-up me-2"></i>
                   Analytics
@@ -598,8 +604,11 @@
 
   <script src="assets/js/main.js"></script>
   <script src="assets/js/api.js"></script>
+  <script src="assets/js/blog_modal.js"></script>
 
   <script>
+    // Make user available globally
+    let user = null;
     document.addEventListener('DOMContentLoaded', async function () {
       // Check login status
       if (!api.auth.isLoggedIn()) {
@@ -608,7 +617,7 @@
       }
 
       // Load user info if logged in
-      const user = api.auth.getCurrentUser();
+      user = api.auth.getCurrentUser();
       if (!user) {
         window.location.href = '/login.html';
         return;
@@ -878,6 +887,75 @@
                     text: 'Your prediction has been saved.',
                     icon: 'success',
                     confirmButtonColor: '#198754'
+                  }).then(() => {
+                    // If prediction is YES, ask if user wants to create an event/blog post
+                    if (result.prediction === 'yes') {
+                      Swal.fire({
+                        title: 'Create Event/Blog Post?',
+                        text: 'Would you like to share this prediction as a public event or blog post?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Create Blog',
+                        cancelButtonText: 'No',
+                        confirmButtonColor: '#4e73df',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true
+                      }).then((blogResult) => {
+                        if (blogResult.isConfirmed) {
+                          // Show a form for blog post
+                          showBlogModal({
+                            user,
+                            region: formData.REGION,
+                            country: formData.COUNTRYNAME,
+                            onPublish: async (blogData) => {
+                              // Prepare form data for image upload
+                              const fd = new FormData();
+                              fd.append('title', blogData.title);
+                              fd.append('content', blogData.content);
+                              fd.append('tags', blogData.tags);
+                              fd.append('region', formData.REGION);
+                              fd.append('country', formData.COUNTRYNAME);
+                              fd.append('date', new Date().toISOString());
+                              fd.append('author', user.full_name);
+                              fd.append('user_id', user.id || '');
+                              if (blogData.imageFile) {
+                                fd.append('image', blogData.imageFile);
+                              }
+                              Swal.showLoading();
+                              fetch('/api/blogposts', {
+                                method: 'POST',
+                                body: fd
+                              })
+                                .then(res => res.json())
+                                .then(() => {
+                                  Swal.fire({
+                                    title: 'Published!',
+                                    text: 'Your event/blog post is now public.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#198754',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'View Blogs',
+                                    cancelButtonText: 'Close'
+                                  }).then((r) => {
+                                    if (r.isConfirmed) {
+                                      window.location.href = 'blogs.html';
+                                    }
+                                  });
+                                })
+                                .catch(() => {
+                                  Swal.fire({
+                                    title: 'Error',
+                                    text: 'Failed to publish blog post.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#dc3545'
+                                  });
+                                });
+                            },
+                            onPreview: () => {}
+                          });
+                        }
+                      });
+                    }
                   });
                 })
                 .catch((error) => {

@@ -15,7 +15,9 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;0,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;0,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -76,14 +78,16 @@
       color: #fff !important;
     }
 
-    .sidebar .text-center h6, .sidebar .text-center small {
+    .sidebar .text-center h6,
+    .sidebar .text-center small {
       color: white !important;
     }
 
     .initials-circle {
       width: 80px;
       height: 80px;
-      background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white */
+      background-color: rgba(255, 255, 255, 0.2);
+      /* Semi-transparent white */
       color: white;
       font-size: 2rem;
       font-weight: bold;
@@ -110,7 +114,7 @@
 
   <main class="main">
     <div class="container-fluid">
-      <div class="row">        
+      <div class="row">
         <!-- Sidebar -->
         <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse pt-3">
           <div class="position-sticky">
@@ -130,6 +134,12 @@
                 <a class="nav-link active" aria-current="page" href="analytics.html">
                   <i class="bi bi-graph-up me-2"></i>
                   Analytics
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="predict.html">
+                  <i class="bi bi-lightning-charge-fill me-2"></i>
+                  Prediction
                 </a>
               </li>
               <li class="nav-item">
@@ -158,10 +168,10 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-5">
           <h2>Analytics Dashboard</h2>
           <p>This is where your analytics charts and data visualizations will go.</p>
-          
+
           <!-- Other Analytics Cards (Side by Side) -->
           <div class="row">
-            
+
             <!-- Prediction Summary Card -->
             <div class="col-md-4 mb-4"> <!-- Takes 4 columns on medium screens and up -->
               <div class="card h-100">
@@ -181,7 +191,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Environmental Factors Summary Card -->
             <div class="col-md-4 mb-4"> <!-- Takes 4 columns on medium screens and up -->
               <div class="card h-100">
@@ -214,7 +224,8 @@
   </main>
 
   <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
 
   <!-- Preloader -->
   <div id="preloader"></div>
@@ -227,24 +238,24 @@
   <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
   <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
   <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-  
+
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
   <script src="assets/js/api.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       // Check login status
       if (!api.auth.isLoggedIn()) {
         window.location.href = '/login.html';
         return;
       }
-      
+
       // Load user info if logged in
       const user = api.auth.getCurrentUser();
       if (!user) {
-         window.location.href = '/login.html';
-         return;
+        window.location.href = '/login.html';
+        return;
       }
 
       // Update user profile
@@ -309,7 +320,8 @@
                 backgroundColor: 'rgba(78, 115, 223, 0.05)', // Light primary color fill
                 tension: 0.3, // Smooth the line
                 fill: true,
-              }]},
+              }]
+            },
             options: {
               responsive: true,
               scales: {
@@ -317,15 +329,15 @@
                   beginAtZero: true,
                   ticks: {
                     // Ensure integers only
-                    callback: function(value) {
-                        if (Number.isInteger(value)) {
-                            return value;
-                        }
+                    callback: function (value) {
+                      if (Number.isInteger(value)) {
+                        return value;
+                      }
                     }
-                }
+                  }
                 },
                 x: {
-                    // Configuration for X-axis if needed
+                  // Configuration for X-axis if needed
                 }
               },
               plugins: {
@@ -338,7 +350,7 @@
               }
             }
           });
-          
+
           // Fetch Predictions by Location data
           const locationResponse = await api.analytics.getPredictionsByLocation();
           const locationData = locationResponse.data; // Assuming data is in response.data
@@ -371,7 +383,7 @@
                 y: {
                   beginAtZero: true,
                   ticks: {
-                    callback: function(value) { if (Number.isInteger(value)) return value; }
+                    callback: function (value) { if (Number.isInteger(value)) return value; }
                   }
                 }
               },
@@ -381,7 +393,7 @@
               }
             }
           });
-          
+
           // Fetch Environmental Factors Summary data
           const factorsResponse = await api.analytics.getEnvironmentalFactorsSummary();
           const factorsData = factorsResponse.data; // Assuming data is in response.data
@@ -446,6 +458,9 @@
     });
   </script>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
 </body>
 
-</html> 
+</html>

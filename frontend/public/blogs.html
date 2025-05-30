@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Blog - LocustHub</title>
+  <meta name="description" content="Latest insights and updates on locust prediction and agricultural technology from LocustHub experts.">
+  <meta name="keywords" content="ML, Machine Learning, Prediction, Locust, Blog, Agriculture, Technology, Research">
+
+  <!-- Favicons -->
+  <link href="assets/img/logo.webp" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,800;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+  <style>
+    /* Blog-specific styles that complement the main design */
+    .blog-hero {
+      background: linear-gradient(135deg, rgba(78, 115, 223, 0.9) 0%, rgba(28, 200, 138, 0.9) 100%),
+                  url('assets/img/hero-bg.jpg') center center;
+      background-size: cover;
+      padding: 120px 0 80px 0;
+      color: white;
+      text-align: center;
+    }
+
+    .blog-hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .blog-hero p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .blog-post-card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .blog-post-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .blog-post-image {
+      height: 250px;
+      background: linear-gradient(45deg, #4e73df, #1cc88a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .blog-post-image::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, 
+        rgba(78, 115, 223, 0.8) 0%, 
+        rgba(28, 200, 138, 0.8) 100%);
+      z-index: 1;
+    }
+
+    .blog-post-image i {
+      position: relative;
+      z-index: 2;
+    }
+
+    .blog-post-content {
+      padding: 2rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .blog-post-category {
+      display: inline-block;
+      background: #4e73df;
+      color: white;
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .blog-post-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+
+    .blog-post-title a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .blog-post-title a:hover {
+      color: #4e73df;
+    }
+
+    .blog-post-excerpt {
+      color: #6c757d;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      flex-grow: 1;
+    }
+
+    .blog-post-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .blog-post-author {
+      display: flex;
+      align-items: center;
+    }
+
+    .blog-post-author i {
+      margin-right: 0.5rem;
+      color: #4e73df;
+    }
+
+    .blog-post-date {
+      display: flex;
+      align-items: center;
+    }
+
+    .blog-post-date i {
+      margin-right: 0.5rem;
+      color: #1cc88a;
+    }
+
+    .read-more-btn {
+      background: linear-gradient(45deg, #4e73df, #1cc88a);
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 25px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+      align-self: flex-start;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .read-more-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(78, 115, 223, 0.4);
+      color: white;
+    }
+
+    .search-filter-section {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-input {
+      border: 2px solid #e9ecef;
+      border-radius: 25px;
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .filter-btn {
+      border: 2px solid #e9ecef;
+      background: white;
+      color: #6c757d;
+      padding: 0.75rem 1.5rem;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      margin: 0.25rem;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      border-color: #4e73df;
+      background: #4e73df;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 300px;
+    }
+
+    .no-posts {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #6c757d;
+    }
+
+    .no-posts i {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      color: #dee2e6;
+    }
+
+    .no-posts h3 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    /* Pagination styles */
+    .pagination {
+      justify-content: center;
+      margin-top: 3rem;
+    }
+
+    .pagination .page-link {
+      border: none;
+      color: #4e73df;
+      padding: 1rem 1.5rem;
+      margin: 0 0.25rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .pagination .page-link:hover {
+      background: #4e73df;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .pagination .page-item.active .page-link {
+      background: linear-gradient(45deg, #4e73df, #1cc88a);
+      border-color: transparent;
+    }
+
+    /* Blog post modal styles */
+    .blog-modal .modal-dialog {
+      max-width: 900px;
+    }
+
+    .blog-modal .modal-header {
+      background: linear-gradient(135deg, #4e73df 0%, #1cc88a 100%);
+      color: white;
+      border-bottom: none;
+      border-radius: 15px 15px 0 0;
+    }
+
+    .blog-modal .modal-body {
+      padding: 2.5rem;
+      line-height: 1.8;
+      font-size: 1.1rem;
+    }
+
+    .blog-modal .modal-body h1,
+    .blog-modal .modal-body h2,
+    .blog-modal .modal-body h3 {
+      color: #2c3e50;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .blog-modal .modal-body p {
+      margin-bottom: 1.5rem;
+      color: #495057;
+    }
+
+    .blog-modal .modal-content {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Featured post styles */
+    .featured-post {
+      background: linear-gradient(135deg, rgba(78, 115, 223, 0.1) 0%, rgba(28, 200, 138, 0.1) 100%);
+      border: 2px solid #4e73df;
+    }
+
+    .featured-post .blog-post-category {
+      background: linear-gradient(45deg, #4e73df, #1cc88a);
+    }
+
+    .featured-post::before {
+      content: 'Featured';
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #ff6b6b;
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 15px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+  </style>
+  
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="index.html" class="logo d-flex align-items-center">
+        <img src="assets/img/logo.webp" alt="LocustHub">
+        <h1 class="sitename">LocustHub</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="blog.html" class="active">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="login.html" class="btn-getstarted">Login</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title" data-aos="fade">
+      <div class="heading">
+        <div class="container">
+          <div class="row d-flex justify-content-center text-center">
+            <div class="col-lg-8">
+              <h1>LocustHub Blog</h1>
+              <p class="mb-0">Stay updated with the latest insights, research, and developments in locust prediction technology and agricultural innovation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <nav class="breadcrumbs">
+        <div class="container">
+          <ol>
+            <li><a href="index.html">Home</a></li>
+            <li class="current">Blog</li>
+          </ol>
+        </div>
+      </nav>
+    </div><!-- End Page Title -->
+
+    <!-- Blog Section -->
+    <section id="blog" class="blog section">
+      <div class="container">
+
+        <!-- Search and Filter Section -->
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <div class="row align-items-center">
+                  <div class="col-md-8 mb-3 mb-md-0">
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="searchInput" placeholder="Search blog posts...">
+                      <button class="btn btn-primary" type="button" onclick="searchPosts()">
+                        <i class="bi bi-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="col-md-4 text-md-end">
+                    <select class="form-select" id="categoryFilter" onchange="filterByCategory()">
+                      <option value="all">All Categories</option>
+                      <option value="research">Research</option>
+                      <option value="technology">Technology</option>
+                      <option value="agriculture">Agriculture</option>
+                      <option value="prediction">Prediction</option>
+                      <option value="news">News</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blog Posts Grid -->
+        <div class="row gy-4" id="blogPostsContainer">
+          <!-- Loading Spinner -->
+          <div class="col-12" id="loadingSpinner">
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3 text-muted">Loading blog posts...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="row mt-5">
+          <div class="col-12">
+            <nav aria-label="Blog pagination">
+              <ul class="pagination justify-content-center" id="pagination">
+                <!-- Pagination will be populated by JavaScript -->
+              </ul>
+            </nav>
+          </div>
+        </div>
+
+      </div>
+    </section><!-- /Blog Section -->
+
+  </main>
+
+  <!-- Blog Post Modal -->
+  <div class="modal fade" id="blogPostModal" tabindex="-1" aria-labelledby="blogPostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="blogPostModalLabel">Blog Post</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="blogPostModalBody">
+          <!-- Blog post content will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <div class="row w-100">
+            <div class="col-md-6">
+              <small class="text-muted" id="modalPostMeta"></small>
+            </div>
+            <div class="col-md-6 text-md-end">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footer" class="footer">
+
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="d-flex align-items-center">
+            <span class="sitename">LocustHub</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Advanced ML-powered locust prediction platform for agricultural protection and food security.</p>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><i class="bi bi-chevron-right"></i> <a href="index.html">Home</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="about.html">About us</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="services.html">Services</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="blog.html">Blog</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Locust Prediction</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Risk Assessment</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Data Analytics</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Consulting</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+          <h4>Follow Us</h4>
+          <p>Stay connected for the latest updates</p>
+          <div class="social-links d-flex">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">LocustHub</strong> <span>All Rights Reserved</span></p>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <script>
+    // Global variables
+    let allPosts = [];
+    let filteredPosts = [];
+    let currentPage = 1;
+    const postsPerPage = 6;
+
+    // API base URL - use the same logic as in api.js
+    const API_BASE_URL = window.location.origin.includes('3000') 
+      ? 'http://localhost:5000/api' 
+      : `${window.location.origin}/api`;
+
+    // Initialize the blog page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadBlogPosts();
+    });
+
+    // Load blog posts from the API
+    async function loadBlogPosts() {
+      try {
+        console.log('Loading blog posts from:', `${API_BASE_URL}/blogposts`);
+        
+        const response = await fetch(`${API_BASE_URL}/blogposts`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Blog posts loaded:', data);
+        
+        allPosts = Array.isArray(data) ? data : [];
+        filteredPosts = [...allPosts];
+        
+        displayPosts();
+        setupPagination();
+        
+      } catch (error) {
+        console.error('Error loading blog posts:', error);
+        displayErrorMessage();
+      }
+    }
+
+    // Display blog posts
+    function displayPosts() {
+      const container = document.getElementById('blogPostsContainer');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      
+      // Hide loading spinner
+      if (loadingSpinner) {
+        loadingSpinner.style.display = 'none';
+      }
+      
+      // Clear container
+      container.innerHTML = '';
+      
+      if (filteredPosts.length === 0) {
+        displayNoPostsMessage();
+        return;
+      }
+      
+      // Calculate pagination
+      const startIndex = (currentPage - 1) * postsPerPage;
+      const endIndex = startIndex + postsPerPage;
+      const postsToShow = filteredPosts.slice(startIndex, endIndex);
+      
+      // Generate HTML for each post
+      postsToShow.forEach((post, index) => {
+        const postElement = createPostElement(post, index);
+        container.appendChild(postElement);
+      });
+      
+      // Initialize AOS for new elements
+      if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+      }
+    }
+
+    // Create a single post element
+    function createPostElement(post, index) {
+      const col = document.createElement('div');
+      col.className = 'col-lg-4 col-md-6';
+      col.setAttribute('data-aos', 'fade-up');
+      col.setAttribute('data-aos-delay', (index % 3) * 100);
+      
+      // Format date
+      const postDate = new Date(post.date);
+      const formattedDate = postDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Create excerpt from content (first 150 characters)
+      const excerpt = post.content ? post.content.substring(0, 150) + '...' : 'No content available.';
+      
+      // Determine category from tags or region
+      let category = 'General';
+      let categoryColor = 'bg-secondary';
+      
+      if (post.tags) {
+        const tags = post.tags.toLowerCase();
+        if (tags.includes('research')) {
+          category = 'Research';
+          categoryColor = 'bg-primary';
+        } else if (tags.includes('technology')) {
+          category = 'Technology';
+          categoryColor = 'bg-success';
+        } else if (tags.includes('agriculture')) {
+          category = 'Agriculture';
+          categoryColor = 'bg-warning';
+        } else if (tags.includes('prediction')) {
+          category = 'Prediction';
+          categoryColor = 'bg-info';
+        } else if (tags.includes('news')) {
+          category = 'News';
+          categoryColor = 'bg-danger';
+        }
+      } else if (post.region) {
+        category = post.region;
+        categoryColor = 'bg-info';
+      }
+      
+      // Handle image
+      let imageHtml = '';
+      if (post.image_url) {
+        imageHtml = `
+          <img src="${post.image_url}" class="card-img-top" alt="${post.title}" style="height: 200px; object-fit: cover;">
+        `;
+      } else {
+        imageHtml = `
+          <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center text-white" style="height: 200px;">
+            <i class="bi bi-journal-text" style="font-size: 3rem;"></i>
+          </div>
+        `;
+      }
+      
+      col.innerHTML = `
+        <article class="card h-100 shadow-sm">
+          ${imageHtml}
+          <div class="card-body d-flex flex-column">
+            <div class="mb-2">
+              <span class="badge ${categoryColor}">${category}</span>
+              ${post.region ? `<span class="badge bg-outline-secondary ms-1">${post.region}</span>` : ''}
+              ${post.country ? `<span class="badge bg-outline-secondary ms-1">${post.country}</span>` : ''}
+            </div>
+            <h5 class="card-title">
+              <a href="#" onclick="openPostModal(${post.id})" class="text-decoration-none text-dark">
+                ${post.title}
+              </a>
+            </h5>
+            <p class="card-text text-muted flex-grow-1">${excerpt}</p>
+            <div class="card-meta d-flex justify-content-between align-items-center text-muted small mb-3">
+              <span><i class="bi bi-person me-1"></i>${post.author || 'LocustHub Team'}</span>
+              <span><i class="bi bi-calendar me-1"></i>${formattedDate}</span>
+            </div>
+            <a href="#" onclick="openPostModal(${post.id})" class="btn btn-primary btn-sm align-self-start">
+              Read More <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </article>
+      `;
+      
+      return col;
+    }
+
+    // Display error message
+    function displayErrorMessage() {
+      const container = document.getElementById('blogPostsContainer');
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger text-center" role="alert">
+            <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
+            <h4>Unable to Load Blog Posts</h4>
+            <p>We're having trouble loading the blog posts right now. Please try again later.</p>
+            <button class="btn btn-primary" onclick="loadBlogPosts()">
+              <i class="bi bi-arrow-clockwise me-2"></i>Try Again
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Display no posts message
+    function displayNoPostsMessage() {
+      const container = document.getElementById('blogPostsContainer');
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="text-center py-5">
+            <i class="bi bi-journal-x text-muted" style="font-size: 5rem;"></i>
+            <h3 class="mt-3 text-muted">No Blog Posts Found</h3>
+            <p class="text-muted">There are no blog posts available at the moment. Check back later for updates!</p>
+            <button class="btn btn-primary" onclick="clearFilters()">
+              <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Setup pagination
+    function setupPagination() {
+      const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+      const paginationContainer = document.getElementById('pagination');
+      
+      if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+      }
+      
+      let paginationHTML = '';
+      
+      // Previous button
+      if (currentPage > 1) {
+        paginationHTML += `
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+        `;
+      }
+      
+      // Page numbers
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+          paginationHTML += `
+            <li class="page-item active">
+              <span class="page-link">${i}</span>
+            </li>
+          `;
+        } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          paginationHTML += `
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+          `;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+          paginationHTML += `
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+          `;
+        }
+      }
+      
+      // Next button
+      if (currentPage < totalPages) {
+        paginationHTML += `
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+        `;
+      }
+      
+      paginationContainer.innerHTML = paginationHTML;
+    }
+
+    // Change page
+    function changePage(page) {
+      currentPage = page;
+      displayPosts();
+      setupPagination();
+      
+      // Scroll to top of blog section
+      document.getElementById('blog').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Search posts
+    function searchPosts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+      
+      if (searchTerm === '') {
+        filteredPosts = [...allPosts];
+      } else {
+        filteredPosts = allPosts.filter(post => 
+          post.title.toLowerCase().includes(searchTerm) ||
+          (post.content && post.content.toLowerCase().includes(searchTerm)) ||
+          (post.tags && post.tags.toLowerCase().includes(searchTerm)) ||
+          (post.author && post.author.toLowerCase().includes(searchTerm)) ||
+          (post.region && post.region.toLowerCase().includes(searchTerm)) ||
+          (post.country && post.country.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      currentPage = 1;
+      displayPosts();
+      setupPagination();
+    }
+
+    // Filter by category
+    function filterByCategory() {
+      const selectedCategory = document.getElementById('categoryFilter').value;
+      
+      if (selectedCategory === 'all') {
+        filteredPosts = [...allPosts];
+      } else {
+        filteredPosts = allPosts.filter(post => {
+          if (post.tags) {
+            return post.tags.toLowerCase().includes(selectedCategory.toLowerCase());
+          }
+          return false;
+        });
+      }
+      
+      currentPage = 1;
+      displayPosts();
+      setupPagination();
+    }
+
+    // Clear all filters
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('categoryFilter').value = 'all';
+      filteredPosts = [...allPosts];
+      currentPage = 1;
+      displayPosts();
+      setupPagination();
+    }
+
+    // Open post modal
+    function openPostModal(postId) {
+      const post = allPosts.find(p => p.id === postId);
+      
+      if (!post) {
+        console.error('Post not found');
+        return;
+      }
+      
+      // Update modal content
+      document.getElementById('blogPostModalLabel').textContent = post.title;
+      
+      const modalBody = document.getElementById('blogPostModalBody');
+      
+      // Determine category
+      let category = 'General';
+      if (post.tags) {
+        const tags = post.tags.toLowerCase();
+        if (tags.includes('research')) category = 'Research';
+        else if (tags.includes('technology')) category = 'Technology';
+        else if (tags.includes('agriculture')) category = 'Agriculture';
+        else if (tags.includes('prediction')) category = 'Prediction';
+        else if (tags.includes('news')) category = 'News';
+      }
+      
+      modalBody.innerHTML = `
+        <div class="mb-4">
+          <span class="badge bg-primary me-2">${category}</span>
+          ${post.region ? `<span class="badge bg-info me-2">${post.region}</span>` : ''}
+          ${post.country ? `<span class="badge bg-secondary me-2">${post.country}</span>` : ''}
+          <br><br>
+          <small class="text-muted">
+            <i class="bi bi-person me-1"></i>${post.author || 'LocustHub Team'} • 
+            <i class="bi bi-calendar me-1"></i>${new Date(post.date).toLocaleDateString()}
+          </small>
+        </div>
+        ${post.image_url ? `<img src="${post.image_url}" class="img-fluid mb-4 rounded" alt="${post.title}">` : ''}
+        <div class="post-content" style="line-height: 1.8;">
+          ${post.content ? post.content.replace(/\n/g, '<br>') : 'Content not available.'}
+        </div>
+      `;
+      
+      const modalMeta = document.getElementById('modalPostMeta');
+      modalMeta.innerHTML = `
+        Published on ${new Date(post.date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}
+      `;
+      
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('blogPostModal'));
+      modal.show();
+    }
+
+    // Add event listener for search input (search on Enter key)
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            searchPosts();
+          }
+        });
+      }
+    });
+</script>

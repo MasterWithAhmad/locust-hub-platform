@@ -28,6 +28,9 @@
   <link href="assets/css/main.css" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   
   <style>
     /* Custom styles from dashboard.html sidebar */
@@ -93,6 +96,76 @@
       justify-content: center;
       margin: 0 auto 0.5rem auto;
     }
+
+    /* Additional styles for enhanced reports */
+    .stat-card {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-card .card-body {
+      padding: 1.5rem;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .filter-section {
+      background: #f8f9fc;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 2rem;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .date-range-picker {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .bulk-actions {
+      display: none;
+      background: #e3e6f0;
+      padding: 1rem;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+
+    .bulk-actions.show {
+      display: block;
+    }
+
+    .table-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
   </style>
 
   <!-- =======================================================
@@ -131,6 +204,12 @@
                 </a>
               </li>
               <li class="nav-item">
+                <a class="nav-link" href="predict.html">
+                  <i class="bi bi-lightning-charge-fill me-2"></i>
+                  Prediction
+                </a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link active" aria-current="page" href="reports.html">
                   <i class="bi bi-bar-chart me-2"></i>
                   Reports
@@ -154,8 +233,175 @@
 
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-5">
-          <h2>User Prediction History</h2>
-          <p>View your historical prediction records.</p>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h2>Reports & Analytics</h2>
+              <p class="text-muted mb-0">Comprehensive analysis of your prediction history</p>
+            </div>
+            <div class="export-buttons">
+              <button class="btn btn-sm btn-outline-primary" onclick="exportToCSV()">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="exportToPDF()">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Statistics -->
+          <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-primary bg-gradient">
+                      <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div class="ms-3">
+                      <h6 class="text-muted mb-1">Total Predictions</h6>
+                      <h3 class="mb-0" id="totalPredictions">0</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-danger bg-gradient">
+                      <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="ms-3">
+                      <h6 class="text-muted mb-1">Locust Detected</h6>
+                      <h3 class="mb-0" id="locustDetected">0</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success bg-gradient">
+                      <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="ms-3">
+                      <h6 class="text-muted mb-1">No Locust</h6>
+                      <h3 class="mb-0" id="noLocust">0</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card stat-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info bg-gradient">
+                      <i class="bi bi-percent"></i>
+                    </div>
+                    <div class="ms-3">
+                      <h6 class="text-muted mb-1">Detection Rate</h6>
+                      <h3 class="mb-0" id="detectionRate">0%</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Predictions Over Time</h5>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Regional Distribution</h5>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container">
+                    <canvas id="regionChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Filters -->
+          <div class="filter-section">
+            <h5 class="mb-3">Advanced Filters</h5>
+            <div class="row">
+              <div class="col-md-3 mb-2">
+                <label class="form-label">Date Range</label>
+                <div class="date-range-picker">
+                  <input type="date" id="startDate" class="form-control form-control-sm">
+                  <span>to</span>
+                  <input type="date" id="endDate" class="form-control form-control-sm">
+                </div>
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="form-label">Region</label>
+                <select id="regionFilter" class="form-select form-select-sm">
+                  <option value="">All Regions</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="form-label">Country</label>
+                <select id="countryFilter" class="form-select form-select-sm">
+                  <option value="">All Countries</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="form-label">Status</label>
+                <select id="statusFilter" class="form-select form-select-sm">
+                  <option value="">All Status</option>
+                  <option value="1">Locust Present</option>
+                  <option value="0">No Locust</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-3">
+              <button class="btn btn-primary btn-sm" onclick="applyFilters()">
+                <i class="bi bi-funnel"></i> Apply Filters
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+                <i class="bi bi-x-circle"></i> Clear Filters
+              </button>
+            </div>
+          </div>
+
+          <!-- Bulk Actions -->
+          <div class="bulk-actions" id="bulkActions">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span id="selectedCount">0</span> items selected
+              </div>
+              <div>
+                <button class="btn btn-sm btn-danger" onclick="bulkDelete()">
+                  <i class="bi bi-trash"></i> Delete Selected
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="exportSelected()">
+                  <i class="bi bi-download"></i> Export Selected
+                </button>
+              </div>
+            </div>
+          </div>
           
           <!-- Reports Content -->
           <div class="row">
@@ -172,12 +418,8 @@
                                  <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="card-title mb-0">Prediction History</h5>
                                     <div class="d-flex gap-2">
-                                       <div class="input-group input-group-sm" style="width: 250px;">
-                                          <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                          <input type="date" id="dateSearch" class="form-control form-control-sm" placeholder="Search by date">
-                                       </div>
-                                       <button id="clearSearch" class="btn btn-sm btn-outline-secondary">
-                                          <i class="bi bi-x-lg"></i>
+                                       <button class="btn btn-sm btn-outline-primary" onclick="toggleBulkSelect()">
+                                          <i class="bi bi-check-square"></i> Select Multiple
                                        </button>
                                     </div>
                                  </div>
@@ -185,6 +427,9 @@
                                     <table class="table table-hover">
                                        <thead>
                                           <tr>
+                                             <th class="bulk-select-header" style="display: none;">
+                                                <input type="checkbox" class="table-checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                             </th>
                                              <th>Date</th>
                                              <th>Region</th>
                                              <th>Country</th>
@@ -336,8 +581,18 @@
         // Store all predictions for filtering/pagination
         allPredictions = predictions;
         currentPage = 1; // Reset to first page
-        filterAndDisplayPredictions(document.getElementById('dateSearch')?.value || ''); // Initial display
-
+        
+        // Update statistics
+        updateStatistics(predictions);
+        
+        // Update charts
+        updateCharts(predictions);
+        
+        // Populate filter dropdowns
+        populateFilterDropdowns(predictions);
+        
+        // Apply initial filters
+        applyFilters();
 
         // Add event listeners to delete buttons
         document.querySelectorAll('.delete-prediction').forEach(button => {
@@ -621,22 +876,16 @@
     let currentPage = 1;
     const rowsPerPage = 5; // Show 5 rows per page
     let allPredictions = [];
+    let filteredPredictions = [];
+    let selectedPredictions = new Set();
+    let bulkSelectMode = false;
+    let timelineChart = null;
+    let regionChart = null;
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
       loadUserPredictions();
-
-      // Add event listeners for search and pagination
-      document.getElementById('dateSearch')?.addEventListener('change', (e) => {
-        currentPage = 1;
-        filterAndDisplayPredictions(e.target.value);
-      });
-
-      document.getElementById('clearSearch')?.addEventListener('click', () => {
-        document.getElementById('dateSearch').value = '';
-        currentPage = 1;
-        filterAndDisplayPredictions('');
-      });
+      initializeCharts();
     });
 
     // Filter predictions by date and paginate
@@ -721,9 +970,10 @@
       const paginatedPredictions = predictions.slice(start, end);
 
       if (paginatedPredictions.length === 0) {
+        const colspan = bulkSelectMode ? 6 : 5;
         tbody.innerHTML = `
           <tr>
-            <td colspan="5" class="text-center py-4">
+            <td colspan="${colspan}" class="text-center py-4">
               <div class="text-muted">
                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                 No predictions found
@@ -749,8 +999,19 @@
         const statusClass = hasLocust ? 'bg-danger' : 'bg-success';
         const statusText = hasLocust ? 'Locust Present' : 'No Locust';
 
+        // Add checkbox cell if in bulk select mode
+        const checkboxCell = bulkSelectMode ? `
+          <td>
+            <input type="checkbox" class="table-checkbox prediction-checkbox" 
+                   data-id="${prediction.id}" 
+                   onchange="handleCheckboxChange(this)"
+                   ${selectedPredictions.has(prediction.id) ? 'checked' : ''}>
+          </td>
+        ` : '';
+
         return `
           <tr>
+            ${checkboxCell}
             <td>${formattedDate}</td>
             <td>${prediction.region_name || 'N/A'}</td>
             <td>${prediction.country_name || 'N/A'}</td>
@@ -774,6 +1035,471 @@
       // Add event listeners to view buttons
       document.querySelectorAll('.view-prediction').forEach(btn => {
         btn.addEventListener('click', handleViewPrediction);
+      });
+    }
+
+    // Update statistics cards
+    function updateStatistics(predictions) {
+      const total = predictions.length;
+      const locustPresent = predictions.filter(p => p.prediction_result === 1 || p.prediction_result === '1').length;
+      const noLocust = total - locustPresent;
+      const detectionRate = total > 0 ? ((locustPresent / total) * 100).toFixed(1) : 0;
+
+      document.getElementById('totalPredictions').textContent = total;
+      document.getElementById('locustDetected').textContent = locustPresent;
+      document.getElementById('noLocust').textContent = noLocust;
+      document.getElementById('detectionRate').textContent = detectionRate + '%';
+    }
+
+    // Initialize charts
+    function initializeCharts() {
+      // Timeline chart
+      const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+      timelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Predictions',
+            data: [],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+
+      // Regional distribution chart
+      const regionCtx = document.getElementById('regionChart').getContext('2d');
+      regionChart = new Chart(regionCtx, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.8)',
+              'rgba(54, 162, 235, 0.8)',
+              'rgba(255, 205, 86, 0.8)',
+              'rgba(75, 192, 192, 0.8)',
+              'rgba(153, 102, 255, 0.8)',
+              'rgba(255, 159, 64, 0.8)'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // Update charts with data
+    function updateCharts(predictions) {
+      // Update timeline chart
+      const monthlyData = {};
+      predictions.forEach(p => {
+        const date = new Date(p.created_at);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+      });
+
+      const sortedMonths = Object.keys(monthlyData).sort();
+      timelineChart.data.labels = sortedMonths.map(m => {
+        const [year, month] = m.split('-');
+        return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      });
+      timelineChart.data.datasets[0].data = sortedMonths.map(m => monthlyData[m]);
+      timelineChart.update();
+
+      // Update regional chart
+      const regionalData = {};
+      predictions.forEach(p => {
+        const region = p.region_name || 'Unknown';
+        regionalData[region] = (regionalData[region] || 0) + 1;
+      });
+
+      regionChart.data.labels = Object.keys(regionalData);
+      regionChart.data.datasets[0].data = Object.values(regionalData);
+      regionChart.update();
+    }
+
+    // Populate filter dropdowns
+    function populateFilterDropdowns(predictions) {
+      const regions = [...new Set(predictions.map(p => p.region_name).filter(r => r))];
+      const countries = [...new Set(predictions.map(p => p.country_name).filter(c => c))];
+
+      const regionFilter = document.getElementById('regionFilter');
+      const countryFilter = document.getElementById('countryFilter');
+
+      regions.forEach(region => {
+        const option = document.createElement('option');
+        option.value = region;
+        option.textContent = region;
+        regionFilter.appendChild(option);
+      });
+
+      countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countryFilter.appendChild(option);
+      });
+    }
+
+    // Apply filters
+    function applyFilters() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const region = document.getElementById('regionFilter').value;
+      const country = document.getElementById('countryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      filteredPredictions = allPredictions.filter(p => {
+        // Date range filter
+        if (startDate || endDate) {
+          const predDate = new Date(p.created_at).toISOString().split('T')[0];
+          if (startDate && predDate < startDate) return false;
+          if (endDate && predDate > endDate) return false;
+        }
+
+        // Region filter
+        if (region && p.region_name !== region) return false;
+
+        // Country filter
+        if (country && p.country_name !== country) return false;
+
+        // Status filter
+        if (status !== '') {
+          const hasLocust = p.prediction_result === 1 || p.prediction_result === '1';
+          if (status === '1' && !hasLocust) return false;
+          if (status === '0' && hasLocust) return false;
+        }
+
+        return true;
+      });
+
+      currentPage = 1;
+      updatePagination(filteredPredictions);
+      displayPredictionsPage(filteredPredictions, currentPage);
+      updateStatistics(filteredPredictions);
+      updateCharts(filteredPredictions);
+    }
+
+    // Clear filters
+    function clearFilters() {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      document.getElementById('regionFilter').value = '';
+      document.getElementById('countryFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      applyFilters();
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+      const data = filteredPredictions.length > 0 ? filteredPredictions : allPredictions;
+      
+      if (data.length === 0) {
+        Swal.fire('No Data', 'No predictions to export', 'info');
+        return;
+      }
+
+      const headers = ['Date', 'Region', 'Country', 'Year', 'Month', 'Temperature', 'Precipitation', 'Soil Moisture', 'Locust Present'];
+      const rows = data.map(p => [
+        new Date(p.created_at).toLocaleDateString(),
+        p.region_name || 'N/A',
+        p.country_name || 'N/A',
+        p.start_year || 'N/A',
+        p.start_month || 'N/A',
+        p.temperature_celsius || 'N/A',
+        p.precipitation_mm || 'N/A',
+        p.soil_moisture_percent || 'N/A',
+        p.prediction_result === 1 || p.prediction_result === '1' ? 'Yes' : 'No'
+      ]);
+
+      let csvContent = headers.join(',') + '\n';
+      rows.forEach(row => {
+        csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `locust_predictions_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Export to PDF
+    function exportToPDF() {
+      const data = filteredPredictions.length > 0 ? filteredPredictions : allPredictions;
+      
+      if (data.length === 0) {
+        Swal.fire('No Data', 'No predictions to export', 'info');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Add title
+      doc.setFontSize(20);
+      doc.text('Locust Prediction Report', 14, 22);
+
+      // Add date
+      doc.setFontSize(12);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 32);
+
+      // Add statistics
+      const total = data.length;
+      const locustPresent = data.filter(p => p.prediction_result === 1 || p.prediction_result === '1').length;
+      const detectionRate = ((locustPresent / total) * 100).toFixed(1);
+
+      doc.text(`Total Predictions: ${total}`, 14, 42);
+      doc.text(`Locust Detected: ${locustPresent}`, 14, 50);
+      doc.text(`Detection Rate: ${detectionRate}%`, 14, 58);
+
+      // Add table
+      const tableData = data.map(p => [
+        new Date(p.created_at).toLocaleDateString(),
+        p.region_name || 'N/A',
+        p.country_name || 'N/A',
+        p.prediction_result === 1 || p.prediction_result === '1' ? 'Yes' : 'No'
+      ]);
+
+      doc.autoTable({
+        head: [['Date', 'Region', 'Country', 'Locust Present']],
+        body: tableData,
+        startY: 70,
+        theme: 'striped'
+      });
+
+      doc.save(`locust_report_${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    // Toggle bulk select mode
+    function toggleBulkSelect() {
+      bulkSelectMode = !bulkSelectMode;
+      const checkboxHeaders = document.querySelectorAll('.bulk-select-header');
+      const bulkActionsDiv = document.getElementById('bulkActions');
+      
+      if (bulkSelectMode) {
+        // Show checkboxes
+        checkboxHeaders.forEach(header => header.style.display = 'table-cell');
+        
+        // Update button text
+        event.target.innerHTML = '<i class="bi bi-x-square"></i> Cancel Selection';
+        event.target.classList.remove('btn-outline-primary');
+        event.target.classList.add('btn-outline-secondary');
+        
+        // Clear any previous selections
+        selectedPredictions.clear();
+        updateBulkActionsUI();
+        
+        // Re-render the table with checkboxes
+        displayPredictionsPage(filteredPredictions.length > 0 ? filteredPredictions : allPredictions, currentPage);
+      } else {
+        // Hide checkboxes
+        checkboxHeaders.forEach(header => header.style.display = 'none');
+        bulkActionsDiv.classList.remove('show');
+        
+        // Update button text
+        event.target.innerHTML = '<i class="bi bi-check-square"></i> Select Multiple';
+        event.target.classList.remove('btn-outline-secondary');
+        event.target.classList.add('btn-outline-primary');
+        
+        // Clear selections
+        selectedPredictions.clear();
+        
+        // Re-render the table without checkboxes
+        displayPredictionsPage(filteredPredictions.length > 0 ? filteredPredictions : allPredictions, currentPage);
+      }
+    }
+
+    // Toggle select all checkboxes
+    function toggleSelectAll() {
+      const selectAllCheckbox = document.getElementById('selectAll');
+      const checkboxes = document.querySelectorAll('.prediction-checkbox');
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+        const predictionId = parseInt(checkbox.dataset.id);
+        
+        if (selectAllCheckbox.checked) {
+          selectedPredictions.add(predictionId);
+        } else {
+          selectedPredictions.delete(predictionId);
+        }
+      });
+      
+      updateBulkActionsUI();
+    }
+
+    // Handle individual checkbox selection
+    function handleCheckboxChange(checkbox) {
+      const predictionId = parseInt(checkbox.dataset.id);
+      
+      if (checkbox.checked) {
+        selectedPredictions.add(predictionId);
+      } else {
+        selectedPredictions.delete(predictionId);
+      }
+      
+      // Update select all checkbox state
+      const allCheckboxes = document.querySelectorAll('.prediction-checkbox');
+      const selectAllCheckbox = document.getElementById('selectAll');
+      selectAllCheckbox.checked = selectedPredictions.size === allCheckboxes.length && allCheckboxes.length > 0;
+      
+      updateBulkActionsUI();
+    }
+
+    // Update bulk actions UI
+    function updateBulkActionsUI() {
+      const bulkActionsDiv = document.getElementById('bulkActions');
+      const selectedCount = document.getElementById('selectedCount');
+      
+      selectedCount.textContent = selectedPredictions.size;
+      
+      if (selectedPredictions.size > 0) {
+        bulkActionsDiv.classList.add('show');
+      } else {
+        bulkActionsDiv.classList.remove('show');
+      }
+    }
+
+    // Bulk delete selected predictions
+    async function bulkDelete() {
+      if (selectedPredictions.size === 0) {
+        Swal.fire('No Selection', 'Please select predictions to delete', 'info');
+        return;
+      }
+      
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: `You are about to delete ${selectedPredictions.size} prediction(s). This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete them!',
+        cancelButtonText: 'Cancel'
+      });
+      
+      if (result.isConfirmed) {
+        // Show loading
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Please wait while we delete the selected predictions',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Delete each selected prediction
+        for (const predictionId of selectedPredictions) {
+          try {
+            await api.predictions.delete(predictionId);
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to delete prediction ${predictionId}:`, error);
+            failCount++;
+          }
+        }
+        
+        // Show result
+        if (failCount === 0) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: `Successfully deleted ${successCount} prediction(s).`,
+            timer: 2000
+          });
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Partial Success',
+            text: `Deleted ${successCount} prediction(s). Failed to delete ${failCount} prediction(s).`
+          });
+        }
+        
+        // Reset bulk select mode and reload data
+        bulkSelectMode = false;
+        selectedPredictions.clear();
+        document.querySelector('[onclick="toggleBulkSelect()"]').click();
+        await loadUserPredictions();
+      }
+    }
+
+    // Export selected predictions
+    function exportSelected() {
+      if (selectedPredictions.size === 0) {
+        Swal.fire('No Selection', 'Please select predictions to export', 'info');
+        return;
+      }
+      
+      // Filter predictions to only selected ones
+      const selectedData = allPredictions.filter(p => selectedPredictions.has(p.id));
+      
+      if (selectedData.length === 0) {
+        Swal.fire('Error', 'Could not find selected predictions', 'error');
+        return;
+      }
+      
+      // Export as CSV
+      const headers = ['Date', 'Region', 'Country', 'Year', 'Month', 'Temperature', 'Precipitation', 'Soil Moisture', 'Locust Present'];
+      const rows = selectedData.map(p => [
+        new Date(p.created_at).toLocaleDateString(),
+        p.region_name || 'N/A',
+        p.country_name || 'N/A',
+        p.start_year || 'N/A',
+        p.start_month || 'N/A',
+        p.temperature_celsius || 'N/A',
+        p.precipitation_mm || 'N/A',
+        p.soil_moisture_percent || 'N/A',
+        p.prediction_result === 1 || p.prediction_result === '1' ? 'Yes' : 'No'
+      ]);
+      
+      let csvContent = headers.join(',') + '\n';
+      rows.forEach(row => {
+        csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+      });
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `selected_predictions_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Complete',
+        text: `Successfully exported ${selectedData.length} prediction(s)`,
+        timer: 2000
       });
     }
     
