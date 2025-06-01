@@ -124,11 +124,71 @@
       color: white;
     }
 
+    /* Enhanced Filter Styles */
     .filter-section {
+      background: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.15rem 1.5rem 0 rgba(58, 59, 69, 0.08);
+      transition: all 0.2s ease;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .filter-section:hover {
+      box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.12);
+    }
+    
+    .filter-section .card-header {
       background: #f8f9fc;
-      border-radius: 10px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
+      border-bottom: 1px solid #e3e6f0;
+      padding: 0.75rem 1.25rem;
+    }
+    
+    .form-control-sm, .form-select-sm {
+      font-size: 0.825rem;
+      padding: 0.35rem 0.75rem;
+      height: calc(1.5em + 0.5rem + 2px);
+      border-radius: 0.25rem;
+      transition: all 0.15s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+    }
+    
+    .form-label {
+      font-weight: 500;
+      color: #5a5c69;
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .input-group-text {
+      background-color: #f8f9fc;
+      border: 1px solid #d1d3e2;
+      font-size: 0.8rem;
+      color: #6e707e;
+    }
+    
+    .btn-sm {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      border-radius: 0.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+    
+    .badge {
+      font-weight: 500;
+      padding: 0.25em 0.6em;
+      font-size: 0.7em;
+    }
+    
+    .bg-primary-soft {
+      background-color: rgba(78, 115, 223, 0.1) !important;
     }
 
     .chart-container {
@@ -343,46 +403,69 @@
             </div>
           </div>
 
-          <!-- Advanced Filters -->
-          <div class="filter-section">
-            <h5 class="mb-3">Advanced Filters</h5>
-            <div class="row">
-              <div class="col-md-3 mb-2">
-                <label class="form-label">Date Range</label>
-                <div class="date-range-picker">
-                  <input type="date" id="startDate" class="form-control form-control-sm">
-                  <span>to</span>
-                  <input type="date" id="endDate" class="form-control form-control-sm">
+          <!-- Enhanced Advanced Filters -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+              <h6 class="card-title mb-0 d-flex align-items-center">
+                <i class="bi bi-funnel me-2 text-primary"></i>
+                <span>Advanced Filters</span>
+                <span class="badge bg-primary-soft text-primary ms-2" id="activeFilterCount">0 active</span>
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <!-- Date Range -->
+                <div class="col-md-6 col-lg-3">
+                  <label class="form-label small text-muted mb-1">Date Range</label>
+                  <div class="input-group input-group-sm">
+                    <input type="date" id="startDate" class="form-control form-control-sm border-end-0" placeholder="Start Date">
+                    <span class="input-group-text bg-light border-0 px-2">to</span>
+                    <input type="date" id="endDate" class="form-control form-control-sm border-start-0" placeholder="End Date">
+                  </div>
+                </div>
+
+                <!-- Region Filter -->
+                <div class="col-md-6 col-lg-2">
+                  <label class="form-label small text-muted mb-1">Region</label>
+                  <div class="input-group input-group-sm">
+                    <select id="regionFilter" class="form-select form-select-sm">
+                      <option value="">All Regions</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Country Filter -->
+                <div class="col-md-6 col-lg-2">
+                  <label class="form-label small text-muted mb-1">Country</label>
+                  <div class="input-group input-group-sm">
+                    <select id="countryFilter" class="form-select form-select-sm">
+                      <option value="">All Countries</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-md-6 col-lg-2">
+                  <label class="form-label small text-muted mb-1">Status</label>
+                  <div class="input-group input-group-sm">
+                    <select id="statusFilter" class="form-select form-select-sm">
+                      <option value="">All Status</option>
+                      <option value="1">Locust Present</option>
+                      <option value="0">No Locust</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-12 col-lg-3 d-flex align-items-end">
+                  <button class="btn btn-primary btn-sm me-2 px-3" onclick="applyFilters()">
+                    <i class="bi bi-funnel me-1"></i> Apply
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm px-3" onclick="clearFilters()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                  </button>
                 </div>
               </div>
-              <div class="col-md-3 mb-2">
-                <label class="form-label">Region</label>
-                <select id="regionFilter" class="form-select form-select-sm">
-                  <option value="">All Regions</option>
-                </select>
-              </div>
-              <div class="col-md-3 mb-2">
-                <label class="form-label">Country</label>
-                <select id="countryFilter" class="form-select form-select-sm">
-                  <option value="">All Countries</option>
-                </select>
-              </div>
-              <div class="col-md-3 mb-2">
-                <label class="form-label">Status</label>
-                <select id="statusFilter" class="form-select form-select-sm">
-                  <option value="">All Status</option>
-                  <option value="1">Locust Present</option>
-                  <option value="0">No Locust</option>
-                </select>
-              </div>
-            </div>
-            <div class="mt-3">
-              <button class="btn btn-primary btn-sm" onclick="applyFilters()">
-                <i class="bi bi-funnel"></i> Apply Filters
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
-                <i class="bi bi-x-circle"></i> Clear Filters
-              </button>
             </div>
           </div>
 
@@ -791,6 +874,20 @@
         }
 
         const prediction = data.data;
+        
+        // Debug: Log the complete prediction object and its structure
+        console.log('Complete prediction object:', prediction);
+        console.log('All prediction properties:');
+        Object.entries(prediction).forEach(([key, value]) => {
+          console.log(`${key}:`, value, `(type: ${typeof value})`);
+        });
+        
+        // Check if we have a status field that might contain the locust presence info
+        const hasStatusField = 'status' in prediction;
+        console.log('Has status field?', hasStatusField);
+        if (hasStatusField) {
+          console.log('Status value:', prediction.status, 'type:', typeof prediction.status);
+        }
 
         // Format the data for display
         const formattedData = [
@@ -825,17 +922,6 @@
             <div class="container-fluid">
               <div class="row g-3">
                 ${cardsHtml}
-              </div>
-              <div class="row mt-4">
-                <div class="col-12">
-                  <div class="alert ${prediction.prediction_result == 1 ? 'alert-danger' : 'alert-success'}">
-                    <h5 class="alert-heading">
-                      <i class="bi ${prediction.prediction_result == 1 ? 'bi-exclamation-triangle' : 'bi-check-circle'}"></i>
-                      ${prediction.prediction_result == 1 ? 'Locust Presence Predicted' : 'No Locust Presence Predicted'}
-                    </h5>
-                    
-                  </div>
-                </div>
               </div>
             </div>
           `,

@@ -5,8 +5,44 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Blog - LocustHub</title>
+  <!-- Primary Meta Tags -->
   <meta name="description" content="Latest insights and updates on locust prediction and agricultural technology from LocustHub experts.">
   <meta name="keywords" content="ML, Machine Learning, Prediction, Locust, Blog, Agriculture, Technology, Research">
+  <meta name="author" content="LocustHub Team">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://locusthub.com/blogs">
+  <meta property="og:title" content="Blog - LocustHub | Latest Insights on Locust Prediction">
+  <meta property="og:description" content="Latest insights and updates on locust prediction and agricultural technology from LocustHub experts.">
+  <meta property="og:image" content="https://locusthub.com/assets/img/og-blog-image.jpg">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://locusthub.com/blogs">
+  <meta name="twitter:title" content="Blog - LocustHub | Latest Insights on Locust Prediction">
+  <meta name="twitter:description" content="Latest insights and updates on locust prediction and agricultural technology from LocustHub experts.">
+  <meta name="twitter:image" content="https://locusthub.com/assets/img/twitter-blog-image.jpg">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "LocustHub Blog",
+    "url": "https://locusthub.com/blogs",
+    "description": "Latest insights and updates on locust prediction and agricultural technology",
+    "publisher": {
+      "@type": "Organization",
+      "name": "LocustHub",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://locusthub.com/assets/img/logo.webp"
+      }
+    },
+    "inLanguage": "en-US"
+  }
+  </script>
 
   <!-- Favicons -->
   <link href="assets/img/logo.webp" rel="icon">
@@ -20,14 +56,409 @@
     rel="stylesheet">
 
   <!-- Vendor CSS Files -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-zoom.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-thumbnail.min.css">
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
   <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
+  <!-- Disqus Comment System -->
+  <script>
+    var disqus_config = function () {
+      this.page.url = window.location.href;
+      this.page.identifier = 'locusthub-blog';
+    };
+  </script>
+  <script id="dsq-count-scr" src="//locusthub.disqus.com/count.js" async></script>
+  
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
+  
+  <style>
+    #header {
+      background-color: #ffffff; /* White background */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    }
+    
+    /* Ensure content doesn't hide behind fixed header */
+    main {
+      padding-top: 90px;
+    }
+    
+    @media (max-width: 991.98px) {
+      main {
+        padding-top: 70px;
+      }
+    }
+    
+    /* Blog Post Modal Styles */
+    .modal-dialog {
+      max-width: 800px;
+      margin: 1.75rem auto;
+    }
+    
+    .modal-content {
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+      border-bottom: none;
+      padding: 0.75rem 1.5rem 0;
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 10;
+    }
+    
+    .modal-body {
+      padding: 2rem 2rem 2rem;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    
+    @media (max-width: 768px) {
+      .modal-body {
+        padding: 0 1.25rem 1.25rem;
+      }
+    }
+    
+    /* Blog Post Styles */
+    .blog-post-title {
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      color: #1a202c;
+    }
+    
+    .blog-post-header {
+      margin-bottom: 1.5rem;
+      padding: 0 1rem;
+    }
+    
+    .blog-post-featured-image {
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 0 auto 1.5rem;
+      max-height: 300px;
+      text-align: center;
+    }
+    
+    .blog-post-featured-image img {
+      max-width: 100%;
+      max-height: 300px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    
+    .blog-post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #4a5568;
+    }
+    
+    .blog-post-content p {
+      margin-bottom: 1.5rem;
+    }
+    
+    .blog-post-content h2,
+    .blog-post-content h3,
+    .blog-post-content h4 {
+      margin-top: 2.5rem;
+      margin-bottom: 1.25rem;
+      color: #1a202c;
+    }
+    
+    .blog-post-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+    
+    .blog-post-content blockquote {
+      border-left: 4px solid #4e73df;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      background-color: #f8f9fa;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+    }
+    
+    .blog-post-content pre {
+      background-color: #2d3748;
+      color: #e2e8f0;
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    
+    .blog-post-content code {
+      background-color: #f0f2f5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #d63384;
+    }
+    
+    .blog-post-content pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    
+    /* Author Bio */
+    .author-bio {
+      background-color: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .author-bio .card-body {
+      padding: 1.5rem;
+    }
+    
+    .author-bio img {
+      border: 3px solid #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Related Posts */
+    .related-posts .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .related-posts .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Share Buttons */
+    .share-buttons .btn {
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .share-buttons .btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* Tags */
+    .post-tags .badge {
+      font-weight: 500;
+      padding: 0.4rem 0.8rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    
+    .post-tags .badge:hover {
+      background-color: #4e73df !important;
+      color: white !important;
+      transform: translateY(-2px);
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .blog-post-title {
+        font-size: 1.75rem;
+      }
+      
+      .blog-post-featured-image {
+        margin: -1rem -1.25rem 1.5rem;
+        max-height: 300px;
+      }
+      
+      .author-bio .d-flex {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .author-bio img {
+        margin: 0 auto 1rem;
+      }
+    }
+    
+    /* Footer Styles */
+    .footer {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      color: #fff;
+      font-size: 14px;
+      padding: 70px 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 50%, #8b5cf6 100%);
+    }
+    
+    .footer .footer-top {
+      padding-bottom: 60px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .footer .footer-info {
+      margin-bottom: 30px;
+    }
+    
+    .footer .footer-info .sitename {
+      font-size: 28px;
+      margin: 0 0 15px 0;
+      padding: 0;
+      line-height: 1;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .footer .social-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      font-size: 16px;
+      color: #fff;
+      margin-right: 10px;
+      transition: 0.3s;
+    }
+    
+    .footer .social-links a:hover {
+      background: #4e73df;
+      transform: translateY(-3px);
+    }
+    
+    .footer h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      position: relative;
+      padding-bottom: 12px;
+      margin-bottom: 25px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    
+    .footer h4::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 50px;
+      height: 3px;
+      background: #4e73df;
+      border-radius: 2px;
+    }
+    
+    .footer .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .footer .footer-links li {
+      padding: 6px 0;
+      margin-bottom: 2px;
+    }
+    
+    .footer a,
+    .footer .footer-links a,
+    .footer .footer-links a:visited {
+      color: #ffffff !important;
+      display: inline-block;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-weight: 500;
+      position: relative;
+      font-size: 15px;
+      padding: 4px 0;
+      text-shadow: 0 0 1px rgba(0,0,0,0.3);
+    }
+    
+    .footer a:hover,
+    .footer .footer-links a:hover {
+      color: #4e73df !important;
+      padding-left: 8px;
+      text-decoration: none;
+    }
+    
+    .footer a::before,
+    .footer .footer-links a::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #4e73df;
+      transition: width 0.3s ease;
+    }
+    
+    .footer a:hover::before,
+    .footer .footer-links a:hover::before {
+      width: 100%;
+    }
+    
+    .footer .footer-links i {
+      color: #4e73df;
+      margin-right: 5px;
+      font-size: 12px;
+    }
+    
+    .footer .copyright {
+      padding: 20px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+    
+    .footer .credits {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+      padding-bottom: 20px;
+    }
+    
+    .footer .credits a {
+      color: #4e73df;
+      text-decoration: none;
+    }
+    
+    .footer .credits a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <link href="assets/css/blog-styles.css" rel="stylesheet">
   <style>
     /* Blog-specific styles that complement the main design */
     .blog-hero {
@@ -57,73 +488,55 @@
       border-radius: 15px;
       overflow: hidden;
       box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       height: 100%;
       display: flex;
       flex-direction: column;
+      margin-bottom: 1.5rem;
     }
-
-    .blog-post-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    .blog-post-image {
-      height: 250px;
-      background: linear-gradient(45deg, #4e73df, #1cc88a);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 3rem;
-      position: relative;
+    
+    .blog-post-card .card-img-container {
+      height: 120px;
       overflow: hidden;
     }
-
-    .blog-post-image::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, 
-        rgba(78, 115, 223, 0.8) 0%, 
-        rgba(28, 200, 138, 0.8) 100%);
-      z-index: 1;
+    
+    .blog-post-card img.card-img-top {
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
-
-    .blog-post-image i {
-      position: relative;
-      z-index: 2;
+    
+    .blog-post-card:hover img.card-img-top {
+      transform: scale(1.05);
     }
-
-    .blog-post-content {
-      padding: 2rem;
-      flex-grow: 1;
+    
+    .blog-post-card .card-body {
+      padding: 0.75rem;
+      flex: 1;
       display: flex;
       flex-direction: column;
     }
-
+    
     .blog-post-category {
       display: inline-block;
       background: #4e73df;
       color: white;
-      padding: 0.3rem 1rem;
+      padding: 0.2rem 0.8rem;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .blog-post-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 1rem;
-      line-height: 1.4;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      line-height: 1.2;
     }
 
     .blog-post-title a {
@@ -138,20 +551,26 @@
 
     .blog-post-excerpt {
       color: #6c757d;
-      font-size: 1rem;
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
       flex-grow: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-clamp: 2;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .blog-post-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.9rem;
+      font-size: 0.7rem;
       color: #6c757d;
-      margin-bottom: 1.5rem;
-      padding-top: 1rem;
+      margin-bottom: 0;
+      padding-top: 0.5rem;
       border-top: 1px solid #e9ecef;
     }
 
@@ -179,7 +598,7 @@
       background: linear-gradient(45deg, #4e73df, #1cc88a);
       color: white;
       border: none;
-      padding: 0.75rem 2rem;
+      padding: 0.25rem 0.75rem;
       border-radius: 25px;
       font-weight: 600;
       text-transform: uppercase;
@@ -355,28 +774,30 @@
 <body class="index-page">
 
   <header id="header" class="header d-flex align-items-center fixed-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+    <div class="container position-relative d-flex align-items-center justify-content-between">
 
-      <a href="index.html" class="logo d-flex align-items-center">
-        <img src="assets/img/logo.webp" alt="LocustHub">
-        <h1 class="sitename">LocustHub</h1>
+      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <img src="assets/img/logo.webp" alt="ML Project Logo" style="max-height: 40px; margin-right: 10px;">
+        <h1 class="sitename">LocustHub</h1><span>.</span>
       </a>
 
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="services.html">Services</a></li>
-          <li><a href="portfolio.html">Portfolio</a></li>
-          <li><a href="team.html">Team</a></li>
-          <li><a href="blog.html" class="active">Blog</a></li>
-          <li><a href="contact.html">Contact</a></li>
-          <li><a href="login.html" class="btn-getstarted">Login</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#portfolio">Visualizations</a></li>
+          <li><a href="blogs.html" class="active">Blogs</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
-    </div>
+      <div class="d-flex align-items-center gap-3">
+        <a class="btn btn-sm btn-outline-primary" href="login.html"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+        <a class="btn btn-sm btn-outline-primary" href="signup.html"><i class="bi bi-person-plus"></i> Sign Up</a>
+        <a class="btn-getstarted" href="dashboard.html">Get Started</a>
+      </div>
   </header>
 
   <main class="main">
@@ -393,92 +814,71 @@
           </div>
         </div>
       </div>
-      <nav class="breadcrumbs">
-        <div class="container">
-          <ol>
-            <li><a href="index.html">Home</a></li>
-            <li class="current">Blog</li>
-          </ol>
-        </div>
-      </nav>
+
     </div><!-- End Page Title -->
 
     <!-- Blog Section -->
     <section id="blog" class="blog section">
       <div class="container">
-
-        <!-- Search and Filter Section -->
-        <div class="row mb-5">
-          <div class="col-lg-8 mx-auto">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <div class="row align-items-center">
-                  <div class="col-md-8 mb-3 mb-md-0">
-                    <div class="input-group">
-                      <input type="text" class="form-control" id="searchInput" placeholder="Search blog posts...">
-                      <button class="btn btn-primary" type="button" onclick="searchPosts()">
-                        <i class="bi bi-search"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="col-md-4 text-md-end">
-                    <select class="form-select" id="categoryFilter" onchange="filterByCategory()">
-                      <option value="all">All Categories</option>
-                      <option value="research">Research</option>
-                      <option value="technology">Technology</option>
-                      <option value="agriculture">Agriculture</option>
-                      <option value="prediction">Prediction</option>
-                      <option value="news">News</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Blog posts will be loaded here -->
+        <div id="loadingSpinner" class="text-center my-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
           </div>
+          <p class="mt-2">Loading blog posts...</p>
         </div>
-
-        <!-- Blog Posts Grid -->
-        <div class="row gy-4" id="blogPostsContainer">
-          <!-- Loading Spinner -->
-          <div class="col-12" id="loadingSpinner">
-            <div class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-3 text-muted">Loading blog posts...</p>
-            </div>
-          </div>
+        
+        <!-- Blog Posts Container -->
+        <div id="blogPostsContainer" class="row g-4">
+          <!-- Blog posts will be dynamically inserted here -->
         </div>
-
+        
         <!-- Pagination -->
-        <div class="row mt-5">
-          <div class="col-12">
-            <nav aria-label="Blog pagination">
-              <ul class="pagination justify-content-center" id="pagination">
-                <!-- Pagination will be populated by JavaScript -->
-              </ul>
-            </nav>
-          </div>
+        <nav aria-label="Blog pagination" class="mt-5">
+          <ul id="pagination" class="pagination justify-content-center">
+            <!-- Pagination will be dynamically inserted here -->
+          </ul>
+        </nav>
+        
+        <!-- No Posts Message (hidden by default) -->
+        <div id="noPostsMessage" class="text-center py-5 d-none">
+          <i class="bi bi-journal-x text-muted" style="font-size: 5rem;"></i>
+          <h3 class="mt-3 text-muted">No Blog Posts Found</h3>
+          <p class="text-muted">There are no blog posts available at the moment.</p>
+          <button class="btn btn-primary" onclick="loadBlogPosts()">
+            <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+          </button>
         </div>
-
       </div>
     </section><!-- /Blog Section -->
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" title="Back to top">
+      <i class="bi bi-arrow-up"></i>
+    </a>
 
   </main>
 
   <!-- Blog Post Modal -->
+  <!-- Blog Post Modal -->
   <div class="modal fade" id="blogPostModal" tabindex="-1" aria-labelledby="blogPostModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="blogPostModalLabel">Blog Post</h5>
+          <h2 class="modal-title h4" id="blogPostModalLabel">Loading...</h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="blogPostModalBody">
-          <!-- Blog post content will be loaded here -->
+        <div class="modal-body p-4" id="blogPostModalBody">
+          <!-- Content will be loaded dynamically by JavaScript -->
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading post content...</p>
+          </div>
         </div>
         <div class="modal-footer">
-          <div class="row w-100">
+          <div class="row w-100 align-items-center">
             <div class="col-md-6">
               <small class="text-muted" id="modalPostMeta"></small>
             </div>
@@ -492,75 +892,110 @@
   </div>
 
   <footer id="footer" class="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="footer-info">
+              <a href="index.html" class="logo d-flex align-items-center">
+                <h1 class="sitename">LocustHub</h1><span>.</span>
+              </a>
+              <p class="mt-3">
+                Km4, Mogadishu, Somalia<br>
+                <strong>Phone:</strong> +252 617 042 931<br>
+                <strong>Email:</strong> ahmad.netdev@gmail.com
+              </p>
+              <div class="social-links mt-3">
+                <a href="https://github.com/MasterWithAhmad" target="_blank" class="github"><i class="bi bi-github"></i></a>
+                <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+                <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
+              </div>
+            </div>
+          </div>
 
-    <div class="container footer-top">
-      <div class="row gy-4">
-        <div class="col-lg-4 col-md-6 footer-about">
-          <a href="index.html" class="d-flex align-items-center">
-            <span class="sitename">LocustHub</span>
-          </a>
-          <div class="footer-contact pt-3">
-            <p>Advanced ML-powered locust prediction platform for agricultural protection and food security.</p>
+          <div class="col-lg-2 col-md-6 footer-links">
+            <h4>Quick Links</h4>
+            <ul>
+              <li><i class="bi bi-chevron-right"></i> <a href="index.html">Home</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#about">About</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="predict.html">Predict</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#contact">Contact</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#team">Our Team</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Locust Prediction</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Data Analysis</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Risk Assessment</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Research Support</a></li>
+              <li><i class="bi bi-chevron-right"></i> <a href="#">Consulting</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <h4>About the Project</h4>
+            <p>This project leverages machine learning to predict locust presence, helping protect agricultural resources. It analyzes environmental data and historical patterns to provide timely and accurate predictions.</p>
+            <div class="mt-3">
+              <a href="#" class="btn btn-outline-light btn-sm">Learn More</a>
+            </div>
           </div>
         </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Useful Links</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="index.html">Home</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="about.html">About us</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="services.html">Services</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="blog.html">Blog</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Our Services</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Locust Prediction</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Risk Assessment</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Data Analytics</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Consulting</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-4 col-md-12">
-          <h4>Follow Us</h4>
-          <p>Stay connected for the latest updates</p>
-          <div class="social-links d-flex">
-            <a href=""><i class="bi bi-twitter-x"></i></a>
-            <a href=""><i class="bi bi-facebook"></i></a>
-            <a href=""><i class="bi bi-instagram"></i></a>
-            <a href=""><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-
       </div>
     </div>
 
-    <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">LocustHub</strong> <span>All Rights Reserved</span></p>
+    <div class="container">
+      <div class="copyright">
+        &copy; Copyright <strong><span>LocustHub</span></strong>. All Rights Reserved
+      </div>
+      <div class="credits">
+        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+      </div>
     </div>
-
   </footer>
-
-  <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Preloader -->
-  <div id="preloader"></div>
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
   <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/lightgallery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/zoom/lg-zoom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/thumbnail/lg-thumbnail.min.js"></script>
   <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
   <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
 
-  <!-- Main JS File -->
+  <!-- Blog Enhancements JS -->
+  <script src="assets/js/blog-enhancements.js"></script>
+  
+  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+  
+  <!-- Initialize Disqus -->
+  <script>
+    // Initialize Disqus when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('disqus_thread')) {
+        // Disqus configuration
+        var disqus_config = function () {
+          this.page.url = window.location.href;
+          this.page.identifier = window.location.pathname;
+        };
+        
+        // Load Disqus script
+        (function() {
+          var d = document, s = d.createElement('script');
+          s.src = 'https://locusthub.disqus.com/embed.js';
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      }
+    });
+  </script>
 
   <script>
     // Global variables
@@ -616,15 +1051,21 @@
       const container = document.getElementById('blogPostsContainer');
       const loadingSpinner = document.getElementById('loadingSpinner');
       
-      // Hide loading spinner
+      // Hide loading spinner if it exists
       if (loadingSpinner) {
         loadingSpinner.style.display = 'none';
       }
       
-      // Clear container
+      // Check if container exists
+      if (!container) {
+        console.error('Blog posts container not found');
+        return;
+      }
+      
+      // Clear container safely
       container.innerHTML = '';
       
-      if (filteredPosts.length === 0) {
+      if (!Array.isArray(filteredPosts) || filteredPosts.length === 0) {
         displayNoPostsMessage();
         return;
       }
@@ -691,11 +1132,13 @@
         categoryColor = 'bg-info';
       }
       
-      // Handle image
+      // Handle post image: use provided URL or a default icon
       let imageHtml = '';
       if (post.image_url) {
         imageHtml = `
-          <img src="${post.image_url}" class="card-img-top" alt="${post.title}" style="height: 200px; object-fit: cover;">
+          <div class="card-img-container">
+            <img src="${post.image_url}" class="card-img-top" alt="${post.title}">
+          </div>
         `;
       } else {
         imageHtml = `
@@ -733,11 +1176,11 @@
       
       return col;
     }
-
+    
     // Display error message
     function displayErrorMessage() {
       const container = document.getElementById('blogPostsContainer');
-      container.innerHTML = `
+      const errorMessage = `
         <div class="col-12">
           <div class="alert alert-danger text-center" role="alert">
             <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
@@ -749,29 +1192,57 @@
           </div>
         </div>
       `;
+      
+      if (container) {
+        container.innerHTML = errorMessage;
+      } else {
+        // If container doesn't exist, create it and append to body
+        const newContainer = document.createElement('div');
+        newContainer.id = 'blogPostsContainer';
+        newContainer.className = 'container mt-4';
+        newContainer.innerHTML = errorMessage;
+        const mainContent = document.querySelector('main') || document.body;
+        mainContent.appendChild(newContainer);
+      }
     }
-
+    
     // Display no posts message
     function displayNoPostsMessage() {
       const container = document.getElementById('blogPostsContainer');
-      container.innerHTML = `
+      const noPostsMessage = `
         <div class="col-12">
           <div class="text-center py-5">
             <i class="bi bi-journal-x text-muted" style="font-size: 5rem;"></i>
             <h3 class="mt-3 text-muted">No Blog Posts Found</h3>
-            <p class="text-muted">There are no blog posts available at the moment. Check back later for updates!</p>
+            <p class="text-muted">There are no blog posts available matching your criteria.</p>
             <button class="btn btn-primary" onclick="clearFilters()">
-              <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+              <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
             </button>
           </div>
         </div>
       `;
+      
+      if (container) {
+        container.innerHTML = noPostsMessage;
+      } else {
+        console.warn('Blog posts container not found for displaying no posts message');
+      }
     }
-
+    
     // Setup pagination
     function setupPagination() {
+      if (!Array.isArray(filteredPosts)) {
+        console.warn('filteredPosts is not an array');
+        return;
+      }
+      
       const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
       const paginationContainer = document.getElementById('pagination');
+      
+      if (!paginationContainer) {
+        console.warn('Pagination container not found');
+        return;
+      }
       
       if (totalPages <= 1) {
         paginationContainer.innerHTML = '';
@@ -784,7 +1255,7 @@
       if (currentPage > 1) {
         paginationHTML += `
           <li class="page-item">
-            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
               <i class="bi bi-chevron-left"></i>
             </a>
           </li>

@@ -867,13 +867,40 @@
 
           // Last Prediction Card
           if (latestPrediction) {
-            const predictionValue = latestPrediction.locust_present ? 'Yes' : 'No';
-            document.querySelectorAll('.stat-card.primary')[1].querySelector('.card-text').textContent = predictionValue;
-
+            // Check multiple possible fields for prediction result
+            let predictionValue = 'No';
+            
+            // Check different possible field names and data types
+            if (latestPrediction.locust_present !== undefined) {
+              predictionValue = latestPrediction.locust_present ? 'Yes' : 'No';
+            } else if (latestPrediction.prediction_result !== undefined) {
+              // Handle different possible formats of prediction_result
+              const result = latestPrediction.prediction_result;
+              if (typeof result === 'boolean') {
+                predictionValue = result ? 'Yes' : 'No';
+              } else if (typeof result === 'number') {
+                predictionValue = result === 1 ? 'Yes' : 'No';
+              } else if (typeof result === 'string') {
+                predictionValue = result.toLowerCase().includes('yes') || 
+                                result === '1' || 
+                                result.toLowerCase().includes('present') ? 'Yes' : 'No';
+              }
+            } else if (latestPrediction.status !== undefined) {
+              // Check status field as fallback
+              const status = latestPrediction.status.toString().toLowerCase();
+              if (status.includes('present') || status === '1' || status === 'yes') {
+                predictionValue = 'Yes';
+              }
+            }
+            
+            // Update the UI with the prediction value
+            const lastPredictionCard = document.querySelectorAll('.stat-card.primary')[1];
+            lastPredictionCard.querySelector('.card-text').textContent = predictionValue;
+            
             // Update trend indicator
-            const trendIcon = document.querySelectorAll('.stat-card.primary')[1].querySelector('i');
+            const trendIcon = lastPredictionCard.querySelector('i');
             trendIcon.className = `bi ${weekOverWeekChange >= 0 ? 'bi-arrow-up-circle-fill text-success' : 'bi-arrow-down-circle-fill text-danger'} me-1`;
-            document.querySelectorAll('.stat-card.primary')[1].querySelector('.small span').textContent =
+            lastPredictionCard.querySelector('.small span').textContent =
               `${Math.abs(weekOverWeekChange)}% from last week`;
           }
 
