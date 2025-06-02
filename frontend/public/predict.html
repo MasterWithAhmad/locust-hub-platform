@@ -1053,6 +1053,87 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
+    // Global variables to store valid options
+    let validCountries = [];
+    let validRegions = [];
+
+    // Function to load valid countries and regions
+    async function loadValidOptions() {
+      try {
+        const response = await fetch('/api/options');
+        if (!response.ok) {
+          throw new Error('Failed to load options');
+        }
+        const data = await response.json();
+        validCountries = data.countries.map(c => c.trim().toUpperCase());
+        validRegions = data.regions.map(r => r.trim().toUpperCase());
+        
+        // Populate datalists
+        const countryList = document.getElementById('countryList');
+        const regionList = document.getElementById('regionList');
+        
+        validCountries.forEach(country => {
+          const option = document.createElement('option');
+          option.value = country;
+          countryList.appendChild(option);
+        });
+        
+        validRegions.forEach(region => {
+          const option = document.createElement('option');
+          option.value = region;
+          regionList.appendChild(option);
+        });
+        
+      } catch (error) {
+        console.error('Error loading options:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load country and region options. Please refresh the page.'
+        });
+      }
+    }
+    
+    // Function to validate input against allowed values
+    function validateInput(input, validValues, fieldName) {
+      const value = input.value.trim().toUpperCase();
+      if (value && !validValues.includes(value)) {
+        input.setCustomValidity(`Please select a valid ${fieldName} from the list`);
+      } else {
+        input.setCustomValidity('');
+      }
+      input.reportValidity();
+    }
+    
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      loadValidOptions();
+      
+      // Add event listeners for validation
+      const countryInput = document.getElementById('COUNTRYNAME');
+      const regionInput = document.getElementById('REGION');
+      
+      countryInput.addEventListener('change', () => {
+        validateInput(countryInput, validCountries, 'country');
+      });
+      
+      regionInput.addEventListener('change', () => {
+        validateInput(regionInput, validRegions, 'region');
+      });
+      
+      // Also validate on form submission
+      document.getElementById('predictionForm').addEventListener('submit', function(event) {
+        validateInput(countryInput, validCountries, 'country');
+        validateInput(regionInput, validRegions, 'region');
+        
+        if (!this.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, false);
+    });
+  </script>
+  <script>
     // Check if SweetAlert2 is loaded
     if (typeof Swal === 'undefined') {
       console.error('SweetAlert2 failed to load. Please check your internet connection.');
