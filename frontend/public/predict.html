@@ -1065,17 +1065,42 @@
           throw new Error('Failed to load options');
         }
         const data = await response.json();
-        validCountries = data.countries.map(c => c.trim().toUpperCase());
+        // Replace Somaliland with Somalia in the countries list
+        validCountries = data.countries.map(c => {
+          const trimmed = c.trim().toUpperCase();
+          return trimmed === 'SOMALILAND' ? 'SOMALIA' : trimmed;
+        });
         validRegions = data.regions.map(r => r.trim().toUpperCase());
         
         // Populate datalists
         const countryList = document.getElementById('countryList');
         const regionList = document.getElementById('regionList');
         
+        // Create options for country list
         validCountries.forEach(country => {
           const option = document.createElement('option');
           option.value = country;
+          option.textContent = country === 'SOMALIA' ? 'Somalia' : country;
           countryList.appendChild(option);
+        });
+        
+        // Get the country input element
+        const countryInput = document.getElementById('COUNTRYNAME');
+        
+        // Add event listener to handle input changes
+        countryInput.addEventListener('input', function() {
+          const value = this.value.trim().toUpperCase();
+          if (value === 'SOMALILAND') {
+            this.value = 'Somalia';
+          }
+        });
+        
+        // Add event listener to handle selection from dropdown
+        countryInput.addEventListener('change', function() {
+          const value = this.value.trim().toUpperCase();
+          if (value === 'SOMALILAND') {
+            this.value = 'Somalia';
+          }
         });
         
         validRegions.forEach(region => {
@@ -1097,6 +1122,15 @@
     // Function to validate input against allowed values
     function validateInput(input, validValues, fieldName) {
       const value = input.value.trim().toUpperCase();
+      
+      // Special case for Somalia/Somaliland
+      if (fieldName === 'country' && value === 'SOMALIA') {
+        input.value = 'SOMALILAND';
+        input.setCustomValidity('');
+        input.reportValidity();
+        return;
+      }
+      
       if (value && !validValues.includes(value)) {
         input.setCustomValidity(`Please select a valid ${fieldName} from the list`);
       } else {
