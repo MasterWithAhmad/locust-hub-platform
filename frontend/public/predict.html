@@ -514,7 +514,7 @@
                           </span>
                           <div class="form-floating flex-grow-1">
                             <input type="text" class="form-control" id="REGION" list="regionList"
-                              placeholder="Select Region" required>
+                              placeholder="Select Region" pattern="[A-Za-z\s]+" title="Please enter only letters and spaces" onkeypress="return /[A-Za-z\s]/.test(event.key)" required>
                             <label for="REGION" class="text-muted">Region</label>
                           </div>
                           <datalist id="regionList">
@@ -528,7 +528,7 @@
                           </span>
                           <div class="form-floating flex-grow-1">
                             <input type="text" class="form-control" id="COUNTRYNAME" list="countryList"
-                              placeholder="Select Country" required>
+                              placeholder="Select Country" pattern="[A-Za-z\s]+" title="Please enter only letters and spaces" onkeypress="return /[A-Za-z\s]/.test(event.key)" required>
                             <label for="COUNTRYNAME" class="text-muted">Country</label>
                           </div>
                           <datalist id="countryList">
