@@ -62,21 +62,28 @@ A comprehensive Locust Prediction System developed as a final year thesis projec
 
 ```
 .
-├── backend/           # Backend API and services
-│   ├── app.py         # Main application entry point
-│   ├── routes/        # API route definitions
-│   ├── models/        # Database models
-│   └── README.md      # Backend documentation
+├── backend/                 # Backend API and services
+│   ├── .env               # Environment configuration
+│   ├── app.py             # Main Flask application
+│   ├── check_user.py      # User verification utility
+│   ├── requirements.txt   # Python dependencies
+│   ├── schema.sql         # Database schema definition
+│   ├── routes/            # API route definitions
+│   │   └── auth.js       # Authentication routes
+│   └── README.md          # Backend documentation
 │
-├── frontend/         # Frontend web application
-│   ├── public/        # Static files
-│   ├── app.js         # Express server
-│   └── README.md      # Frontend documentation
+├── frontend/            # Frontend web application
+│   ├── public/            # Static files and HTML pages
+│   │   ├── assets/        # CSS, JS, images
+│   │   ├── forms/         # Form-related files
+│   │   ├── *.html         # Application pages
+│   ├── server.js          # Express server setup
+│   └── README.md          # Frontend documentation
 │
-└── thesis-project/   # Thesis documentation and research
-    ├── data/          # Research datasets
-    ├── models/        # ML model files
-    └── README.md      # Thesis documentation
+└── thesis-project/      # Thesis documentation and research
+    ├── data/             # Research datasets
+    ├── models/           # ML model files
+    └── README.md         # Thesis documentation
 ```
 
 ## 🛠️ Installation
@@ -84,7 +91,7 @@ A comprehensive Locust Prediction System developed as a final year thesis projec
 ### Prerequisites
 - Python 3.8+
 - Node.js 14+
-- SQLite (or your preferred database)
+- MySQL 8.0+
 
 ### Setup
 
@@ -126,9 +133,9 @@ A comprehensive Locust Prediction System developed as a final year thesis projec
 
 ## 📚 Documentation
 
-- [Backend Documentation](./backend/README.md)
-- [Frontend Documentation](./frontend/README.md)
-- [Thesis Documentation](./thesis-project/README.md)
+- [Backend Documentation](/backend/README.md) - API documentation and setup guide
+- [Frontend Documentation](/frontend/README.md) - Frontend development and setup
+- [Thesis Documentation](/thesis-project/README.md) - Research and methodology details
 
 ## 🤝 Contributing
 
@@ -150,7 +157,7 @@ Project Link: [https://github.com/MasterWithAhmad/locust-hub-platform](https://g
 - [Flask](https://flask.palletsprojects.com/) - Python web framework
 - [Express.js](https://expressjs.com/) - Node.js web application framework
 - [Bootstrap 5](https://getbootstrap.com/) - Frontend component library
-- [SQLite](https://www.sqlite.org/) - Database engine
+- [MySQL](https://www.mysql.com/) - Relational database management system
 - [Chart.js](https://www.chartjs.org/) - Data visualization
 - [Font Awesome](https://fontawesome.com/) - Icons and UI components
 

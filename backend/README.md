@@ -1,26 +1,28 @@
-# Backend Service
+# LocustHub Backend Service
 
 ## Overview
-This is the backend service for the News Recommendation System, built with Python and Flask. It provides RESTful APIs for user authentication, news processing, and recommendation generation.
+This is the backend service for the Locust Prediction System, built with Python and Flask. It provides RESTful APIs for user authentication, environmental data processing, and locust swarm prediction.
 
 ## Features
 - User authentication and authorization
-- News article processing
-- Recommendation generation
+- Environmental data processing
+- Machine learning model integration for locust prediction
 - RESTful API endpoints
-- SQLite database integration
+- MySQL database integration
+- Data visualization endpoints
+- Prediction history tracking
 
 ## Prerequisites
 - Python 3.8+
 - pip (Python package manager)
-- SQLite3
+- MySQL 8.0+
 
 ## Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd backend
+   git clone https://github.com/MasterWithAhmad/locust-hub-platform.git
+   cd locust-hub-platform/backend
    ```
 
 2. **Create and activate virtual environment**
@@ -40,11 +42,14 @@ This is the backend service for the News Recommendation System, built with Pytho
 4. **Set up environment variables**
    Create a `.env` file in the root directory with the following variables:
    ```
-   # Database Configuration
+   # MySQL Database Configuration
       DB_HOST=localhost
-      DB_USER=root
-      DB_PASSWORD= ''   (if you have a password, put it there)
-      DB_NAME='database name goes here'
+      DB_PORT=3306
+      DB_USER=your_mysql_username
+      DB_PASSWORD=your_mysql_password
+      DB_NAME=locusthub
+      
+   # Make sure MySQL server is running and the database exists
 
    # JWT Configuration
       JWT_SECRET_KEY='your secret key here'
@@ -62,6 +67,21 @@ python app.py
 ```
 
 The server will start on `http://localhost:5000` by default.
+
+## Project Structure
+
+```
+backend/
+├── .env                     # Environment variables
+├── app.py                   # Main Flask application
+├── check_user.py            # User verification utility
+├── requirements.txt         # Python dependencies
+├── schema.sql              # Database schema definition
+├── insert_test_predictions*.sql  # Test data scripts
+├── routes/
+│   └── auth.js             # Authentication routes and logic
+└── README.md               # This file
+```
 
 ## API Endpoints
 

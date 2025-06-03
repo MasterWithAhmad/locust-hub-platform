@@ -1,15 +1,16 @@
-# Frontend Application
+# LocustHub Frontend Application
 
 ## Overview
-This is the frontend application for the News Recommendation System, built with Node.js, Express, and Bootstrap 5. It serves static HTML pages with a clean and responsive user interface.
+This is the frontend application for the Locust Prediction System, built with Node.js, Express, and Bootstrap 5. It provides an interactive dashboard for monitoring and predicting locust swarms with a clean, responsive user interface.
 
 ## Features
 - Responsive design using Bootstrap 5
-- Server-side rendering with Express
-- Static file serving
-- Clean and intuitive UI
-- User authentication pages
-- Dashboard and analytics views
+- Real-time data visualization with Chart.js
+- Interactive prediction interface
+- User authentication and authorization
+- Dashboard with key metrics and alerts
+- Environmental data visualization
+- Historical prediction tracking
 
 ## Prerequisites
 - Node.js (v14+)
@@ -20,8 +21,8 @@ This is the frontend application for the News Recommendation System, built with 
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd frontend
+   git clone https://github.com/MasterWithAhmad/locust-hub-platform.git
+   cd locust-hub-platform/frontend
    ```
 
 2. **Install dependencies**
@@ -40,14 +41,18 @@ frontend/
 │   ├── assets/             # Images, CSS, JS, and other static assets
 │   ├── forms/              # Form-related HTML files
 │   ├── analytics.html      # Analytics page
+│   ├── blogs.html          # Blog posts and articles
 │   ├── dashboard.html      # Main dashboard
+│   ├── forgot-password.html # Password recovery
 │   ├── index.html          # Home/Landing page
 │   ├── login.html          # Login page
-│   └── ...                # Other HTML pages
-├── app.js                 # Express application setup
-├── server.js              # Server entry point
+│   ├── predict.html        # Prediction interface
+│   ├── reports.html        # Reports and analytics
+│   ├── settings.html       # User settings
+│   └── signup.html         # User registration
+├── server.js              # Server entry point (Express setup)
 ├── package.json           # Project dependencies and scripts
-└── README.md             # This file
+└── README.md              # This file
 ```
 
 ## Available Scripts
