@@ -510,20 +510,6 @@
                       <div class="col-md-6">
                         <div class="input-group mb-3">
                           <span class="input-group-text bg-light">
-                            <i class="bi bi-geo-alt text-primary"></i>
-                          </span>
-                          <div class="form-floating flex-grow-1">
-                            <input type="text" class="form-control" id="REGION" list="regionList"
-                              placeholder="Select Region" pattern="[A-Za-z\s]+" title="Please enter only letters and spaces" onkeypress="return /[A-Za-z\s]/.test(event.key)" required>
-                            <label for="REGION" class="text-muted">Region</label>
-                          </div>
-                          <datalist id="regionList">
-                            </datalist>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="input-group mb-3">
-                          <span class="input-group-text bg-light">
                             <i class="bi bi-globe text-primary"></i>
                           </span>
                           <div class="form-floating flex-grow-1">
@@ -532,6 +518,20 @@
                             <label for="COUNTRYNAME" class="text-muted">Country</label>
                           </div>
                           <datalist id="countryList">
+                            </datalist>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="input-group mb-3">
+                          <span class="input-group-text bg-light">
+                            <i class="bi bi-geo-alt text-primary"></i>
+                          </span>
+                          <div class="form-floating flex-grow-1">
+                            <input type="text" class="form-control" id="REGION" list="regionList"
+                              placeholder="Select Region" pattern="[A-Za-z\s]+" title="Please enter only letters and spaces" onkeypress="return /[A-Za-z\s]/.test(event.key)" required>
+                            <label for="REGION" class="text-muted">Region</label>
+                          </div>
+                          <datalist id="regionList">
                             </datalist>
                         </div>
                       </div>
@@ -1056,6 +1056,36 @@
     // Global variables to store valid options
     let validCountries = [];
     let validRegions = [];
+    // Country-to-regions mapping (expand as needed)
+    const countryRegionMap = {
+      'SOMALIA': [
+        'Awdal', 'Bakool', 'Banaadir', 'Bari', 'Bay', 'Galgaduud', 'Gedo', 'Hiiraan',
+        'Lower Juba', 'Middle Juba', 'Lower Shabelle', 'Middle Shabelle', 'Mudug',
+        'Nugaal', 'Sanaag', 'Sool', 'Togdheer', 'Woqooyi Galbeed'
+      ]
+      // Add more countries and their regions if needed
+    };
+
+    // Updates the region datalist based on selected country
+    function updateRegionListForCountry(country) {
+      const regionList = document.getElementById('regionList');
+      regionList.innerHTML = '';
+      const regions = countryRegionMap[country.trim().toUpperCase()];
+      if (regions) {
+        regions.forEach(region => {
+          const option = document.createElement('option');
+          option.value = region;
+          regionList.appendChild(option);
+        });
+      } else {
+        // Fallback: show all regions from validRegions
+        validRegions.forEach(region => {
+          const option = document.createElement('option');
+          option.value = region;
+          regionList.appendChild(option);
+        });
+      }
+    }
 
     // Function to load valid countries and regions
     async function loadValidOptions() {
@@ -1093,6 +1123,8 @@
           if (value === 'SOMALILAND') {
             this.value = 'Somalia';
           }
+          // Update region datalist suggestions based on selected country
+          updateRegionListForCountry(this.value);
         });
         
         // Add event listener to handle selection from dropdown
@@ -1101,13 +1133,12 @@
           if (value === 'SOMALILAND') {
             this.value = 'Somalia';
           }
+          // Update region datalist suggestions based on selected country
+          updateRegionListForCountry(this.value);
         });
         
-        validRegions.forEach(region => {
-          const option = document.createElement('option');
-          option.value = region;
-          regionList.appendChild(option);
-        });
+        // Initially, show all regions or leave region datalist empty
+        regionList.innerHTML = '';
         
       } catch (error) {
         console.error('Error loading options:', error);
