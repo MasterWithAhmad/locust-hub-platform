@@ -648,6 +648,7 @@
   <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
   <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
 
+  <script src="country_region_map.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/blog_modal.js"></script>
@@ -1056,15 +1057,7 @@
     // Global variables to store valid options
     let validCountries = [];
     let validRegions = [];
-    // Country-to-regions mapping (expand as needed)
-    const countryRegionMap = {
-      'SOMALIA': [
-        'Awdal', 'Bakool', 'Banaadir', 'Bari', 'Bay', 'Galgaduud', 'Gedo', 'Hiiraan',
-        'Lower Juba', 'Middle Juba', 'Lower Shabelle', 'Middle Shabelle', 'Mudug',
-        'Nugaal', 'Sanaag', 'Sool', 'Togdheer', 'Woqooyi Galbeed'
-      ]
-      // Add more countries and their regions if needed
-    };
+    // countryRegionMap is now imported from country_region_map.js
 
     // Updates the region datalist based on selected country
     function updateRegionListForCountry(country) {
@@ -1077,14 +1070,8 @@
           option.value = region;
           regionList.appendChild(option);
         });
-      } else {
-        // Fallback: show all regions from validRegions
-        validRegions.forEach(region => {
-          const option = document.createElement('option');
-          option.value = region;
-          regionList.appendChild(option);
-        });
       }
+      // If no regions, datalist stays empty, but user can still enter any region
     }
 
     // Function to load valid countries and regions
@@ -1119,22 +1106,28 @@
         
         // Add event listener to handle input changes
         countryInput.addEventListener('input', function() {
-          const value = this.value.trim().toUpperCase();
-          if (value === 'SOMALILAND') {
-            this.value = 'Somalia';
+          let value = this.value.trim().toUpperCase();
+          // Normalize Somalia variants
+          if (["SOMALIA", "SOMALILAND", "SOMALIA REPUBLIC", "SOMALI REPUBLIC"].includes(value)) {
+            value = "SOMALIA";
+            this.value = "Somalia";
           }
           // Update region datalist suggestions based on selected country
-          updateRegionListForCountry(this.value);
+          console.log('Country input (normalized):', value, countryRegionMap[value]);
+          updateRegionListForCountry(value);
         });
         
         // Add event listener to handle selection from dropdown
         countryInput.addEventListener('change', function() {
-          const value = this.value.trim().toUpperCase();
-          if (value === 'SOMALILAND') {
-            this.value = 'Somalia';
+          let value = this.value.trim().toUpperCase();
+          // Normalize Somalia variants
+          if (["SOMALIA", "SOMALILAND", "SOMALIA REPUBLIC", "SOMALI REPUBLIC"].includes(value)) {
+            value = "SOMALIA";
+            this.value = "Somalia";
           }
           // Update region datalist suggestions based on selected country
-          updateRegionListForCountry(this.value);
+          console.log('Country change (normalized):', value, countryRegionMap[value]);
+          updateRegionListForCountry(value);
         });
         
         // Initially, show all regions or leave region datalist empty

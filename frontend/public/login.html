@@ -282,7 +282,7 @@
                   </div>
                   <div class="text-center text-muted mb-4">or use your email to login</div>
                   <!-- Login Form -->
-                  <form id="loginForm" onsubmit="return handleLogin(event)">
+                  <form id="loginForm">
                     <div class="mb-4">
                       <label for="email" class="form-label d-flex align-items-center">
                         <i class="bi bi-envelope me-2"></i> Email Address
@@ -422,18 +422,13 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <script>
-    // Check for account deletion message
-    document.addEventListener('DOMContentLoaded', function() {
-      // Get URL parameters once
+    document.addEventListener('DOMContentLoaded', function () {
       const urlParams = new URLSearchParams(window.location.search);
-      
+  
       // Show success message if account was deleted
       if (urlParams.has('accountDeleted')) {
-        // Clear any existing auth data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        
-        // Show success message
         Swal.fire({
           icon: 'success',
           title: 'Account Deleted',
@@ -441,34 +436,35 @@
           confirmButtonText: 'OK',
           allowOutsideClick: false,
           willClose: () => {
-            // Clean up the URL
             window.history.replaceState({}, document.title, window.location.pathname);
           }
         });
       }
-      
+  
       // Check if user is already logged in
       const token = localStorage.getItem('token');
       if (token) {
-        // If user is logged in but shouldn't be (e.g., after account deletion)
-        // Force logout and redirect
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login.html';
         return;
       }
-      
-      // Password visibility toggle
+  
+      // Attach form submit handler correctly
+      const loginForm = document.getElementById('loginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+      }
+  
+      // Toggle password visibility
       const togglePassword = document.querySelector('#togglePassword');
       const password = document.querySelector('#password');
-      
+  
       if (togglePassword && password) {
-        togglePassword.addEventListener('click', function() {
-          // Toggle the type attribute
+        togglePassword.addEventListener('click', function () {
           const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
           password.setAttribute('type', type);
-          
-          // Toggle the eye icon
+  
           const icon = this.querySelector('i');
           if (icon) {
             icon.classList.toggle('bi-eye');
@@ -476,61 +472,51 @@
           }
         });
       }
-      
-      // Check if user just registered
+  
+      // Show success message after registration
       if (urlParams.get('registered') === 'true') {
         const successDiv = document.getElementById('successMessage');
         if (successDiv) {
           successDiv.textContent = 'Registration successful! Please log in.';
-        successDiv.style.display = 'block';
+          successDiv.style.display = 'block';
         }
-        // Remove the query parameter from the URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     });
-
+  
     async function handleLogin(event) {
       event.preventDefault();
-      
+  
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const rememberMe = document.getElementById('rememberMe').checked;
       const errorDiv = document.getElementById('errorMessage');
       const submitBtn = event.target.querySelector('button[type="submit"]');
       const originalBtnText = submitBtn.innerHTML;
-      
+  
       try {
-        // Update button state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Logging in...';
         errorDiv.style.display = 'none';
-        
+  
         console.log('Attempting login with:', { email });
-        
-        // Use the API function from api.js
+  
         const data = await window.api.auth.login(email, password, rememberMe);
-        
-        // If we get here, login was successful
+  
         console.log('Login successful, token stored');
-        
-        // Redirect to dashboard or intended page
         window.location.href = 'dashboard.html';
-        
+  
       } catch (error) {
         console.error('Login error:', error);
         errorDiv.textContent = error.message || 'An error occurred during login. Please try again.';
         errorDiv.style.display = 'block';
-        
-        // Reset button state
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalBtnText;
-        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
       }
-      return false;
+      
     }
   </script>
-
+  
 </body>
 
 </html> 
