@@ -1018,6 +1018,14 @@
           });
         });
 
+        // Always clear the form and region list after all dialogs
+        setTimeout(() => {
+          const form = document.getElementById('predictionForm');
+          if (form) form.reset();
+          const regionList = document.getElementById('regionList');
+          if (regionList) regionList.innerHTML = '';
+        }, 500);
+
       } catch (error) {
         console.error('Prediction error:', error);
         // Hide loading state
