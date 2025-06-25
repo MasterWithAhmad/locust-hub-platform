@@ -580,10 +580,10 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                       <div class="card-title">MODEL ACCURACY</div>
-                      <div class="card-text">99.37%</div>
+                      <div class="card-text">...</div>
                       <div class="text-muted small mt-1">
-                        <i class="bi bi-check-circle-fill text-success me-1"></i>
-                        <span>Excellent performance</span>
+                        <i class="bi"></i>
+                        <span></span>
                       </div>
                     </div>
                   </div>
@@ -916,29 +916,27 @@
               formatRelativeTime(updateDate);
           }
 
-          // Model Accuracy Card (this would typically come from your model metrics)
-          // For now, we'll calculate accuracy based on predictions with known outcomes
-          if (predictions.length > 0) {
-            // This is a placeholder - you would typically get this from your model metrics
-            // or calculate based on predictions with known outcomes
-            const accuracy = 99.37; // Replace with actual accuracy calculation
-            document.querySelector('.stat-card.info .card-text').textContent = `${accuracy}%`;
+           // Model Accuracy Card: Show probability of the latest prediction
+           if (predictions.length > 0 && latestPrediction && latestPrediction.probability !== undefined) {
+             const probability = latestPrediction.probability;
+             const accuracyPercent = (probability * 100).toFixed(2);
+             document.querySelector('.stat-card.info .card-text').textContent = `${accuracyPercent}%`;
 
-            // Update status text based on accuracy
-            let statusText = 'Excellent performance';
-            let statusClass = 'text-success';
-            if (accuracy < 80) {
-              statusText = 'Needs improvement';
-              statusClass = 'text-warning';
-            } else if (accuracy < 90) {
-              statusText = 'Good performance';
-              statusClass = 'text-info';
-            }
+             // Update status text based on probability
+             let statusText = 'Excellent performance';
+             let statusClass = 'text-success';
+             if (probability < 0.8) {
+               statusText = 'Needs improvement';
+               statusClass = 'text-warning';
+             } else if (probability < 0.9) {
+               statusText = 'Good performance';
+               statusClass = 'text-info';
+             }
 
-            const statusIcon = document.querySelector('.stat-card.info i');
-            statusIcon.className = `bi ${statusClass.includes('success') ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'} ${statusClass} me-1`;
-            document.querySelector('.stat-card.info .small span').textContent = statusText;
-          }
+             const statusIcon = document.querySelector('.stat-card.info i');
+             statusIcon.className = `bi ${statusClass.includes('success') ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'} ${statusClass} me-1`;
+             document.querySelector('.stat-card.info .small span').textContent = statusText;
+           }
 
         } catch (error) {
           console.error('Error fetching prediction stats:', error);

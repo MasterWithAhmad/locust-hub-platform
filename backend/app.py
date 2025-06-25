@@ -404,8 +404,8 @@ def save_prediction():
         sql = """
             INSERT INTO predictions 
             (user_id, region, country_name, start_year, start_month, 
-            soil_moisture, tmax, ppt, locust_present)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            soil_moisture, tmax, ppt, locust_present, probability)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         values = (
             user_id,
@@ -416,7 +416,8 @@ def save_prediction():
             data['soil_moisture_percent'],
             data['temperature_celsius'],
             data['precipitation_mm'],
-            data['prediction_result']
+            data['prediction_result'],
+            data.get('probability', None)
         )
 
         print('Executing SQL with values:', values)
@@ -628,6 +629,7 @@ def get_predictions():
                     tmax as temperature_celsius, 
                     ppt as precipitation_mm,
                     locust_present as prediction_result,
+                    probability,
                     prediction_date as created_at
                 FROM predictions 
                 WHERE user_id = %s

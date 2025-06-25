@@ -923,7 +923,8 @@
                 precipitation_mm: parseFloat(formData.PPT),
                 temperature_celsius: parseFloat(formData.TMAX),
                 soil_moisture_percent: parseFloat(formData.SOILMOISTURE),
-                prediction_result: result.probability > 0.5 ? 1 : 0
+                prediction_result: result.probability > 0.5 ? 1 : 0,
+                probability: result.probability
               };
 
               // Save the prediction
