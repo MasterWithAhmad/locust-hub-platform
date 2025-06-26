@@ -1,0 +1,185 @@
+#header {
+      background-color: #ffffff; /* White background */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
+    }
+
+    /*--------------------------------------------------------------
+    # Footer
+    --------------------------------------------------------------*/
+    .footer {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      color: #fff;
+      font-size: 14px;
+      padding: 70px 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 50%, #8b5cf6 100%);
+    }
+
+    .footer .footer-top {
+      padding-bottom: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer .footer-info {
+      margin-bottom: 30px;
+    }
+
+    .footer .footer-info .sitename {
+      font-size: 28px;
+      margin: 0 0 15px 0;
+      padding: 0;
+      line-height: 1;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .footer .footer-info p {
+      font-size: 14px;
+      line-height: 24px;
+      margin-bottom: 0;
+      color: #e6e6e6;
+    }
+
+    .footer .social-links {
+      margin: 0 0 20px 0;
+    }
+
+    .footer .social-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      color: #fff;
+      margin-right: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .footer .social-links a:hover {
+      background: #4f46e5;
+      transform: translateY(-3px);
+    }
+
+    .footer h4 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      position: relative;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .footer h4::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 40px;
+      height: 2px;
+      background: #4f46e5;
+    }
+
+    .footer .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer .footer-links li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .footer .footer-links a,
+    .footer .footer-links a:link,
+    .footer .footer-links a:visited,
+    .footer .footer-links a:active {
+      color: #ffffff !important;
+      display: inline-block;
+      line-height: 1.6;
+      transition: all 0.3s ease;
+      text-decoration: none !important;
+      font-weight: 500;
+      font-size: 15px;
+      position: relative;
+      text-shadow: 0 0 1px rgba(255,255,255,0.3);
+    }
+
+    .footer .footer-links a:hover {
+      color: #ffffff !important;
+      padding-left: 8px;
+      transform: translateX(3px);
+      text-decoration: none !important;
+      opacity: 0.9;
+      text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+    
+    .footer .footer-links a::before {
+      content: '→';
+      position: absolute;
+      left: -15px;
+      opacity: 0;
+      transition: all 0.3s ease;
+      color: #4f46e5;
+    }
+    
+    .footer .footer-links a:hover::before {
+      opacity: 1;
+      left: -12px;
+    }
+
+    .footer .footer-links i {
+      font-size: 12px;
+      margin-right: 8px;
+      color: #4f46e5;
+    }
+
+    .footer .footer-newsletter p {
+      color: #cbd5e1;
+      margin-bottom: 20px;
+    }
+
+    .footer .copyright {
+      padding: 20px 0;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer .credits {
+      padding-top: 8px;
+      text-align: center;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+
+    .footer .credits a {
+      color: #4f46e5;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .footer .credits a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
