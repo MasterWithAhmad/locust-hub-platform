@@ -1,7 +1,7 @@
 // API base URL - use the current origin to avoid CORS issues
-const API_BASE_URL = window.location.origin.includes('3000') 
-  ? 'http://localhost:5000/api' 
-  : `${window.location.origin}/api`;
+const API_BASE_URL = window.location.origin.includes('3000')
+    ? 'http://localhost:5000/api'
+    : `${window.location.origin}/api`;
 
 console.log('API Base URL:', API_BASE_URL);
 
@@ -13,7 +13,7 @@ async function handleResponse(response) {
         localStorage.removeItem('user');
         window.location.href = '/login.html';
     }
-    
+
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -28,9 +28,9 @@ async function register(fullName, email, password, securityQuestion, securityAns
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-            full_name: fullName, 
-            email, 
+        body: JSON.stringify({
+            full_name: fullName,
+            email,
             password,
             security_question: securityQuestion,
             security_answer: securityAnswer
@@ -52,10 +52,10 @@ async function login(email, password) {
         });
 
         const data = await handleResponse(response);
-        
+
         // Debug logging
         console.log('Login response data:', data);
-        
+
         if (!data.access_token) {
             throw new Error('No access token received from server');
         }
@@ -75,7 +75,7 @@ async function login(email, password) {
         // Store the token and user data
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(userData));
-        
+
         console.log('Login successful, user data stored:', userData);
         return {
             ...data,
@@ -121,7 +121,7 @@ function getAuthHeader() {
     try {
         const token = localStorage.getItem('token');
         const user = getCurrentUser();
-        
+
         if (!token) {
             console.warn('No authentication token found');
             throw new Error('No authentication token found');
@@ -137,7 +137,7 @@ function getAuthHeader() {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
         };
-        
+
     } catch (error) {
         console.error('Error in getAuthHeader:', error);
         // Return headers without Authorization on error
@@ -146,6 +146,19 @@ function getAuthHeader() {
             'Accept': 'application/json'
         };
     }
+}
+
+// Contact form function
+async function sendContactMessage({ name, email, phone, message }) {
+    const response = await fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ name, email, phone, message })
+    });
+    return handleResponse(response);
 }
 
 // Prediction functions
@@ -168,16 +181,16 @@ async function savePrediction(predictionData) {
 async function getAllPredictions() {
     try {
         console.log('Fetching predictions from:', `${API_BASE_URL}/predictions`);
-        
+
         // Get the current user to verify authentication
         const user = getCurrentUser();
         if (!user || !user.id) {
             throw new Error('User not authenticated');
         }
-        
+
         const headers = getAuthHeader();
         console.log('Request headers:', headers);
-        
+
         const response = await fetch(`${API_BASE_URL}/predictions`, {
             method: 'GET',
             headers: {
@@ -188,9 +201,9 @@ async function getAllPredictions() {
             },
             credentials: 'same-origin'
         });
-        
+
         console.log('Response status:', response.status);
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Error response:', errorText);
@@ -205,7 +218,7 @@ async function getAllPredictions() {
             error.status = response.status;
             throw error;
         }
-        
+
         const data = await response.json();
         console.log('Predictions data:', data);
         return data;
@@ -416,7 +429,7 @@ window.api = {
         getEnvironmentalFactorsSummary
     },
     user: {
-        getUserDetails: async function() {
+        getUserDetails: async function () {
             console.log('Calling getUserDetails API...');
             const response = await fetch(`${API_BASE_URL}/user`, {
                 method: 'GET',
@@ -428,7 +441,7 @@ window.api = {
             console.log('User Details API response:', response);
             return handleResponse(response);
         },
-        updateProfile: async function(profileData) {
+        updateProfile: async function (profileData) {
             console.log('Calling updateProfile API...', profileData);
             const response = await fetch(`${API_BASE_URL}/user/profile`, {
                 method: 'PUT',
@@ -441,7 +454,7 @@ window.api = {
             console.log('Update Profile API response:', response);
             return handleResponse(response);
         },
-        changePassword: async function(passwordData) {
+        changePassword: async function (passwordData) {
             console.log('Calling changePassword API...', passwordData);
             const response = await fetch(`${API_BASE_URL}/user/password`, {
                 method: 'PUT',
@@ -454,7 +467,7 @@ window.api = {
             console.log('Change Password API response:', response);
             return handleResponse(response);
         },
-        deleteAccount: async function() {
+        deleteAccount: async function () {
             console.log('Calling deleteAccount API...');
             try {
                 const response = await fetch(`${API_BASE_URL}/account/delete`, {
@@ -465,29 +478,29 @@ window.api = {
                     },
                     credentials: 'include'
                 });
-                
+
                 const data = await response.json().catch(() => ({}));
-                
+
                 if (response.status === 401) {
                     // Token expired or invalid, logout and redirect
                     logout();
                     return { success: false, message: 'Session expired. Please log in again.' };
                 }
-                
+
                 if (!response.ok) {
                     throw new Error(data.message || 'Failed to delete account');
                 }
-                
+
                 // Clear all auth data from localStorage
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                
-                return { 
-                    success: true, 
+
+                return {
+                    success: true,
                     ...data,
                     redirect: '/login.html?accountDeleted=true'  // Add redirect URL
                 };
-                
+
             } catch (error) {
                 console.error('Error in deleteAccount:', error);
                 throw error;

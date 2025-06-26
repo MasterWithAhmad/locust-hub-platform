@@ -1046,7 +1046,7 @@
         <div class="row">
           <div class="col-lg-12">
             <div class="form-wrapper" data-aos="fade-up" data-aos-delay="400">
-              <form action="forms/contact.php" method="post" role="form" class="php-email-form">
+              <form id="contactForm" role="form" class="php-email-form">
                 <div class="row">
                   <div class="col-md-6 form-group">
                     <div class="input-group">
@@ -1179,7 +1179,7 @@
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
+  
   <script src="assets/vendor/aos/aos.js"></script>
   <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
   <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
@@ -1222,6 +1222,40 @@
     });
   </script>
 
+<script src="assets/js/api.js"></script>
+<script>
+// Contact form AJAX submission
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+  contactForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const loadingEl = contactForm.querySelector('.loading');
+    const errorEl = contactForm.querySelector('.error-message');
+    const sentEl = contactForm.querySelector('.sent-message');
+    loadingEl.style.display = 'block';
+    errorEl.style.display = 'none';
+    sentEl.style.display = 'none';
+
+    const name = contactForm.elements['name'].value.trim();
+    const email = contactForm.elements['email'].value.trim();
+    const phone = contactForm.elements['phone'].value.trim();
+    const message = contactForm.elements['message'].value.trim();
+
+    try {
+      await sendContactMessage({ name, email, phone, message });
+      loadingEl.style.display = 'none';
+      sentEl.style.display = 'block';
+      errorEl.style.display = 'none';
+      contactForm.reset();
+    } catch (error) {
+      loadingEl.style.display = 'none';
+      errorEl.textContent = error.message || 'Failed to send message.';
+      errorEl.style.display = 'block';
+      sentEl.style.display = 'none';
+    }
+  });
+}
+</script>
 </body>
 
 </html>

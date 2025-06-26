@@ -209,6 +209,35 @@ def serve_index():
 def serve_static(path):
     return send_from_directory(app.static_folder, path)
 
+# Contact Form Submission
+@app.route('/api/contact', methods=['POST'])
+def save_contact_message():
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        message = data.get('message')
+
+        if not all([name, email, phone, message]):
+            return jsonify({'error': 'All fields are required'}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO contact_messages (name, email, phone, message) VALUES (%s, %s, %s, %s)',
+            (name, email, phone, message)
+        )
+        conn.commit()
+        return jsonify({'message': 'Message submitted successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
 # User Registration
 @app.route('/api/register', methods=['POST'])
 def register():
