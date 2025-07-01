@@ -93,7 +93,7 @@
         </nav>
 
         <!-- Main content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-5">
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-5" style="margin-left: 230px; width: calc(100% - 230px);">
           <!-- Quick Stats -->
           <div class="row g-4 mb-4">
             <div class="col">
@@ -217,21 +217,21 @@
                     <div class="tab-pane fade show active" id="weeklyChart">
                       <div class="chart-container">
                         <canvas id="weeklyTrendChart"></canvas>
-                      </div>
-                    </div>
+                  </div>
+                          </div>
                     <div class="tab-pane fade" id="monthlyChart">
                       <div class="chart-container">
                         <canvas id="monthlyOverviewChart"></canvas>
                       </div>
-                    </div>
+                          </div>
                     <div class="tab-pane fade" id="regionalChart">
                       <div class="chart-container">
                         <canvas id="regionalDistChart"></canvas>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+                            </div>
+                          </div>
+                        </div>
 
               <!-- Recent Predictions -->
               <div class="card mb-4">
@@ -248,8 +248,7 @@
                           <th>Region</th>
                           <th>Country</th>
                           <th>Result</th>
-                          <th>Feedback</th>
-                          <th>Actions</th>
+                          <th>Feedback</th>                          
                         </tr>
                       </thead>
                       <tbody id="recentPredictionsTable">
@@ -262,10 +261,10 @@
                         </tr>
                       </tbody>
                     </table>
-                  </div>
-                </div>
-              </div>
-            </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
             <!-- Right Column -->
             <div class="col-lg-4">
@@ -280,29 +279,29 @@
                   <div class="text-end">
                     <p class="mb-0">Temperature</p>
                     <small>Optimal: 25-35°C</small>
-                  </div>
-                </div>
+                            </div>
+                          </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div>
                     <i class="bi bi-moisture fs-1"></i>
                     <span class="fs-3 ms-2" id="currentMoisture">65%</span>
-                  </div>
+                        </div>
                   <div class="text-end">
                     <p class="mb-0">Soil Moisture</p>
                     <small>Optimal: 60-80%</small>
-                  </div>
-                </div>
+                            </div>
+                          </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <i class="bi bi-cloud-rain fs-1"></i>
                     <span class="fs-3 ms-2" id="currentRain">12mm</span>
-                  </div>
+                        </div>
                   <div class="text-end">
                     <p class="mb-0">Precipitation</p>
                     <small>Average reading</small>
-                  </div>
-                </div>
-              </div>
+                            </div>
+                          </div>
+                        </div>
 
               <!-- Recent Activity -->
               <div class="card">
@@ -316,7 +315,7 @@
                         <span class="visually-hidden">Loading activities...</span>
                       </div>
                     </div>
-                  </div>
+                      </div>
                 </div>
               </div>
             </div>

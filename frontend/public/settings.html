@@ -24,368 +24,9 @@
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <link href="assets/css/main.css" rel="stylesheet">
+  <link href="assets/css/settings.css" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <style>
-    /* Modern Settings Page Styles */
-    :root {
-      --primary-color: #4e73df;
-      --primary-light: #9bb8ff;
-      --secondary-color: #1cc88a;
-      --secondary-light: #7ae0b7;
-      --warning-color: #f6c23e;
-      --warning-light: #f9d78c;
-      --info-color: #36b9cc;
-      --info-light: #80d6e5;
-      --danger-color: #e74a3b;
-      --dark-color: #2c3e50;
-      --light-color: #f8f9fc;
-      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-
-    body {
-      background-color: #f8f9fa;
-      color: #4a4a4a;
-      margin: 0;
-      padding: 0 0 0 250px;
-      min-height: 100vh;
-    }
-
-    .main-content {
-      padding: 1.5rem;
-      margin: 0;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-
-    .row {
-      margin-left: 0;
-      margin-right: 0;
-    }
-
-    .settings-card {
-      margin: 0 0.5rem 1rem 0.5rem;
-    }
-
-    .container-fluid {
-      padding: 0;
-      margin: 0;
-      max-width: 100%;
-    }
-
-    .row {
-      margin: 0;
-      --bs-gutter-x: 0;
-    }
-
-    .settings-card {
-      height: 100%;
-      margin-bottom: 0;
-    }
-
-    .card-body {
-      padding: 1.5rem;
-    }
-
-    @media (max-width: 991.98px) {
-
-      /* Sidebar styles */
-      .sidebar {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 100;
-        padding: 48px 0 0;
-        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-        background: linear-gradient(180deg, var(--primary-color) 0%, #3a7bd5 100%);
-        width: 250px;
-      }
-
-      /* Main content adjustment */
-      body {
-        margin: 0;
-        padding: 0 0 0 250px;
-        min-height: 100vh;
-        background-color: #f8f9fa;
-      }
-
-      .main-content {
-        width: 100%;
-        padding: 1.5rem;
-        margin: 0;
-      }
-
-      .container-fluid {
-        padding: 0;
-        margin: 0;
-        max-width: 100%;
-      }
-    }
-
-    /* Sidebar Styles */
-    .sidebar {
-      background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%) !important;
-      min-height: 100vh;
-      box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      z-index: 1000;
-      padding-top: 1rem;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 767.98px) {
-      .sidebar {
-        position: fixed;
-        left: -250px;
-        transition: all 0.3s;
-      }
-
-      .sidebar.show {
-        left: 0;
-      }
-    }
-
-    .sidebar .nav-link {
-      color: rgba(255, 255, 255, 0.8);
-      padding: 0.75rem 1rem;
-      margin: 0.15rem 0.5rem;
-      border-radius: 0.35rem;
-      transition: all 0.3s;
-      font-size: 0.9rem;
-    }
-
-    .sidebar .nav-link:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .sidebar .nav-link.active {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.2);
-      font-weight: 600;
-    }
-
-    .sidebar .nav-link i {
-      margin-right: 0.5rem;
-      font-size: 1rem;
-      width: 20px;
-      text-align: center;
-    }
-
-    .sidebar .nav-link.text-danger {
-      color: #fff !important;
-    }
-
-    .sidebar .nav-link.text-danger:hover {
-      background: rgba(220, 53, 69, 0.2);
-    }
-
-    .initials-circle {
-      width: 80px;
-      height: 80px;
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 2rem;
-      font-weight: bold;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 0.5rem auto;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .initials-circle:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Settings Page Specific Styles */
-    .settings-header {
-      padding: 1.5rem 0;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .settings-header h2 {
-      color: var(--dark-color);
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .settings-header p {
-      color: #6c757d;
-      font-size: 1.05rem;
-    }
-
-    .settings-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: var(--card-shadow);
-      border: none;
-      margin-bottom: 2rem;
-      overflow: hidden;
-      transition: var(--transition);
-    }
-
-    .settings-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .settings-card .card-header {
-      background: white;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .settings-card .card-header h6 {
-      margin: 0;
-      font-weight: 600;
-      color: var(--dark-color);
-      font-size: 1.1rem;
-    }
-
-    .settings-card .card-header i {
-      color: var(--primary-color);
-      font-size: 1.25rem;
-    }
-
-    .settings-card .card-body {
-      padding: 1.75rem;
-    }
-
-    .profile-info p {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.75rem;
-      padding: 0.75rem 0;
-      border-bottom: 1px dashed #eee;
-    }
-
-    .profile-info p:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .profile-info strong {
-      min-width: 120px;
-      display: inline-flex;
-      align-items: center;
-      color: #6c757d;
-    }
-
-    .profile-info i {
-      margin-right: 0.75rem;
-      color: var(--primary-color);
-      width: 20px;
-      text-align: center;
-    }
-
-    .form-label {
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .form-control,
-    .form-select {
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e0e0e0;
-      transition: var(--transition);
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.15);
-    }
-
-    .btn-primary {
-      background-color: var(--primary-color);
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .btn-primary:hover {
-      background-color: #2e59d9;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(78, 115, 223, 0.25);
-    }
-
-    .btn-outline-secondary {
-      border-radius: 8px;
-      padding: 0.75rem 1.5rem;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .btn-outline-secondary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      margin: 2rem 0;
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-
-    .divider::before,
-    .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .divider:not(:empty)::before {
-      margin-right: 1.25rem;
-    }
-
-    .divider:not(:empty)::after {
-      margin-left: 1.25rem;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .settings-card .card-body {
-        padding: 1.25rem;
-      }
-
-      .profile-info p {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-      }
-
-      .profile-info strong {
-        margin-bottom: 0.25rem;
-      }
-    }
-
-    /* Add other relevant dashboard styles here if needed for content */
-  </style>
 
 </head>
 
@@ -574,52 +215,49 @@
 
         <div class="col-12">
           <div class="settings-card border-danger">
-            <div class="card-header bg-danger bg-opacity-10 text-danger d-flex align-items-center">
+            <div class="card-header bg-danger bg-opacity-10 text-danger d-flex align-items-center" data-bs-toggle="collapse" href="#dangerZoneCollapse" role="button" aria-expanded="false" aria-controls="dangerZoneCollapse" style="cursor: pointer;">
               <i class="bi bi-exclamation-triangle me-2"></i>
               <h6 class="mb-0">Danger Zone</h6>
+              <i class="bi bi-chevron-down ms-auto"></i>
             </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h6 class="text-danger mb-1">Delete Account</h6>
-                  <p class="mb-0 text-muted">Permanently delete your account and all associated data. This action cannot
-                    be undone.</p>
+            <div class="collapse" id="dangerZoneCollapse">
+              <div class="card-body">
+                <!-- Delete Account Section -->
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h6 class="text-danger mb-1">Delete Account</h6>
+                      <p class="mb-0 text-muted">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                    </div>
+                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                      <i class="bi bi-trash me-1"></i> Delete Account
+                    </button>
+                  </div>
+                  <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                      <strong>Warning:</strong> This will permanently delete all your data including subscriptions and preferences.
+                    </div>
+                  </div>
                 </div>
-                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-                  <i class="bi bi-trash me-1"></i> Delete Account
-                </button>
-              </div>
-              <div class="alert alert-warning d-flex align-items-center" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <div>
-                  <strong>Warning:</strong> This will permanently delete all your data including subscriptions and
-                  preferences.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12">
-          <div class="settings-card border-warning">
-            <div class="card-header bg-warning bg-opacity-10 text-warning d-flex align-items-center">
-              <i class="bi bi-arrow-clockwise me-2"></i>
-              <h6 class="mb-0">Factory Reset</h6>
-            </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h6 class="text-warning mb-1">Reset My Data</h6>
-                  <p class="mb-0 text-muted">This will delete all your predictions and give you a clean slate. Your account will remain.</p>
-                </div>
-                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#factoryResetModal">
-                  <i class="bi bi-arrow-clockwise me-1"></i> Factory Reset
-                </button>
-              </div>
-              <div class="alert alert-warning d-flex align-items-center" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <div>
-                  <strong>Warning:</strong> This will permanently delete all your predictions. Your account will not be deleted.
+                
+                <!-- Factory Reset Section -->
+                <div class="border-top pt-4 mt-3">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h6 class="text-warning mb-1">Reset My Data</h6>
+                      <p class="mb-0 text-muted">This will delete all your predictions and give you a clean slate. Your account will remain.</p>
+                    </div>
+                    <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#factoryResetModal">
+                      <i class="bi bi-arrow-clockwise me-1"></i> Factory Reset
+                    </button>
+                  </div>
+                  <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                      <strong>Warning:</strong> This will permanently delete all your predictions. Your account will not be deleted.
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -657,7 +295,8 @@
           </div>
         </div>
 
-        <div class="modal fade" id="factoryResetModal" tabindex="-1" aria-labelledby="factoryResetModalLabel" aria-hidden="true">
+        <div class="modal fade" id="factoryResetModal" tabindex="-1" aria-labelledby="factoryResetModalLabel"
+          aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header border-0">
@@ -670,11 +309,13 @@
                   <div>This will delete all your predictions and cannot be undone. Your account will remain.</div>
                 </div>
                 <p>To confirm, please type <strong>reset my data</strong> below:</p>
-                <input type="text" id="confirmFactoryResetInput" class="form-control mb-3" placeholder="Type 'reset my data' to confirm">
+                <input type="text" id="confirmFactoryResetInput" class="form-control mb-3"
+                  placeholder="Type 'reset my data' to confirm">
               </div>
               <div class="modal-footer border-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" id="confirmFactoryResetBtn" disabled>Factory Reset</button>
+                <button type="button" class="btn btn-warning" id="confirmFactoryResetBtn" disabled>Factory
+                  Reset</button>
               </div>
             </div>
           </div>

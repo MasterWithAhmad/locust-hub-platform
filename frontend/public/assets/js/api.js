@@ -328,6 +328,19 @@ async function getEnvironmentalFactorsSummary() {
     return handleResponse(response);
 }
 
+async function getFeedbackAnalytics() {
+    console.log('Calling getFeedbackAnalytics API...');
+    const response = await fetch(`${API_BASE_URL}/analytics/feedback`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+        },
+    });
+    console.log('Feedback Analytics API response:', response);
+    return handleResponse(response);
+}
+
 async function submitPredictionFeedback(predictionId, feedback) {
     const response = await fetch(`${API_BASE_URL}/predictions/${predictionId}/feedback`, {
         method: 'POST',
@@ -440,7 +453,8 @@ window.api = {
         getPredictionSummary,
         getPredictionsOverTime,
         getPredictionsByLocation,
-        getEnvironmentalFactorsSummary
+        getEnvironmentalFactorsSummary,
+        getFeedbackAnalytics,
     },
     user: {
         getUserDetails: async function () {

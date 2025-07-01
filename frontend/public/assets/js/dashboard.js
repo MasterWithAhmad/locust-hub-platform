@@ -345,11 +345,6 @@ document.addEventListener('DOMContentLoaded', async function () {
               <td>${pred.country_name || 'N/A'}</td>
               <td><span class="badge ${badgeClass}">${badgeText}</span></td>
               <td>${feedbackCell}</td>
-              <td>
-                <button class="btn btn-sm btn-outline-primary" onclick="viewPredictionDetails(${pred.id})">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </td>
             </tr>
           `;
         }).join('');

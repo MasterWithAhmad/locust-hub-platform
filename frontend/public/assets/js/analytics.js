@@ -209,4 +209,99 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Call the function to load and display analytics data
       loadAnalyticsData();
+
+      async function loadFeedbackAnalytics() {
+        try {
+          const res = await api.analytics.getFeedbackAnalytics();
+          const data = res.data || res;
+
+          // Update summary cards
+          document.getElementById('feedbackTotal').innerText = data.total_feedback;
+          document.getElementById('feedbackCorrectPct').innerText = data.correct_pct + '%';
+          document.getElementById('feedbackIncorrectPct').innerText = data.incorrect_pct + '%';
+
+          // Pie Chart: Feedback Distribution
+          new Chart(document.getElementById('feedbackPieChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+              labels: ['Correct', 'Incorrect'],
+              datasets: [{
+                data: [data.correct_count, data.incorrect_count],
+                backgroundColor: ['#1cc88a', '#e74a3b']
+              }]
+            },
+            options: { responsive: true }
+          });
+
+          // Line Chart: Feedback Over Time
+          new Chart(document.getElementById('feedbackLineChart').getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: data.feedback_over_time.map(x => x.period),
+              datasets: [
+                {
+                  label: 'Correct',
+                  data: data.feedback_over_time.map(x => x.correct),
+                  borderColor: '#1cc88a',
+                  backgroundColor: 'rgba(28,200,138,0.1)',
+                  fill: true
+                },
+                {
+                  label: 'Incorrect',
+                  data: data.feedback_over_time.map(x => x.incorrect),
+                  borderColor: '#e74a3b',
+                  backgroundColor: 'rgba(231,74,59,0.1)',
+                  fill: true
+                }
+              ]
+            },
+            options: { responsive: true }
+          });
+
+          // Bar Chart: Feedback by Region
+          new Chart(document.getElementById('feedbackRegionChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: data.feedback_by_region.map(x => x.region),
+              datasets: [
+                {
+                  label: 'Correct',
+                  data: data.feedback_by_region.map(x => x.correct),
+                  backgroundColor: '#1cc88a'
+                },
+                {
+                  label: 'Incorrect',
+                  data: data.feedback_by_region.map(x => x.incorrect),
+                  backgroundColor: '#e74a3b'
+                }
+              ]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+          });
+
+          // Recent Feedback Table
+          const tbody = document.querySelector('#recentFeedbackTable tbody');
+          tbody.innerHTML = '';
+          data.recent_feedback.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row.date ? row.date.split('T')[0] : ''}</td>
+              <td>${row.region}</td>
+              <td>${row.country}</td>
+              <td>${row.result}</td>
+              <td>
+                <span class="badge ${row.feedback === 'correct' ? 'bg-success' : 'bg-danger'}">
+                  ${row.feedback.charAt(0).toUpperCase() + row.feedback.slice(1)}
+                </span>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error('Error loading feedback analytics:', err);
+        }
+      }
+
+      // Call this after other analytics loads
+      loadFeedbackAnalytics();
     });

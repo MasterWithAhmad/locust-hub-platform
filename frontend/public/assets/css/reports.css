@@ -15,7 +15,15 @@
     .sidebar {
       background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
       min-height: 100vh;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 220px; /* Fixed width */
       box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+      overflow-y: auto;
+      z-index: 1000;
     }
 
     .sidebar .nav-link {
@@ -190,4 +198,29 @@
       width: 20px;
       height: 20px;
       cursor: pointer;
+    }
+
+    .collapsible-header {
+      background: #f8f9fc;
+      border-radius: 1rem 1rem 0 0;
+      font-size: 1.15rem;
+      font-weight: 500;
+      border-bottom: 1px solid #e3e6f0;
+      min-height: 48px;
+      user-select: none;
+      outline: none;
+      cursor: pointer;
+    }
+    .collapsible-header:focus,
+    .collapsible-header:hover {
+      background: #eef2fa;
+      box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+    }
+    .collapsible-header .chevron-icon {
+      font-size: 1.7rem;
+      color: #4e73df;
+      transition: transform 0.3s;
+    }
+    .collapsible-header[aria-expanded="true"] .chevron-icon {
+      transform: rotate(180deg);
     }

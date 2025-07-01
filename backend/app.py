@@ -1110,7 +1110,7 @@ def factory_reset():
         return jsonify({'success': True, 'message': 'All your predictions have been deleted.'}), 200
     except Exception as e:
         if conn:
-            conn.rollback()
+                conn.rollback()
         print(f"Error during factory reset: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
     finally:
@@ -1437,6 +1437,94 @@ def set_prediction_feedback(prediction_id):
     except Exception as e:
         conn.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/analytics/feedback', methods=['GET'])
+@jwt_required()
+def get_feedback_analytics():
+    user_id = get_jwt_identity()
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Total feedback, correct, incorrect
+        cursor.execute('''
+            SELECT 
+                COUNT(*) as total,
+                SUM(feedback = 'correct') as correct_count,
+                SUM(feedback = 'incorrect') as incorrect_count
+            FROM predictions
+            WHERE user_id = %s AND feedback IS NOT NULL
+        ''', (user_id,))
+        row = cursor.fetchone()
+        total = row['total'] or 0
+        correct = row['correct_count'] or 0
+        incorrect = row['incorrect_count'] or 0
+        correct_pct = round((correct / total) * 100, 1) if total else 0.0
+        incorrect_pct = round((incorrect / total) * 100, 1) if total else 0.0
+
+        # Feedback over time (weekly)
+        cursor.execute('''
+            SELECT DATE_FORMAT(feedback_timestamp, '%Y-%u') as week,
+                   SUM(feedback = 'correct') as correct,
+                   SUM(feedback = 'incorrect') as incorrect
+            FROM predictions
+            WHERE user_id = %s AND feedback IS NOT NULL
+            GROUP BY week
+            ORDER BY week DESC
+            LIMIT 12
+        ''', (user_id,))
+        feedback_over_time = [
+            {'period': row['week'], 'correct': row['correct'], 'incorrect': row['incorrect']}
+            for row in cursor.fetchall()
+        ]
+        feedback_over_time.reverse()  # chronological order
+
+        # Feedback by region
+        cursor.execute('''
+            SELECT region,
+                   SUM(feedback = 'correct') as correct,
+                   SUM(feedback = 'incorrect') as incorrect
+            FROM predictions
+            WHERE user_id = %s AND feedback IS NOT NULL
+            GROUP BY region
+            ORDER BY region
+        ''', (user_id,))
+        feedback_by_region = [
+            {'region': row['region'], 'correct': row['correct'], 'incorrect': row['incorrect']}
+            for row in cursor.fetchall()
+        ]
+
+        # Recent feedback entries
+        cursor.execute('''
+            SELECT id as prediction_id, feedback_timestamp as date, region, country_name as country, 
+                   CASE WHEN locust_present = 1 THEN 'Yes' ELSE 'No' END as result, feedback
+            FROM predictions
+            WHERE user_id = %s AND feedback IS NOT NULL
+            ORDER BY feedback_timestamp DESC
+            LIMIT 10
+        ''', (user_id,))
+        recent_feedback = []
+        for row in cursor.fetchall():
+            # Format date as ISO string if possible
+            if row['date'] and hasattr(row['date'], 'isoformat'):
+                row['date'] = row['date'].isoformat()
+            recent_feedback.append(row)
+
+        return jsonify({
+            'total_feedback': total,
+            'correct_count': correct,
+            'incorrect_count': incorrect,
+            'correct_pct': correct_pct,
+            'incorrect_pct': incorrect_pct,
+            'feedback_over_time': feedback_over_time,
+            'feedback_by_region': feedback_by_region,
+            'recent_feedback': recent_feedback
+        }), 200
+    except Exception as e:
+        print(f"Error in feedback analytics: {e}")
+        return jsonify({'error': 'Failed to fetch feedback analytics', 'details': str(e)}), 500
     finally:
         cursor.close()
         conn.close()
