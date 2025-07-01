@@ -155,6 +155,20 @@ document.addEventListener('DOMContentLoaded', async function () {
              document.querySelector('.stat-card.info .small span').textContent = statusText;
            }
 
+           // Feedback Summary Card
+           const feedbackSummaryText = document.getElementById('feedbackSummaryText');
+           const feedbackSummarySubtext = document.getElementById('feedbackSummarySubtext');
+           if (predictions.length > 0) {
+             const correctCount = predictions.filter(p => p.feedback === 'correct').length;
+             const feedbackCount = predictions.filter(p => p.feedback === 'correct' || p.feedback === 'incorrect').length;
+             const percent = feedbackCount > 0 ? ((correctCount / feedbackCount) * 100).toFixed(1) : 0;
+             feedbackSummaryText.textContent = `${correctCount} / ${feedbackCount} correct`;
+             feedbackSummarySubtext.innerHTML = `<i class='bi bi-info-circle'></i> <span>${percent}% marked correct</span>`;
+           } else {
+             feedbackSummaryText.textContent = 'N/A';
+             feedbackSummarySubtext.innerHTML = `<i class='bi bi-info-circle'></i> <span>No feedback yet</span>`;
+           }
+
         } catch (error) {
           console.error('Error fetching prediction stats:', error);
           // Show error in console but don't break the UI
@@ -306,12 +320,31 @@ document.addEventListener('DOMContentLoaded', async function () {
           const badgeClass = hasLocust ? 'bg-danger' : 'bg-success';
           const badgeText = hasLocust ? 'Locust Present' : 'No Locust';
           
+          // Feedback cell logic
+          const feedbackCell = (() => {
+            if (pred.feedback === 'correct') {
+              return `<span class="badge bg-success"><i class="bi bi-hand-thumbs-up"></i> Marked correct</span>`;
+            } else if (pred.feedback === 'incorrect') {
+              return `<span class="badge bg-danger"><i class="bi bi-hand-thumbs-down"></i> Marked incorrect</span>`;
+            } else {
+              return `
+                <button class="btn btn-link p-0 feedback-btn" data-id="${pred.id}" data-feedback="correct" title="Mark as correct">
+                  <i class="bi bi-hand-thumbs-up fs-5 text-success"></i>
+                </button>
+                <button class="btn btn-link p-0 feedback-btn" data-id="${pred.id}" data-feedback="incorrect" title="Mark as incorrect">
+                  <i class="bi bi-hand-thumbs-down fs-5 text-danger"></i>
+                </button>
+              `;
+            }
+          })();
+
           return `
             <tr>
               <td>${date.toLocaleDateString()}</td>
               <td>${pred.region_name || 'N/A'}</td>
               <td>${pred.country_name || 'N/A'}</td>
               <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+              <td>${feedbackCell}</td>
               <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="viewPredictionDetails(${pred.id})">
                   <i class="bi bi-eye"></i>
@@ -320,6 +353,31 @@ document.addEventListener('DOMContentLoaded', async function () {
             </tr>
           `;
         }).join('');
+        
+        // Add feedback event handler for the table
+        tbody.addEventListener('click', async function(e) {
+          if (e.target.closest('.feedback-btn')) {
+            const btn = e.target.closest('.feedback-btn');
+            const predictionId = btn.dataset.id;
+            const feedback = btn.dataset.feedback;
+            // Instantly replace the feedback cell with a badge/text
+            const cell = btn.closest('td');
+            if (cell) {
+              if (feedback === 'correct') {
+                cell.innerHTML = '<span class="badge bg-success"><i class="bi bi-hand-thumbs-up"></i> Marked correct</span>';
+              } else {
+                cell.innerHTML = '<span class="badge bg-danger"><i class="bi bi-hand-thumbs-down"></i> Marked incorrect</span>';
+              }
+            }
+            try {
+              await api.predictions.submitFeedback(predictionId, feedback);
+              // Optionally, reload the table to keep everything in sync
+              // loadRecentPredictions();
+            } catch (err) {
+              // Optionally, show a toast or revert the cell if you want
+            }
+          }
+        });
         
       } catch (error) {
         console.error('Error loading recent predictions:', error);

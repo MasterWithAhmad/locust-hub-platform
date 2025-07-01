@@ -96,8 +96,7 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-5">
           <!-- Quick Stats -->
           <div class="row g-4 mb-4">
-            <!-- Total Predictions Card -->
-            <div class="col-md-3">
+            <div class="col">
               <div class="stat-card primary h-100">
                 <div class="card-body">
                   <div class="d-flex align-items-center">
@@ -116,9 +115,7 @@
                 </div>
               </div>
             </div>
-
-            <!-- Last Prediction Card -->
-            <div class="col-md-3">
+            <div class="col">
               <div class="stat-card primary h-100">
                 <div class="card-body">
                   <div class="d-flex align-items-center">
@@ -137,9 +134,7 @@
                 </div>
               </div>
             </div>
-
-            <!-- Last Updated Card -->
-            <div class="col-md-3">
+            <div class="col">
               <div class="stat-card warning h-100">
                 <div class="card-body">
                   <div class="d-flex align-items-center">
@@ -158,9 +153,7 @@
                 </div>
               </div>
             </div>
-
-            <!-- Model Accuracy Card -->
-            <div class="col-md-3">
+            <div class="col">
               <div class="stat-card info h-100">
                 <div class="card-body">
                   <div class="d-flex align-items-center">
@@ -179,37 +172,23 @@
                 </div>
               </div>
             </div>
-          </div>
-
-
-          <!-- Quick Actions -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-3">
-              <div class="quick-action-card" onclick="window.location.href='predict.html'">
-                <i class="bi bi-plus-circle text-primary"></i>
-                <h5>New Prediction</h5>
-                <p class="text-muted small">Make a new locust prediction</p>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="quick-action-card" onclick="window.location.href='reports.html'">
-                <i class="bi bi-file-earmark-text text-info"></i>
-                <h5>View Reports</h5>
-                <p class="text-muted small">Access detailed reports</p>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="quick-action-card" onclick="window.location.href='analytics.html'">
-                <i class="bi bi-graph-up-arrow text-success"></i>
-                <h5>Analytics</h5>
-                <p class="text-muted small">View prediction analytics</p>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="quick-action-card" onclick="window.location.href='settings.html'">
-                <i class="bi bi-gear text-warning"></i>
-                <h5>Settings</h5>
-                <p class="text-muted small">Manage your account</p>
+            <div class="col">
+              <div class="stat-card success h-100" id="feedbackSummaryCard">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <i class="bi bi-hand-thumbs-up"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <div class="card-title">FEEDBACK ACCURACY</div>
+                      <div class="card-text" id="feedbackSummaryText">N/A</div>
+                      <div class="text-muted small mt-1" id="feedbackSummarySubtext">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Loading...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -269,6 +248,7 @@
                           <th>Region</th>
                           <th>Country</th>
                           <th>Result</th>
+                          <th>Feedback</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -342,7 +322,7 @@
             </div>
           </div>
 
-                </div>
+      </div>
 
   </main>
   </div>
