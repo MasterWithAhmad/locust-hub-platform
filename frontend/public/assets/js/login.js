@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
   
     async function handleLogin(event) {
       event.preventDefault();
+      console.log('Login handler attached');
   
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -90,4 +91,5 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.innerHTML = originalBtnText;
       }
       
+      return false;
     }

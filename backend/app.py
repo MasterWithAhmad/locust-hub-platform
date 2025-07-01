@@ -12,6 +12,7 @@ import pandas as pd
 import json
 import joblib
 import datetime
+from functools import lru_cache
 
 # Load environment variables
 load_dotenv()
@@ -332,14 +333,43 @@ def login():
         if conn:
             conn.close()
 
-# Make Prediction
+# List of allowed models and their display names
+ALLOWED_MODELS = {
+    'random_forest.pkl': 'Random Forest',
+    'random_forest_tuned.pkl': 'Random Forest (Tuned)',
+    'gradient_boosting.pkl': 'Gradient Boosting',
+    'lightgbm.pkl': 'LightGBM',
+    'xgboost.pkl': 'XGBoost',
+    'decision_tree.pkl': 'Decision Tree'
+}
+
+@lru_cache(maxsize=8)
+def load_model(model_filename):
+    model_path = os.path.join(MODEL_DIR, model_filename)
+    return joblib.load(model_path)
+
+@app.route('/api/models', methods=['GET'])
+def get_models():
+    """Return the list of available models for prediction."""
+    return jsonify([
+        {'value': fname, 'label': label}
+        for fname, label in ALLOWED_MODELS.items()
+    ])
+
 @app.route('/api/predict', methods=['POST'])
 def make_prediction():
     try:
         # Get data from request
         data = request.get_json()
         print("Received data:", data)
-        
+        model_name = data.get('MODEL_NAME', 'random_forest.pkl')
+        if model_name not in ALLOWED_MODELS:
+            model_name = 'random_forest.pkl'
+        try:
+            model_to_use = load_model(model_name)
+        except Exception as e:
+            print(f"Error loading model {model_name}: {e}")
+            return jsonify({'error': f'Failed to load model: {model_name}'}), 500
         # Create DataFrame
         input_data = pd.DataFrame({
             'REGION': [data['REGION'].strip().upper()],
@@ -350,37 +380,29 @@ def make_prediction():
             'TMAX': [float(data['TMAX'])],
             'SOILMOISTURE': [float(data['SOILMOISTURE'])]
         })
-        
         print("Input data before preprocessing:", input_data)
-        
         # Apply target encoding for REGION and COUNTRYNAME
-        # If region/country not in encodings, use mean or default value
         input_data['REGION'] = input_data['REGION'].map(region_encodings)
         input_data['COUNTRYNAME'] = input_data['COUNTRYNAME'].map(country_encodings)
-        
         # Handle unknown regions/countries by using mean encoding or default value
         if input_data['REGION'].isna().any():
             input_data['REGION'] = input_data['REGION'].fillna(region_encodings.mean())
         if input_data['COUNTRYNAME'].isna().any():
             input_data['COUNTRYNAME'] = input_data['COUNTRYNAME'].fillna(country_encodings.mean())
-        
         print("Input data after preprocessing:", input_data)
-        
         # Make prediction
-        prediction = model.predict(input_data)
-        probabilities = model.predict_proba(input_data)
-        
+        prediction = model_to_use.predict(input_data)
+        probabilities = model_to_use.predict_proba(input_data)
         print("Prediction:", prediction)
         print("Probabilities:", probabilities)
-        
         # Return prediction and probability
         return jsonify({
             'prediction': 'yes' if prediction[0] == 1 else 'no',
             'probability': float(probabilities[0][1]),  # Probability of class 1 (yes)
             'matched_region': data['REGION'].strip().upper(),
-            'matched_country': data['COUNTRYNAME'].strip().upper()
+            'matched_country': data['COUNTRYNAME'].strip().upper(),
+            'model_used': model_name
         })
-        
     except Exception as e:
         print("Error during prediction:", str(e))
         return jsonify({'error': str(e)}), 500

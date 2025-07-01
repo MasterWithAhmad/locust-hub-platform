@@ -238,21 +238,25 @@ async function deletePrediction(predictionId) {
 }
 
 async function predict(predictionInputData) {
+    const body = {
+        REGION: predictionInputData.REGION,
+        COUNTRYNAME: predictionInputData.COUNTRYNAME,
+        STARTYEAR: predictionInputData.STARTYEAR,
+        STARTMONTH: predictionInputData.STARTMONTH,
+        PPT: predictionInputData.PPT,
+        TMAX: predictionInputData.TMAX,
+        SOILMOISTURE: predictionInputData.SOILMOISTURE
+    };
+    if (predictionInputData.MODEL_NAME) {
+        body.MODEL_NAME = predictionInputData.MODEL_NAME;
+    }
     const response = await fetch(`${API_BASE_URL}/predict`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             ...getAuthHeader(),
         },
-        body: JSON.stringify({
-            REGION: predictionInputData.REGION,
-            COUNTRYNAME: predictionInputData.COUNTRYNAME,
-            STARTYEAR: predictionInputData.STARTYEAR,
-            STARTMONTH: predictionInputData.STARTMONTH,
-            PPT: predictionInputData.PPT,
-            TMAX: predictionInputData.TMAX,
-            SOILMOISTURE: predictionInputData.SOILMOISTURE
-        }),
+        body: JSON.stringify(body),
     });
     return handleResponse(response);
 }

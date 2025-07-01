@@ -66,6 +66,23 @@ document.addEventListener("DOMContentLoaded", async function () {
       text: "Could not load region and country options. Please try again later.",
     });
   }
+
+  // Fetch and populate model options
+  try {
+    const response = await fetch('/api/models');
+    const models = await response.json();
+    const modelSelect = document.getElementById('MODEL_NAME');
+    if (models && Array.isArray(models)) {
+      models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.value;
+        option.textContent = model.label;
+        modelSelect.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error('Failed to load models:', err);
+  }
 });
 
 async function handlePredictionSubmit(event) {
@@ -101,6 +118,19 @@ async function handlePredictionSubmit(event) {
   // Get values from the input types
   const startYear = parseInt(document.getElementById("STARTYEAR").value); // Read year directly from number input
   const startMonth = parseInt(document.getElementById("STARTMONTH").value); // format 1-12
+  const modelName = document.getElementById("MODEL_NAME").value;
+  if (!modelName) {
+    Swal.fire({
+      icon: "error",
+      title: "Model Required",
+      text: "Please select a prediction model.",
+    });
+    predictButton.disabled = false;
+    predictButtonText.style.display = "inline-block";
+    predictButtonLoading.style.display = "none";
+    predictButtonLoadingText.style.display = "none";
+    return;
+  }
 
   const formData = {
     REGION: document.getElementById("REGION").value.trim(),
@@ -110,6 +140,7 @@ async function handlePredictionSubmit(event) {
     PPT: parseFloat(document.getElementById("PPT").value),
     TMAX: parseFloat(document.getElementById("TMAX").value),
     SOILMOISTURE: parseFloat(document.getElementById("SOILMOISTURE").value),
+    MODEL_NAME: modelName
   };
 
   console.log("Prediction data:", formData);
