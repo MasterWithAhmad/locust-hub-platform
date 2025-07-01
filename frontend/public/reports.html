@@ -33,6 +33,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   
+  <style>
+    label.disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  </style>
 </head>
 
 <body class="starter-page-page">
@@ -314,6 +320,7 @@
                                              <th>Region</th>
                                              <th>Country</th>
                                              <th>Status</th>
+                                             <th>Feedback</th>
                                              <th>Actions</th>
                                           </tr>
                                        </thead>
@@ -892,6 +899,25 @@
           </td>
         ` : '';
 
+        // Add feedback cell
+        const feedbackCell = (() => {
+          if (prediction.feedback === 'correct') {
+            return `<span class="badge bg-success"><i class="bi bi-hand-thumbs-up"></i> Marked correct</span>`;
+          } else if (prediction.feedback === 'incorrect') {
+            return `<span class="badge bg-danger"><i class="bi bi-hand-thumbs-down"></i> Marked incorrect</span>`;
+          } else {
+            // Show two icon buttons only
+            return `
+              <button class="btn btn-link p-0 feedback-btn" data-id="${prediction.id}" data-feedback="correct" title="Mark as correct">
+                <i class="bi bi-hand-thumbs-up fs-5 text-success"></i>
+              </button>
+              <button class="btn btn-link p-0 feedback-btn" data-id="${prediction.id}" data-feedback="incorrect" title="Mark as incorrect">
+                <i class="bi bi-hand-thumbs-down fs-5 text-danger"></i>
+              </button>
+            `;
+          }
+        })();
+
         return `
           <tr>
             ${checkboxCell}
@@ -899,6 +925,7 @@
             <td>${prediction.region_name || 'N/A'}</td>
             <td>${prediction.country_name || 'N/A'}</td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
+            <td>${feedbackCell}</td>
             <td class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-primary view-prediction" data-id="${prediction.id}">
                 <i class="bi bi-eye me-1"></i>View
@@ -918,6 +945,34 @@
       // Add event listeners to view buttons
       document.querySelectorAll('.view-prediction').forEach(btn => {
         btn.addEventListener('click', handleViewPrediction);
+      });
+
+      // Add event listeners to feedback buttons
+      document.getElementById('predictionHistory').addEventListener('click', async function(e) {
+        if (e.target.closest('.feedback-btn')) {
+          const btn = e.target.closest('.feedback-btn');
+          const predictionId = btn.dataset.id;
+          const feedback = btn.dataset.feedback;
+
+          // Instantly replace the feedback cell with a badge/text
+          const cell = btn.closest('td');
+          if (cell) {
+            if (feedback === 'correct') {
+              cell.innerHTML = '<span class="badge bg-success"><i class="bi bi-hand-thumbs-up"></i> Marked correct</span>';
+            } else {
+              cell.innerHTML = '<span class="badge bg-danger"><i class="bi bi-hand-thumbs-down"></i> Marked incorrect</span>';
+            }
+          }
+
+          // Submit feedback in the background
+          try {
+            await api.predictions.submitFeedback(predictionId, feedback);
+            // Optionally, reload the table to keep everything in sync
+            // loadUserPredictions();
+          } catch (err) {
+            // Optionally, show a toast or revert the cell if you want
+          }
+        }
       });
     }
 

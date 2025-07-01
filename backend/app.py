@@ -681,7 +681,9 @@ def get_predictions():
                     ppt as precipitation_mm,
                     locust_present as prediction_result,
                     probability,
-                    prediction_date as created_at
+                    prediction_date as created_at,
+                    feedback,
+                    feedback_timestamp
                 FROM predictions 
                 WHERE user_id = %s
                 ORDER BY prediction_date DESC
@@ -1405,6 +1407,39 @@ def debug_blog_images():
         'files': files,
         'url_example': '/assets/blog_images/' + files[0] if files else None
     }
+
+@app.route('/api/predictions/<int:prediction_id>/feedback', methods=['POST'])
+@jwt_required()
+def set_prediction_feedback(prediction_id):
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    feedback = data.get('feedback')
+    if feedback not in ['correct', 'incorrect']:
+        return jsonify({'success': False, 'message': 'Invalid feedback value'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Only allow feedback on user's own predictions and if feedback is not already set
+        cursor.execute('SELECT feedback FROM predictions WHERE id = %s AND user_id = %s', (prediction_id, user_id))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'success': False, 'message': 'Prediction not found or access denied'}), 404
+        if row[0] is not None:
+            return jsonify({'success': False, 'message': 'Feedback already submitted for this prediction'}), 400
+
+        cursor.execute(
+            'UPDATE predictions SET feedback = %s, feedback_timestamp = NOW() WHERE id = %s',
+            (feedback, prediction_id)
+        )
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Feedback recorded'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 if __name__ == '__main__':
     # Initialize database on startup

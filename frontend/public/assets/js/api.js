@@ -328,6 +328,15 @@ async function getEnvironmentalFactorsSummary() {
     return handleResponse(response);
 }
 
+async function submitPredictionFeedback(predictionId, feedback) {
+    const response = await fetch(`${API_BASE_URL}/predictions/${predictionId}/feedback`, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: JSON.stringify({ feedback })
+    });
+    return handleResponse(response);
+}
+
 // Export the API functions
 window.api = {
     auth: {
@@ -420,7 +429,8 @@ window.api = {
     predictions: {
         save: savePrediction,
         getAll: getAllPredictions,
-        delete: deletePrediction
+        delete: deletePrediction,
+        submitFeedback: submitPredictionFeedback
     },
     options: {
         getOptions
