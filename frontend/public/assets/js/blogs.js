@@ -53,6 +53,10 @@ async function loadBlogPosts() {
 
     const data = await response.json();
     console.log("Blog posts loaded:", data);
+    // Debug: print the actual structure
+    if (Array.isArray(data) && data.length > 0) {
+      console.log("First post structure:", JSON.stringify(data[0], null, 2));
+    }
 
     allPosts = Array.isArray(data) ? data : [];
     filteredPosts = [...allPosts];
@@ -78,6 +82,7 @@ function displayPosts() {
   // Check if container exists
   if (!container) {
     console.error("Blog posts container not found");
+    document.body.innerHTML += '<div style="color:red;font-size:2em;">blogPostsContainer NOT FOUND</div>';
     return;
   }
 
@@ -97,7 +102,9 @@ function displayPosts() {
   // Generate HTML for each post
   postsToShow.forEach((post, index) => {
     const postElement = createPostElement(post, index);
+    console.log("Appending card for post:", post.title || post.id);
     container.appendChild(postElement);
+    console.log("Appended card for post:", post.title || post.id);
   });
 
   // Initialize AOS for new elements
@@ -108,107 +115,73 @@ function displayPosts() {
 
 // Create a single post element
 function createPostElement(post, index) {
-  const col = document.createElement("div");
-  col.className = "col-lg-4 col-md-6";
-  col.setAttribute("data-aos", "fade-up");
-  col.setAttribute("data-aos-delay", (index % 3) * 100);
+  const col = document.createElement('div');
+  col.className = 'col-lg-4 col-md-6';
+  col.setAttribute('data-aos', 'fade-up');
+  col.setAttribute('data-aos-delay', (index % 3) * 100);
 
-  // Format date
-  const postDate = new Date(post.date);
-  const formattedDate = postDate.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const excerpt = post.content ? post.content.replace(/<[^>]+>/g, '').slice(0, 120) + (post.content.replace(/<[^>]+>/g, '').length > 120 ? '...' : '') : 'No content available.';
+  const avatar = getAuthorAvatar(post.author);
+  const formattedDate = formatDate(post.date);
+  const tag = post.country || post.region || 'General';
+  const image = post.image_url || post.imageUrl || '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp';
 
-  // Create excerpt from content (first 150 characters)
-  const excerpt = post.content
-    ? post.content.substring(0, 150) + "..."
-    : "No content available.";
-
-  // Determine category from tags or region
-  let category = "General";
-  let categoryColor = "bg-secondary";
-
+  // Prepare tags as badges
+  let tagsHtml = '';
   if (post.tags) {
-    const tags = post.tags.toLowerCase();
-    if (tags.includes("research")) {
-      category = "Research";
-      categoryColor = "bg-primary";
-    } else if (tags.includes("technology")) {
-      category = "Technology";
-      categoryColor = "bg-success";
-    } else if (tags.includes("agriculture")) {
-      category = "Agriculture";
-      categoryColor = "bg-warning";
-    } else if (tags.includes("prediction")) {
-      category = "Prediction";
-      categoryColor = "bg-info";
-    } else if (tags.includes("news")) {
-      category = "News";
-      categoryColor = "bg-danger";
-    }
-  } else if (post.region) {
-    category = post.region;
-    categoryColor = "bg-info";
+    const tagsArr = post.tags.split(',').map(t => t.trim()).filter(Boolean);
+    tagsHtml = tagsArr.map(t => `<span class="badge bg-light text-dark border border-primary ms-1">#${t}</span>`).join(' ');
   }
 
-  // Handle post image: use provided URL or a default icon
-  let imageHtml = "";
-  if (post.image_url) {
-    imageHtml = `
-          <div class="card-img-container">
-            <img src="${post.image_url}" class="card-img-top" alt="${post.title}">
-          </div>
-        `;
-  } else {
-    imageHtml = `
-          <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center text-white" style="height: 200px;">
-            <i class="bi bi-journal-text" style="font-size: 3rem;"></i>
-          </div>
-        `;
-  }
+  // Unique modal id for each post
+  const modalId = `blogModal_${post.id}`;
 
   col.innerHTML = `
-        <article class="card h-100 shadow-sm">
-          ${imageHtml}
-          <div class="card-body d-flex flex-column">
-            <div class="mb-2">
-              <span class="badge ${categoryColor}">${category}</span>
-              ${
-                post.region
-                  ? `<span class="badge bg-outline-secondary ms-1">${post.region}</span>`
-                  : ""
-              }
-              ${
-                post.country
-                  ? `<span class="badge bg-outline-secondary ms-1">${post.country}</span>`
-                  : ""
-              }
-            </div>
-            <h5 class="card-title">
-              <a href="#" onclick="openPostModal(${
-                post.id
-              })" class="text-decoration-none text-dark">
-                ${post.title}
-              </a>
-            </h5>
-            <p class="card-text text-muted flex-grow-1">${excerpt}</p>
-            <div class="card-meta d-flex justify-content-between align-items-center text-muted small mb-3">
-              <span><i class="bi bi-person me-1"></i>${
-                post.author || "LocustHub Team"
-              }</span>
-              <span><i class="bi bi-calendar me-1"></i>${formattedDate}</span>
-            </div>
-            <a href="#" onclick="openPostModal(${
-              post.id
-            })" class="btn btn-primary btn-sm align-self-start">
-              Read More <i class="bi bi-arrow-right ms-1"></i>
-            </a>
+    <div class="blog-post-card card mb-4 fade-in">
+      <div class="card-img-container position-relative">
+        <img src="${image}" class="card-img-top" alt="${post.title}">
+        <div class="img-gradient-overlay"></div>
+        <span class="badge position-absolute top-0 start-0 m-3 blog-post-category">${tag}</span>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title blog-post-title">${post.title}</h5>
+        <div class="blog-post-excerpt">${excerpt}</div>
+        <div class="blog-post-meta d-flex align-items-center mt-2">
+          ${avatar}
+          <span class="ms-2">${post.author || 'Unknown'}</span>
+          <span class="mx-2">·</span>
+          <span class="blog-post-date"><i class="bi bi-calendar"></i> ${formattedDate}</span>
+        </div>
+        <div class="blog-post-tags mt-2">${tagsHtml}</div>
+        <div class="blog-post-actions d-flex align-items-center mt-3">
+          <button class="btn btn-link p-0 me-3" title="Like"><i class="bi bi-heart"></i></button>
+          <button class="btn btn-link p-0 me-3" title="Comment"><i class="bi bi-chat"></i></button>
+          <button class="btn btn-link p-0 me-3" title="Bookmark"><i class="bi bi-bookmark"></i></button>
+          <button class="btn btn-primary ms-auto view-btn" data-bs-toggle="modal" data-bs-target="#${modalId}"><i class="bi bi-eye"></i> View</button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal for full content -->
+    <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${modalId}_label" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="${modalId}_label">${post.title}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-        </article>
-      `;
-
+          <div class="modal-body">
+            <div class="mb-3">
+              <span class="badge bg-primary">${tag}</span>
+              <span class="ms-2 text-muted"><i class="bi bi-calendar"></i> ${formattedDate}</span>
+              <span class="ms-2 text-muted"><i class="bi bi-person"></i> ${post.author || 'Unknown'}</span>
+            </div>
+            <div>${post.content || 'No content available.'}</div>
+            <div class="mt-3">${tagsHtml}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
   return col;
 }
 
@@ -497,3 +470,104 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+// --- Search Functionality ---
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase().trim();
+      filteredPosts = allPosts.filter(post =>
+        post.title.toLowerCase().includes(searchTerm) ||
+        (post.content && post.content.toLowerCase().includes(searchTerm)) ||
+        (post.tags && post.tags.toLowerCase().includes(searchTerm)) ||
+        (post.author && post.author.toLowerCase().includes(searchTerm)) ||
+        (post.region && post.region.toLowerCase().includes(searchTerm)) ||
+        (post.country && post.country.toLowerCase().includes(searchTerm))
+      );
+      currentPage = 1;
+      displayPosts();
+      setupPagination();
+    });
+  }
+
+  // --- Sorting Functionality ---
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const sortValue = this.value;
+      if (sortValue === 'latest') {
+        filteredPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      } else if (sortValue === 'oldest') {
+        filteredPosts.sort((a, b) => new Date(a.date) - new Date(b.date));
+      } else if (sortValue === 'az') {
+        filteredPosts.sort((a, b) => a.title.localeCompare(b.title));
+      } else if (sortValue === 'za') {
+        filteredPosts.sort((a, b) => b.title.localeCompare(a.title));
+      }
+      currentPage = 1;
+      displayPosts();
+      setupPagination();
+    });
+  }
+});
+
+function getReadingTime(text) {
+  const plain = text.replace(/<[^>]+>/g, '');
+  const words = plain.trim().split(/\s+/).length;
+  return Math.max(1, Math.round(words / 200)); // 200 wpm
+}
+
+function getAuthorAvatar(author) {
+  if (!author) return `<div class="avatar-circle"><span>A</span></div>`;
+  const initial = author.trim()[0].toUpperCase();
+  return `<div class="avatar-circle"><span>${initial}</span></div>`;
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function renderBlogCard(post) {
+  const {
+    title, content, image_url, author, date, country, region
+  } = post;
+  const excerpt = content.replace(/<[^>]+>/g, '').slice(0, 120) + (content.replace(/<[^>]+>/g, '').length > 120 ? '...' : '');
+  const readingTime = getReadingTime(content);
+  const avatar = getAuthorAvatar(author);
+  const formattedDate = formatDate(date);
+  const tag = country || region || 'General';
+  const image = image_url || '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp';
+  return `
+    <div class="blog-post-card card mb-4 fade-in">
+      <div class="card-img-container position-relative">
+        <img src="${image}" class="card-img-top" alt="${title}">
+        <div class="img-gradient-overlay"></div>
+        <span class="badge position-absolute top-0 start-0 m-3 blog-post-category">${tag}</span>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title blog-post-title">${title}</h5>
+        <div class="blog-post-excerpt">${excerpt}</div>
+        <div class="blog-post-meta d-flex align-items-center mt-2">
+          ${avatar}
+          <span class="ms-2">${author || 'Unknown'}</span>
+          <span class="mx-2">·</span>
+          <span class="blog-post-date"><i class="bi bi-calendar"></i> ${formattedDate}</span>
+          <span class="mx-2">·</span>
+          <span class="blog-post-reading-time"><i class="bi bi-clock"></i> ${readingTime} min read</span>
+        </div>
+        <div class="blog-post-actions d-flex align-items-center mt-3">
+          <button class="btn btn-link p-0 me-3" title="Like"><i class="bi bi-heart"></i></button>
+          <button class="btn btn-link p-0 me-3" title="Comment"><i class="bi bi-chat"></i></button>
+          <button class="btn btn-link p-0 me-3" title="Bookmark"><i class="bi bi-bookmark"></i></button>
+          <div class="ms-auto social-share">
+            <a href="#" class="btn btn-link p-0 me-2" title="Share on Twitter"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="btn btn-link p-0 me-2" title="Share on Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="btn btn-link p-0" title="Share on LinkedIn"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}

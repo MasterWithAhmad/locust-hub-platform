@@ -129,8 +129,30 @@
           </div>
         </div>
       </div>
-
     </div><!-- End Page Title -->
+
+    <!-- Search and Sort Bar -->
+    <div class="container" id="searchSortBar">
+      <div class="row mb-4 align-items-center">
+        <div class="col-md-8 mb-2 mb-md-0 position-relative">
+          <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted" style="z-index:2;">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" id="searchInput" class="form-control ps-5" placeholder="Search blog posts..." aria-label="Search">
+        </div>
+        <div class="col-md-4 position-relative">
+          <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted" style="z-index:2;">
+            <i class="bi bi-funnel"></i>
+          </span>
+          <select id="sortSelect" class="form-select ps-5" aria-label="Sort">
+            <option value="latest">Sort by: Latest</option>
+            <option value="oldest">Oldest</option>
+            <option value="az">A-Z Title</option>
+            <option value="za">Z-A Title</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
     <!-- Blog Section -->
     <section id="blog" class="blog section">
