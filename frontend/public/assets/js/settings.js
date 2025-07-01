@@ -391,6 +391,95 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         console.error('Update profile form not found.');
       }
+
+      // Factory Reset Modal Logic
+      const factoryResetModal = document.getElementById('factoryResetModal');
+      const confirmFactoryResetBtn = document.getElementById('confirmFactoryResetBtn');
+      const confirmFactoryResetInput = document.getElementById('confirmFactoryResetInput');
+
+      function updateFactoryResetButtonState() {
+        const isConfirmed = confirmFactoryResetInput.value.toLowerCase() === 'reset my data';
+        confirmFactoryResetBtn.disabled = !isConfirmed;
+      }
+
+      if (confirmFactoryResetInput) {
+        confirmFactoryResetInput.addEventListener('input', updateFactoryResetButtonState);
+      }
+
+      if (confirmFactoryResetBtn) {
+        confirmFactoryResetBtn.addEventListener('click', async function () {
+          if (!confirmFactoryResetBtn.disabled) {
+            // Show SweetAlert confirmation
+            const result = await Swal.fire({
+              title: 'Are you sure?',
+              text: 'This will delete all your predictions and cannot be undone. Your account will remain.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#f6c23e',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Yes, reset my data',
+              cancelButtonText: 'Cancel',
+              reverseButtons: true,
+              customClass: {
+                confirmButton: 'btn btn-warning',
+                cancelButton: 'btn btn-secondary me-2'
+              },
+              buttonsStyling: false
+            });
+
+            if (result.isConfirmed) {
+              try {
+                Swal.fire({
+                  title: 'Resetting your data...',
+                  text: 'Please wait while we clear your predictions.',
+                  allowOutsideClick: false,
+                  didOpen: () => {
+                    Swal.showLoading();
+                  }
+                });
+
+                // Call the API to reset user data
+                const response = await fetch('/api/user/factory-reset', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                  }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                  await Swal.fire({
+                    icon: 'success',
+                    title: 'Factory Reset Complete',
+                    text: data.message || 'All your predictions have been deleted.',
+                    confirmButtonText: 'OK'
+                  });
+                  // Optionally, refresh the page or update UI
+                } else {
+                  throw new Error(data.message || 'Failed to reset data');
+                }
+              } catch (error) {
+                Swal.close();
+                await Swal.fire({
+                  icon: 'error',
+                  title: 'Reset Failed',
+                  text: error.message || 'An error occurred while resetting your data. Please try again.',
+                  confirmButtonText: 'OK'
+                });
+              }
+            }
+          }
+        });
+      }
+
+      if (factoryResetModal) {
+        factoryResetModal.addEventListener('hidden.bs.modal', function () {
+          if (confirmFactoryResetInput) confirmFactoryResetInput.value = '';
+          if (confirmFactoryResetBtn) confirmFactoryResetBtn.disabled = true;
+        });
+      }
     }); // End of DOMContentLoaded
 
     // Password Change Handler

@@ -600,6 +600,32 @@
           </div>
         </div>
 
+        <div class="col-12">
+          <div class="settings-card border-warning">
+            <div class="card-header bg-warning bg-opacity-10 text-warning d-flex align-items-center">
+              <i class="bi bi-arrow-clockwise me-2"></i>
+              <h6 class="mb-0">Factory Reset</h6>
+            </div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h6 class="text-warning mb-1">Reset My Data</h6>
+                  <p class="mb-0 text-muted">This will delete all your predictions and give you a clean slate. Your account will remain.</p>
+                </div>
+                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#factoryResetModal">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Factory Reset
+                </button>
+              </div>
+              <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div>
+                  <strong>Warning:</strong> This will permanently delete all your predictions. Your account will not be deleted.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel"
           aria-hidden="true">
           <div class="modal-dialog">
@@ -626,6 +652,29 @@
               <div class="modal-footer border-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete My Account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="factoryResetModal" tabindex="-1" aria-labelledby="factoryResetModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header border-0">
+                <h5 class="modal-title text-warning" id="factoryResetModalLabel">Factory Reset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  <div>This will delete all your predictions and cannot be undone. Your account will remain.</div>
+                </div>
+                <p>To confirm, please type <strong>reset my data</strong> below:</p>
+                <input type="text" id="confirmFactoryResetInput" class="form-control mb-3" placeholder="Type 'reset my data' to confirm">
+              </div>
+              <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmFactoryResetBtn" disabled>Factory Reset</button>
               </div>
             </div>
           </div>

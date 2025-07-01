@@ -1088,75 +1088,34 @@ def change_password():
         if cursor: cursor.close()
         if conn: conn.close()
 
-@app.route('/api/account/delete', methods=['DELETE'])
+@app.route('/api/user/factory-reset', methods=['POST'])
 @jwt_required()
-def delete_account():
+def factory_reset():
     """
-    Delete the authenticated user's account and all associated data.
-    Requires the user to be authenticated via JWT.
+    Deletes all predictions for the authenticated user, but does not delete the user account.
     """
     conn = None
     cursor = None
     try:
-        # Get user ID from JWT
         user_id = get_jwt_identity()
         if not user_id:
-            return jsonify({'error': 'User not authenticated'}), 401
-            
-        # Get database connection
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        try:
-            # Start transaction
-            conn.start_transaction()
-            
-            # 1. Delete user's predictions (or set to NULL if you want to keep the data)
-            cursor.execute('DELETE FROM predictions WHERE user_id = %s', (user_id,))
-            
-            # 2. Delete user's session data (if you have a sessions table)
-            # cursor.execute('DELETE FROM user_sessions WHERE user_id = %s', (user_id,))
-            
-            # 3. Delete user's profile data (if you have a separate profiles table)
-            # cursor.execute('DELETE FROM user_profiles WHERE user_id = %s', (user_id,))
-            
-            # 4. Finally, delete the user account
-            cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
-            
-            # Check if any row was affected
-            if cursor.rowcount == 0:
-                conn.rollback()
-                return jsonify({'success': False, 'message': 'User not found'}), 404
-            
-            # Commit the transaction
-            conn.commit()
-            
-            return jsonify({
-                'success': True,
-                'message': 'Account and all associated data have been permanently deleted.'
-            }), 200
-            
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            print(f"Error deleting account: {str(e)}")
-            return jsonify({
-                'success': False,
-                'message': 'Failed to delete account',
-                'error': str(e)
-            }), 500
-            
+        # Delete all predictions for this user
+        cursor.execute('DELETE FROM predictions WHERE user_id = %s', (user_id,))
+        conn.commit()
+        return jsonify({'success': True, 'message': 'All your predictions have been deleted.'}), 200
     except Exception as e:
-        print(f"Unexpected error in delete_account: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': 'An error occurred while processing your request',
-            'error': str(e)
-        }), 500
-        
+        if conn:
+            conn.rollback()
+        print(f"Error during factory reset: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
     finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 # Forgot Password - Step 1: Get Security Question
 @app.route('/api/auth/forgot-password', methods=['POST'])

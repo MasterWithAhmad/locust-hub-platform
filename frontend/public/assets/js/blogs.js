@@ -143,7 +143,7 @@ function createPostElement(post, index) {
         <div class="img-gradient-overlay"></div>
         <span class="badge position-absolute top-0 start-0 m-3 blog-post-category">${tag}</span>
       </div>
-      <div class="card-body d-flex flex-column">
+          <div class="card-body d-flex flex-column">
         <h5 class="card-title blog-post-title">${post.title}</h5>
         <div class="blog-post-excerpt">${excerpt}</div>
         <div class="blog-post-meta d-flex align-items-center mt-2">
@@ -168,7 +168,7 @@ function createPostElement(post, index) {
           <div class="modal-header">
             <h5 class="modal-title" id="${modalId}_label">${post.title}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
+            </div>
           <div class="modal-body">
             <div class="mb-3">
               <span class="badge bg-primary">${tag}</span>
@@ -181,7 +181,7 @@ function createPostElement(post, index) {
         </div>
       </div>
     </div>
-  `;
+      `;
   return col;
 }
 
