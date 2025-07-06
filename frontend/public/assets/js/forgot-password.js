@@ -2,6 +2,7 @@
 const API_BASE_URL = "http://127.0.0.1:5000";
 let currentStep = 1;
 let userEmail = "";
+let securityQuestion = "";
 
 // Initialize SweetAlert2 with theme
 const Toast = Swal.mixin({
@@ -16,6 +17,88 @@ const Toast = Swal.mixin({
   },
 });
 
+// DOM Elements
+const progressBar = document.getElementById('progress-bar');
+const newPasswordInput = document.getElementById('newPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const passwordStrength = document.getElementById('password-strength');
+const passwordStrengthText = document.querySelector('#password-strength-text span');
+
+// Password strength checker
+function checkPasswordStrength(password) {
+  let strength = 0;
+  const tips = [];
+  
+  if (!password) {
+    return { strength: 0, tips: ['Enter a password'] };
+  }
+  
+  if (password.length < 8) {
+    tips.push('at least 8 characters');
+  } else {
+    strength += 1;
+  }
+  
+  if (password.match(/[a-z]+/)) {
+    strength += 1;
+  } else {
+    tips.push('lowercase letter');
+  }
+  
+  if (password.match(/[A-Z]+/)) {
+    strength += 1;
+  } else {
+    tips.push('uppercase letter');
+  }
+  
+  if (password.match(/[0-9]+/)) {
+    strength += 1;
+  } else {
+    tips.push('number');
+  }
+  
+  if (password.match(/[!@#$%^&*(),.?":{}|<>]+/)) {
+    strength += 1;
+  } else {
+    tips.push('special character');
+  }
+  
+  // Only update UI if elements exist
+  if (progressBar && passwordStrength && passwordStrengthText) {
+    const width = (strength / 5) * 100;
+    progressBar.style.width = `${width}%`;
+    
+    // Update strength text and color
+    let strengthText = '';
+    let strengthClass = '';
+    
+    if (strength <= 1) {
+      strengthText = 'Very Weak';
+      strengthClass = 'bg-danger';
+    } else if (strength <= 2) {
+      strengthText = 'Weak';
+      strengthClass = 'bg-warning';
+    } else if (strength <= 3) {
+      strengthText = 'Good';
+      strengthClass = 'bg-info';
+    } else if (strength <= 4) {
+      strengthText = 'Strong';
+      strengthClass = 'bg-primary';
+    } else {
+      strengthText = 'Very Strong';
+      strengthClass = 'bg-success';
+    }
+    
+    passwordStrength.className = 'progress-bar ' + strengthClass;
+    passwordStrengthText.textContent = strengthText;
+  }
+  
+  return {
+    strength: strength,
+    tips: tips
+  };
+}
+
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize tooltips
@@ -27,66 +110,177 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Password visibility toggles
-  const toggleNewPassword = document.querySelector("#toggleNewPassword");
-  const newPassword = document.querySelector("#newPassword");
-  const toggleConfirmPassword = document.querySelector(
-    "#toggleConfirmPassword"
-  );
-  const confirmPassword = document.querySelector("#confirmPassword");
+  const toggleNewPassword = document.getElementById('toggleNewPassword');
+  const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
 
   // Toggle new password visibility
-  if (toggleNewPassword && newPassword) {
-    toggleNewPassword.addEventListener("click", function () {
-      togglePasswordVisibility(newPassword, this);
+  if (toggleNewPassword) {
+    toggleNewPassword.addEventListener('click', function() {
+      const input = document.getElementById('newPassword');
+      const icon = this.querySelector('i');
+      if (input && icon) {
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('bi-eye-slash');
+          icon.classList.add('bi-eye');
+        }
+      }
     });
   }
 
   // Toggle confirm password visibility
-  if (toggleConfirmPassword && confirmPassword) {
-    toggleConfirmPassword.addEventListener("click", function () {
-      togglePasswordVisibility(confirmPassword, this);
+  if (toggleConfirmPassword) {
+    toggleConfirmPassword.addEventListener('click', function() {
+      const input = document.getElementById('confirmPassword');
+      const icon = this.querySelector('i');
+      if (input && icon) {
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('bi-eye-slash');
+          icon.classList.add('bi-eye');
+        }
+      }
     });
+  }
+  
+  // Password strength checker
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener('input', function() {
+      checkPasswordStrength(this.value);
+      validatePasswords();
+    });
+  }
+  
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', validatePasswords);
   }
 
   // Show initial step
   showStep(1);
+  updateProgressBar();
 });
 
-// Show a specific step in the form
-function showStep(step) {
-  // Hide all steps
-  document.querySelectorAll(".step").forEach((div) => {
-    div.style.display = "none";
-  });
-
-  // Show the current step
-  const currentStepElement = document.getElementById(`step${step}`);
-  if (currentStepElement) {
-    currentStepElement.style.display = "block";
-  }
-
-  currentStep = step;
-
-  // Scroll to top of form
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// Toggle password visibility
+// Toggle password visibility with better feedback
 function togglePasswordVisibility(inputId, toggleBtn) {
   const input = document.getElementById(inputId);
-  const icon = toggleBtn.querySelector("i");
+  if (!input) return;
+  
+  const icon = toggleBtn?.querySelector('i');
+  
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) {
+      icon.classList.remove('bi-eye');
+      icon.classList.add('bi-eye-slash');
+    }
+    toggleBtn?.setAttribute('aria-label', 'Hide password');
+    toggleBtn?.setAttribute('title', 'Hide password');
+  } else {
+    input.type = 'password';
+    if (icon) {
+      icon.classList.remove('bi-eye-slash');
+      icon.classList.add('bi-eye');
+    }
+    toggleBtn?.setAttribute('aria-label', 'Show password');
+    toggleBtn?.setAttribute('title', 'Show password');
+  }
+  
+  // Focus back on the input
+  input.focus();
+}
 
-  if (input && icon) {
-    if (input.type === "password") {
-      input.type = "text";
-      icon.classList.remove("bi-eye");
-      icon.classList.add("bi-eye-slash");
+// Validate password match
+function validatePasswords() {
+  const password = newPasswordInput?.value || '';
+  const confirm = confirmPasswordInput?.value || '';
+  const resetBtn = document.getElementById('resetPasswordBtn');
+  
+  if (!resetBtn) return;
+  
+  if (password && confirm) {
+    if (password !== confirm) {
+      resetBtn.disabled = true;
+      resetBtn.title = 'Passwords do not match';
+      return false;
     } else {
-      input.type = "password";
-      icon.classList.remove("bi-eye-slash");
-      icon.classList.add("bi-eye");
+      const strength = checkPasswordStrength(password);
+      resetBtn.disabled = strength.strength < 3; // Require at least 'Good' strength
+      resetBtn.title = strength.strength < 3 ? 'Password is too weak' : '';
+      return strength.strength >= 3;
     }
   }
+  
+  resetBtn.disabled = !password || !confirm;
+  return false;
+}
+
+// Update progress bar based on current step
+function updateProgressBar() {
+  if (!progressBar) return;
+  const progress = ((currentStep - 1) / 2) * 100;
+  progressBar.style.width = `${progress}%`;
+}
+
+// Show a specific step in the form with smooth transition
+function showStep(step) {
+  const steps = document.querySelectorAll('.step');
+  const currentElement = document.getElementById(`step${currentStep}`);
+  const nextElement = document.getElementById(`step${step}`);
+  
+  // Update step indicators
+  document.querySelectorAll('.step-indicator .step').forEach((indicator, index) => {
+    if (index + 1 < step) {
+      indicator.classList.add('completed');
+      indicator.classList.remove('active');
+    } else if (index + 1 === step) {
+      indicator.classList.add('active');
+      indicator.classList.remove('completed');
+    } else {
+      indicator.classList.remove('active', 'completed');
+    }
+  });
+  
+  // Fade out current step
+  if (currentElement) {
+    currentElement.style.opacity = '0';
+    currentElement.style.transition = 'opacity 0.3s ease-in-out';
+    
+    setTimeout(() => {
+      currentElement.style.display = 'none';
+      
+      // Fade in next step
+      if (nextElement) {
+        nextElement.style.display = 'block';
+        nextElement.style.opacity = '0';
+        
+        // Trigger reflow
+        void nextElement.offsetHeight;
+        
+        nextElement.style.opacity = '1';
+        nextElement.style.transition = 'opacity 0.3s ease-in-out';
+      }
+    }, 300);
+  }
+  
+  currentStep = step;
+  updateProgressBar();
+  
+  // Focus on first input of the step
+  setTimeout(() => {
+    const firstInput = nextElement?.querySelector('input');
+    if (firstInput) firstInput.focus();
+  }, 350);
+  
+  // Scroll to top of form
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Initialize the form
@@ -149,328 +343,328 @@ function isValidEmail(email) {
 
 // Step 1: Check email and get security question
 async function checkEmail() {
-  const email = document.getElementById("email").value.trim();
-  const continueBtn = document.querySelector(
-    '#step1 button[onclick="checkEmail()"]'
-  );
-
+  const emailInput = document.getElementById("email");
+  const email = emailInput.value.trim();
+  
+  // Validate email
   if (!email) {
-    await Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Please enter your email address",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
+    showError("Please enter your email address.", "emailHelp");
+    emailInput.focus();
     return;
   }
 
   if (!isValidEmail(email)) {
-    await Swal.fire({
-      icon: "error",
-      title: "Invalid Email",
-      text: "Please enter a valid email address",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
+    showError("Please enter a valid email address.", "emailHelp");
+    emailInput.focus();
     return;
   }
 
+  const continueBtn = document.querySelector('#step1 button[onclick="checkEmail()"]');
+  const originalBtnText = continueBtn.innerHTML;
+  
   try {
     // Show loading state
-    Swal.fire({
-      title: "Verifying Email",
-      text: "Please wait while we check your email...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
+    continueBtn.disabled = true;
+    continueBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Checking...';
+    
+    // Call API to check email and get security question
     const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
       },
       body: JSON.stringify({ email }),
-      credentials: "include", // Important for sending cookies with CORS
     });
 
     const data = await response.json();
-
-    // Close any open dialogs
-    Swal.close();
-
+    
     if (!response.ok) {
-      throw new Error(data.error || "Failed to verify email");
+      throw new Error(data.message || (response.status === 404 
+        ? "No account found with this email address." 
+        : "An error occurred. Please try again later."));
     }
-
-    if (!data.security_question) {
-      throw new Error("No security question found for this account");
+    
+    if (data.success) {
+      userEmail = email;
+      securityQuestion = data.security_question || "What is your mother's maiden name?";
+      document.getElementById("securityQuestion").textContent = securityQuestion;
+      showStep(2);
+      
+      // Show success message
+      Toast.fire({
+        icon: 'success',
+        title: 'Verification email sent!',
+        text: 'Please check your email for the verification code.'
+      });
+    } else {
+      throw new Error(data.message || "An error occurred. Please try again.");
     }
-
-    // Store email for next steps
-    userEmail = email;
-
-    // Show security question immediately
-    document.getElementById("securityQuestion").textContent =
-      data.security_question;
-    showStep(2);
   } catch (error) {
     console.error("Error:", error);
-    await Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: error.message || "An error occurred while verifying your email",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
+    showError(error.message || "An error occurred. Please try again.", "emailHelp");
+  } finally {
+    // Reset button state
+    continueBtn.disabled = false;
+    continueBtn.innerHTML = originalBtnText;
   }
 }
 
 // Step 2: Verify security answer
 async function verifyAnswer() {
   const answerInput = document.getElementById("securityAnswer");
-  const answer = answerInput ? answerInput.value.trim() : "";
-  const submitBtn = document.querySelector('#step2 button[type="button"]');
-
+  const answer = answerInput.value.trim();
+  
+  // Validate answer
   if (!answer) {
-    await Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Please enter your answer",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
-    if (answerInput) answerInput.focus();
+    showError("Please enter your answer.", "securityAnswerHelp");
+    answerInput.focus();
     return;
   }
 
+  const verifyBtn = document.querySelector('#step2 button[onclick="verifyAnswer()"]');
+  const originalBtnText = verifyBtn.innerHTML;
+  
   try {
     // Show loading state
-    Swal.fire({
-      title: "Verifying Answer",
-      text: "Please wait while we verify your answer...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
-    // Call API to verify answer
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Verifying...';
+    
+    // Call API to verify security answer
     const response = await fetch(`${API_BASE_URL}/api/auth/verify-answer`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
       },
       body: JSON.stringify({
         email: userEmail,
         answer: answer,
       }),
-      credentials: "include",
     });
 
     const data = await response.json();
-
-    // Close loading dialog
-    Swal.close();
-
+    
     if (!response.ok) {
-      throw new Error(data.error || "Verification failed. Please try again.");
+      throw new Error(data.message || (response.status === 400 
+        ? "Incorrect answer. Please try again." 
+        : "An error occurred. Please try again later."));
     }
-
-    // Show success message
-    await Swal.fire({
-      icon: "success",
-      title: "Success!",
-      text: "Your answer has been verified. You can now set a new password.",
-      confirmButtonText: "Continue",
-      confirmButtonColor: "#0d6efd",
-    });
-
-    // Show password reset form
-    showStep(3);
+    
+    if (data.success) {
+      // Store the reset token if provided
+      if (data.reset_token) {
+        localStorage.setItem('resetToken', data.reset_token);
+      }
+      
+      showStep(3);
+      
+      // Show success message
+      Toast.fire({
+        icon: 'success',
+        title: 'Identity verified!',
+        text: 'You can now set a new password for your account.'
+      });
+    } else {
+      throw new Error(data.message || "An error occurred. Please try again.");
+    }
   } catch (error) {
     console.error("Error:", error);
-    await Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: error.message || "An error occurred while verifying your answer",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
+    showError(error.message || "An error occurred. Please try again.", "securityAnswerHelp");
+    
+    // Shake animation for wrong answer
+    answerInput.classList.add('is-invalid');
+    setTimeout(() => {
+      answerInput.classList.remove('is-invalid');
+    }, 1000);
   } finally {
-    // Reset button state if it exists
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = 'Verify <i class="bi bi-shield-check ms-2"></i>';
-    }
-  }
-}
-
-// Step 3: Reset password
-async function resetPassword() {
-  const newPassword = document.getElementById("newPassword").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
-  const submitBtn = document.querySelector('#step3 button[type="button"]');
-
-  // Log the start of the reset process
-  console.log("Starting password reset process...");
-  console.log("User email:", userEmail);
-  console.log("New password length:", newPassword.length);
-
-  // Validate passwords
-  if (newPassword.length < 8) {
-    console.log("Password validation failed: too short");
-    await Swal.fire({
-      icon: "error",
-      title: "Password Too Short",
-      text: "Password must be at least 8 characters long",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    console.log("Password validation failed: passwords do not match");
-    await Swal.fire({
-      icon: "error",
-      title: "Passwords Do Not Match",
-      text: "Please make sure both passwords match",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
-    return;
-  }
-
-  try {
-    // Update button state
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML =
-        '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Resetting...';
-    }
-
-    // Show loading state
-    Swal.fire({
-      title: "Resetting Password",
-      text: "Please wait while we update your password...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
-    // Prepare request data
-    const requestData = {
-      email: userEmail,
-      new_password: newPassword,
-    };
-
-    console.log("Sending reset password request:", {
-      url: `${API_BASE_URL}/api/auth/reset-password`,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: requestData,
-      credentials: "include",
-    });
-
-    // Call API to reset password
-    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(requestData),
-      credentials: "include",
-    });
-
-    console.log("Received response status:", response.status);
-
-    let data;
-    try {
-      const responseText = await response.text();
-      console.log("Raw response text:", responseText);
-      try {
-        data = JSON.parse(responseText);
-        console.log("Response data:", data);
-      } catch (e) {
-        console.error("Failed to parse JSON string:", e);
-        throw new Error("Invalid JSON response from server");
-      }
-    } catch (e) {
-      console.error("Error getting response text:", e);
-      throw new Error("Could not read response from server");
-    }
-
-    // Close any open dialogs
-    Swal.close();
-
-    if (!response.ok) {
-      console.error("Error response from server:", data);
-      throw new Error(
-        data.error || `Failed to reset password (${response.status})`
-      );
-    }
-
-    console.log("Password reset successful, showing success message");
-
-    // Show success message
-    await Swal.fire({
-      icon: "success",
-      title: "Password Reset Successful",
-      text:
-        data.message ||
-        "Your password has been reset successfully. You can now log in with your new password.",
-      confirmButtonText: "Go to Login",
-      confirmButtonColor: "#0d6efd",
-      allowOutsideClick: false,
-    });
-
-    // Redirect to login page
-    console.log("Redirecting to login page...");
-    window.location.href = "login.html";
-  } catch (error) {
-    console.error("Error in resetPassword:", error);
-
-    // Close any open dialogs
-    Swal.close();
-
-    // Show error message
-    await Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: error.message || "An error occurred while resetting your password",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#0d6efd",
-    });
-
     // Reset button state
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML =
-        'Reset Password <i class="bi bi-arrow-repeat ms-2"></i>';
-    }
+    verifyBtn.disabled = false;
+    verifyBtn.innerHTML = originalBtnText;
   }
 }
+
 // Navigation functions
 function backToStep(step) {
+  // If going back from step 3 to step 2, clear the password fields
+  if (currentStep === 3 && step === 2) {
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    
+    // Reset password strength meter
+    if (passwordStrength) {
+      passwordStrength.style.width = '0%';
+      passwordStrength.className = 'progress-bar';
+    }
+    
+    if (passwordStrengthText) {
+      passwordStrengthText.textContent = 'Very Weak';
+    }
+  }
+  
   showStep(step);
 }
 
-function backToStep1() {
-  showStep(1);
+// Show error message with better formatting
+function showError(message, targetId = null) {
+  // If targetId is provided, show error in that element
+  if (targetId) {
+    const target = document.getElementById(targetId);
+    if (target) {
+      // If target is a form text element, update it
+      if (target.classList.contains('form-text')) {
+        target.classList.remove('text-muted');
+        target.classList.add('text-danger');
+        target.textContent = message;
+        return;
+      }
+      
+      // Otherwise, create or update error message below the target
+      let errorElement = target.nextElementSibling;
+      if (!errorElement || !errorElement.classList.contains('invalid-feedback')) {
+        errorElement = document.createElement('div');
+        errorElement.className = 'invalid-feedback d-block';
+        target.parentNode.insertBefore(errorElement, target.nextSibling);
+      }
+      errorElement.textContent = message;
+      
+      // Add is-invalid class to input
+      if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') {
+        target.classList.add('is-invalid');
+      }
+      
+      // Scroll to the error
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    // Fallback to toast notification
+    Toast.fire({
+      icon: 'error',
+      title: 'Error',
+      text: message
+    });
+  }
 }
-function backToStep2() {
-  showStep(2);
+
+// Clear error message
+function clearError(targetId) {
+  if (targetId) {
+    const target = document.getElementById(targetId);
+    if (target) {
+      // If target is a form text element, reset it
+      if (target.classList.contains('form-text')) {
+        target.classList.remove('text-danger');
+        target.classList.add('text-muted');
+        target.textContent = target.dataset.originalText || '';
+        return;
+      }
+      
+      // Remove is-invalid class from input
+      target.classList.remove('is-invalid');
+      
+      // Remove error message element if it exists
+      const errorElement = target.nextElementSibling;
+      if (errorElement && errorElement.classList.contains('invalid-feedback')) {
+        errorElement.remove();
+      }
+    }
+  }
 }
+
+// Reset password function
+async function resetPassword() {
+  const newPassword = document.getElementById('newPassword')?.value.trim();
+  const confirmPassword = document.getElementById('confirmPassword')?.value.trim();
+  const resetBtn = document.querySelector('button[onclick="resetPassword()"]');
+  
+  // Basic validation
+  if (!newPassword || !confirmPassword) {
+    showError('Please fill in all password fields', 'passwordHelp');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    showError('Passwords do not match', 'passwordHelp');
+    return;
+  }
+  
+  // Check password strength
+  const strength = checkPasswordStrength(newPassword);
+  if (strength.strength < 3) {
+    showError('Password is too weak. Please choose a stronger password.', 'passwordHelp');
+    return;
+  }
+  
+  // Store button state for restoration
+  let buttonState = {
+    html: resetBtn?.innerHTML || 'Reset Password',
+    disabled: resetBtn?.disabled || false
+  };
+  
+  try {
+    // Show loading state
+    if (resetBtn) {
+      resetBtn.disabled = true;
+      resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Resetting...';
+    }
+    
+    // Call API to reset password
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: userEmail,
+        new_password: newPassword,
+        reset_token: localStorage.getItem('resetToken')
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to reset password. Please try again.');
+    }
+    
+    // Show success message
+    await Swal.fire({
+      icon: 'success',
+      title: 'Password Reset Successful!',
+      text: 'Your password has been updated successfully. You can now log in with your new password.',
+      confirmButtonText: 'Go to Login'
+    });
+    
+    // Clear stored data and redirect to login
+    localStorage.removeItem('resetToken');
+    window.location.href = 'login.html';
+    
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    showError(error.message || 'An error occurred while resetting your password. Please try again.', 'passwordHelp');
+    
+    // Re-throw the error to be caught by the global error handler if needed
+    throw error;
+  } finally {
+    // Reset button state
+    if (resetBtn) {
+      resetBtn.disabled = buttonState.disabled;
+      resetBtn.innerHTML = buttonState.html;
+    }
+  }
+}
+
+// Validate email format
+function isValidEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(String(email).toLowerCase());
+}
+
+// Expose functions to global scope
+window.checkEmail = checkEmail;
+window.verifyAnswer = verifyAnswer;
+window.resetPassword = resetPassword;
+window.backToStep = backToStep;
+window.backToStep1 = () => backToStep(1);
+window.backToStep2 = () => backToStep(2);
 
 // Initialize the form
 document.addEventListener("DOMContentLoaded", () => {
@@ -478,7 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Allow form submission with Enter key
   document.getElementById("email").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") requestReset();
+    if (e.key === "Enter") checkEmail();
   });
 
   document
