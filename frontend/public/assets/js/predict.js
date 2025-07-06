@@ -86,76 +86,105 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 async function handlePredictionSubmit(event) {
+  // Prevent default form submission and propagation
   event.preventDefault();
+  event.stopPropagation();
+  
+  // Get form reference from the event
+  const form = event.target;
+  
+  // Manually collect form values to ensure all fields are captured
+  const initialFormValues = {
+    COUNTRYNAME: document.getElementById('COUNTRYNAME').value,
+    REGION: document.getElementById('REGION').value,
+    STARTYEAR: document.getElementById('STARTYEAR').value,
+    STARTMONTH: document.getElementById('STARTMONTH').value,
+    PPT: document.getElementById('PPT').value,
+    TMAX: document.getElementById('TMAX').value,
+    SOILMOISTURE: document.getElementById('SOILMOISTURE').value
+  };
+  
+  const predictButton = form.querySelector('button[type="submit"]');
+  const predictButtonText = predictButton.querySelector('#predictButtonText');
+  const predictButtonLoading = predictButton.querySelector('#predictButtonLoading');
+  const predictButtonLoadingText = predictButton.querySelector('#predictButtonLoadingText');
 
-  const predictButton = document.querySelector(
-    '#predictionForm button[type="submit"]'
-  );
-  const predictButtonText = document.getElementById("predictButtonText");
-  const predictButtonLoading = document.getElementById("predictButtonLoading");
-  const predictButtonLoadingText = document.getElementById(
-    "predictButtonLoadingText"
-  );
-
-  // Show loading state
   predictButton.disabled = true;
-  predictButtonText.style.display = "none";
-  predictButtonLoading.style.display = "inline-block";
-  predictButtonLoadingText.style.display = "inline-block";
+  predictButtonText.classList.add('d-none');
+  predictButtonLoading.classList.remove('d-none');
+  predictButtonLoadingText.classList.remove('d-none');
 
-  // Basic client-side validation
-  const form = document.getElementById("predictionForm");
+  // First, perform client-side validation
   if (!form.checkValidity()) {
     form.reportValidity();
-    // Hide loading state on validation failure
+    // Reset button state on validation failure
     predictButton.disabled = false;
-    predictButtonText.style.display = "inline-block";
-    predictButtonLoading.style.display = "none";
-    predictButtonLoadingText.style.display = "none";
-    return;
+    predictButtonText.classList.remove('d-none');
+    predictButtonLoading.classList.add('d-none');
+    predictButtonLoadingText.classList.add('d-none');
+    return false;
   }
+  
+  // Get values from the form data
+  const startYear = parseInt(initialFormValues.STARTYEAR) || new Date().getFullYear();
+  const startMonth = parseInt(initialFormValues.STARTMONTH) || 1;
+  const modelSelect = document.getElementById('MODEL_NAME');
+  const modelName = modelSelect ? modelSelect.value : '';
 
-  // Get values from the input types
-  const startYear = parseInt(document.getElementById("STARTYEAR").value); // Read year directly from number input
-  const startMonth = parseInt(document.getElementById("STARTMONTH").value); // format 1-12
-  const modelName = document.getElementById("MODEL_NAME").value;
   if (!modelName) {
     Swal.fire({
       icon: "error",
       title: "Model Required",
       text: "Please select a prediction model.",
     });
+    // Reset button state
     predictButton.disabled = false;
-    predictButtonText.style.display = "inline-block";
-    predictButtonLoading.style.display = "none";
-    predictButtonLoadingText.style.display = "none";
-    return;
+    predictButtonText.classList.remove('d-none');
+    predictButtonLoading.classList.add('d-none');
+    predictButtonLoadingText.classList.add('d-none');
+    return false;
   }
 
-  const formData = {
-    REGION: document.getElementById("REGION").value.trim(),
-    COUNTRYNAME: document.getElementById("COUNTRYNAME").value.trim(),
+  // Prepare prediction data with proper typing
+  const predictionData = {
+    REGION: initialFormValues.REGION?.trim() || '',
+    COUNTRYNAME: initialFormValues.COUNTRYNAME?.trim() || '',
     STARTYEAR: startYear,
     STARTMONTH: startMonth,
-    PPT: parseFloat(document.getElementById("PPT").value),
-    TMAX: parseFloat(document.getElementById("TMAX").value),
-    SOILMOISTURE: parseFloat(document.getElementById("SOILMOISTURE").value),
+    PPT: parseFloat(initialFormValues.PPT) || 0,
+    TMAX: parseFloat(initialFormValues.TMAX) || 0,
+    SOILMOISTURE: parseFloat(initialFormValues.SOILMOISTURE) || 0,
     MODEL_NAME: modelName
   };
 
-  console.log("Prediction data:", formData);
+  console.log("Prediction data:", predictionData);
 
   try {
-    const result = await api.predict(formData);
+    const result = await api.predict(predictionData);
     console.log("Prediction API result:", result);
 
-    // Hide loading state
+    // Reset button state
     predictButton.disabled = false;
-    predictButtonText.style.display = "inline-block";
-    predictButtonLoading.style.display = "none";
-    predictButtonLoadingText.style.display = "none";
+    predictButtonText.classList.remove('d-none');
+    predictButtonLoading.classList.add('d-none');
+    predictButtonLoadingText.classList.add('d-none');
 
-    // Show simple result first
+    // Repopulate form fields to prevent clearing
+    Object.entries(initialFormValues).forEach(([key, value]) => {
+      const input = form.elements[key];
+      if (input) {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = value === 'on';
+        } else if (input.type === 'select-one' && input.id === 'MODEL_NAME') {
+          // Special handling for model select
+          input.value = modelName;
+        } else {
+          input.value = value || '';
+        }
+      }
+    });
+
+    // Show prediction result
     Swal.fire({
       title: result.prediction === "yes" ? "⚠️ YES ⚠️" : "✅ NO",
       html: `
@@ -184,8 +213,8 @@ async function handlePredictionSubmit(event) {
       },
     }).then(() => {
       // After clicking OK, show detailed card
-      const formattedDate = `${getMonthName(parseInt(formData.STARTMONTH))} ${
-        formData.STARTYEAR
+      const formattedDate = `${getMonthName(parseInt(initialFormValues.STARTMONTH))} ${
+        initialFormValues.STARTYEAR
       }`;
 
       Swal.fire({
@@ -201,7 +230,7 @@ async function handlePredictionSubmit(event) {
                                                 <div>
                                                     <h6 class="card-title mb-1">Region</h6>
                                                     <p class="card-text mb-0">${
-                                                      formData.REGION
+                                                      initialFormValues.REGION || 'N/A'
                                                     }</p>
                                                 </div>
                                             </div>
@@ -216,10 +245,8 @@ async function handlePredictionSubmit(event) {
                                                 <div>
                                                     <h6 class="card-title mb-1">Country</h6>
                                                     <p class="card-text mb-0">${
-                                                      formData.COUNTRYNAME
-                                                    } (${
-          result.matched_country
-        })</p>
+                                                      initialFormValues.COUNTRYNAME || 'N/A'
+                                                    } (${result.matched_country || 'N/A'})</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -250,7 +277,7 @@ async function handlePredictionSubmit(event) {
                                                 <div>
                                                     <h6 class="card-title mb-1">Precipitation</h6>
                                                     <p class="card-text mb-0">${
-                                                      formData.PPT
+                                                      initialFormValues.PPT || 'N/A'
                                                     } mm</p>
                                                 </div>
                                             </div>
@@ -265,7 +292,7 @@ async function handlePredictionSubmit(event) {
                                                 <div>
                                                     <h6 class="card-title mb-1">Max Temperature</h6>
                                                     <p class="card-text mb-0">${
-                                                      formData.TMAX
+                                                      initialFormValues.TMAX || 'N/A'
                                                     } °C</p>
                                                 </div>
                                             </div>
@@ -280,7 +307,7 @@ async function handlePredictionSubmit(event) {
                                                 <div>
                                                     <h6 class="card-title mb-1">Soil Moisture</h6>
                                                     <p class="card-text mb-0">${
-                                                      formData.SOILMOISTURE
+                                                      initialFormValues.SOILMOISTURE || 'N/A'
                                                     }</p>
                                                 </div>
                                             </div>
@@ -330,13 +357,13 @@ async function handlePredictionSubmit(event) {
         if (saveResult.isConfirmed) {
           // Format data for saving
           const predictionToSave = {
-            region_name: formData.REGION.trim().toUpperCase(),
-            country_name: formData.COUNTRYNAME.trim().toUpperCase(),
-            start_year: parseInt(formData.STARTYEAR),
-            start_month: parseInt(formData.STARTMONTH),
-            precipitation_mm: parseFloat(formData.PPT),
-            temperature_celsius: parseFloat(formData.TMAX),
-            soil_moisture_percent: parseFloat(formData.SOILMOISTURE),
+            region_name: initialFormValues.REGION.trim().toUpperCase(),
+            country_name: initialFormValues.COUNTRYNAME.trim().toUpperCase(),
+            start_year: parseInt(initialFormValues.STARTYEAR),
+            start_month: parseInt(initialFormValues.STARTMONTH),
+            precipitation_mm: parseFloat(initialFormValues.PPT),
+            temperature_celsius: parseFloat(initialFormValues.TMAX),
+            soil_moisture_percent: parseFloat(initialFormValues.SOILMOISTURE),
             prediction_result: result.probability > 0.5 ? 1 : 0,
             probability: result.probability,
           };
@@ -368,16 +395,16 @@ async function handlePredictionSubmit(event) {
                       // Show a form for blog post
                       showBlogModal({
                         user,
-                        region: formData.REGION,
-                        country: formData.COUNTRYNAME,
+                        region: initialFormValues.REGION,
+                        country: initialFormValues.COUNTRYNAME,
                         onPublish: async (blogData) => {
                           // Prepare form data for image upload
                           const fd = new FormData();
                           fd.append("title", blogData.title);
                           fd.append("content", blogData.content);
                           fd.append("tags", blogData.tags);
-                          fd.append("region", formData.REGION);
-                          fd.append("country", formData.COUNTRYNAME);
+                          fd.append("region", initialFormValues.REGION);
+                          fd.append("country", initialFormValues.COUNTRYNAME);
                           fd.append("date", new Date().toISOString());
                           fd.append("author", user.full_name);
                           fd.append("user_id", user.id || "");
@@ -434,13 +461,7 @@ async function handlePredictionSubmit(event) {
       });
     });
 
-    // Always clear the form and region list after all dialogs
-    setTimeout(() => {
-      const form = document.getElementById("predictionForm");
-      if (form) form.reset();
-      const regionList = document.getElementById("regionList");
-      if (regionList) regionList.innerHTML = "";
-    }, 500);
+    // Removed form reset to keep input values after submission
   } catch (error) {
     console.error("Prediction error:", error);
     // Hide loading state
@@ -603,6 +624,64 @@ function validateInput(input, validValues, fieldName) {
     input.setCustomValidity("");
   }
   input.reportValidity();
+}
+
+// Function to reset the prediction form
+function resetPredictionForm() {
+  const form = document.getElementById('predictionForm');
+  if (form) {
+    form.reset();
+    
+    // Reset any custom states or UI elements
+    const predictButton = form.querySelector('button[type="submit"]');
+    if (predictButton) {
+      predictButton.disabled = false;
+      predictButton.querySelector('#predictButtonText').classList.remove('d-none');
+      predictButton.querySelector('#predictButtonLoading').classList.add('d-none');
+      predictButton.querySelector('#predictButtonLoadingText').classList.add('d-none');
+    }
+    
+    // Hide any previous results or error messages
+    const resultDiv = document.getElementById('predictionResult');
+    if (resultDiv) {
+      resultDiv.style.display = 'none';
+      resultDiv.innerHTML = '';
+      resultDiv.className = 'mt-3 text-center fw-bold';
+    }
+    
+    // Collect form values before submission to preserve them
+    const initialFormValues = {
+      COUNTRYNAME: document.getElementById('COUNTRYNAME').value,
+      REGION: document.getElementById('REGION').value,
+      STARTYEAR: document.getElementById('STARTYEAR').value,
+      STARTMONTH: document.getElementById('STARTMONTH').value,
+      PPT: document.getElementById('PPT').value,
+      TMAX: document.getElementById('TMAX').value,
+      SOILMOISTURE: document.getElementById('SOILMOISTURE').value,
+      STARTMONTH_NAME: getMonthName(document.getElementById('STARTMONTH').value)
+    };
+
+    // Reset any custom validation messages
+    const formInputs = form.querySelectorAll('input, select');
+    formInputs.forEach(input => {
+      input.classList.remove('is-invalid');
+      const feedback = input.nextElementSibling;
+      if (feedback && feedback.classList.contains('invalid-feedback')) {
+        feedback.remove();
+      }
+    });
+    
+    // Show a success message
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Form has been reset',
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true
+    });
+  }
 }
 
 // Initialize when DOM is loaded
