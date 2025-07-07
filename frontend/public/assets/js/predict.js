@@ -1,5 +1,8 @@
 // Make user available globally
 let user = null;
+let formSubmitted = false;
+
+// Initialize the application when DOM is loaded
 document.addEventListener("DOMContentLoaded", async function () {
   // Check login status
   if (!api.auth.isLoggedIn()) {
@@ -105,23 +108,28 @@ async function handlePredictionSubmit(event) {
   };
   
   const predictButton = form.querySelector('button[type="submit"]');
+  if (!predictButton) {
+    console.error('Submit button not found');
+    return false;
+  }
+
   const predictButtonText = predictButton.querySelector('#predictButtonText');
   const predictButtonLoading = predictButton.querySelector('#predictButtonLoading');
   const predictButtonLoadingText = predictButton.querySelector('#predictButtonLoadingText');
 
   predictButton.disabled = true;
-  predictButtonText.classList.add('d-none');
-  predictButtonLoading.classList.remove('d-none');
-  predictButtonLoadingText.classList.remove('d-none');
+  if (predictButtonText) predictButtonText.classList.add('d-none');
+  if (predictButtonLoading) predictButtonLoading.classList.remove('d-none');
+  if (predictButtonLoadingText) predictButtonLoadingText.classList.remove('d-none');
 
   // First, perform client-side validation
   if (!form.checkValidity()) {
     form.reportValidity();
     // Reset button state on validation failure
     predictButton.disabled = false;
-    predictButtonText.classList.remove('d-none');
-    predictButtonLoading.classList.add('d-none');
-    predictButtonLoadingText.classList.add('d-none');
+    if (predictButtonText) predictButtonText.classList.remove('d-none');
+    if (predictButtonLoading) predictButtonLoading.classList.add('d-none');
+    if (predictButtonLoadingText) predictButtonLoadingText.classList.add('d-none');
     return false;
   }
   
@@ -139,9 +147,9 @@ async function handlePredictionSubmit(event) {
     });
     // Reset button state
     predictButton.disabled = false;
-    predictButtonText.classList.remove('d-none');
-    predictButtonLoading.classList.add('d-none');
-    predictButtonLoadingText.classList.add('d-none');
+    if (predictButtonText) predictButtonText.classList.remove('d-none');
+    if (predictButtonLoading) predictButtonLoading.classList.add('d-none');
+    if (predictButtonLoadingText) predictButtonLoadingText.classList.add('d-none');
     return false;
   }
 
@@ -163,11 +171,11 @@ async function handlePredictionSubmit(event) {
     const result = await api.predict(predictionData);
     console.log("Prediction API result:", result);
 
-    // Reset button state
-    predictButton.disabled = false;
-    predictButtonText.classList.remove('d-none');
-    predictButtonLoading.classList.add('d-none');
-    predictButtonLoadingText.classList.add('d-none');
+    // Reset button state with null checks
+    if (predictButton) predictButton.disabled = false;
+    if (predictButtonText) predictButtonText.classList.remove('d-none');
+    if (predictButtonLoading) predictButtonLoading.classList.add('d-none');
+    if (predictButtonLoadingText) predictButtonLoadingText.classList.add('d-none');
 
     // Repopulate form fields to prevent clearing
     Object.entries(initialFormValues).forEach(([key, value]) => {
@@ -211,15 +219,18 @@ async function handlePredictionSubmit(event) {
         htmlContainer: "prediction-content",
         confirmButton: "btn btn-primary",
       },
-    }).then(() => {
-      // After clicking OK, show detailed card
-      const formattedDate = `${getMonthName(parseInt(initialFormValues.STARTMONTH))} ${
-        initialFormValues.STARTYEAR
-      }`;
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    }).then((swalResult) => {
+      if (swalResult.isConfirmed) {
+        // After clicking OK, show detailed card
+        const formattedDate = `${getMonthName(parseInt(initialFormValues.STARTMONTH))} ${
+          initialFormValues.STARTYEAR
+        }`;
 
-      Swal.fire({
-        title: "Prediction Details",
-        html: `
+        Swal.fire({
+          title: "Prediction Details",
+          html: `
                         <div class="container-fluid">
                             <div class="row g-3 mb-3">
                                 <div class="col-sm-6">
@@ -336,129 +347,130 @@ async function handlePredictionSubmit(event) {
                             </div>
                         </div>
                     `,
-        showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-save"></i> SAVE PREDICTION',
-        cancelButtonText: '<i class="bi bi-x-lg"></i> CLOSE',
-        confirmButtonColor: "#198754",
-        cancelButtonColor: "#6c757d",
-        reverseButtons: true,
-        focusConfirm: false,
-        showCloseButton: true,
-        showClass: {
-          popup: "animate__animated animate__fadeInDown animate__faster",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutUp animate__faster",
-        },
-        customClass: {
-          popup: "prediction-details-modal",
-        },
-      }).then((saveResult) => {
-        if (saveResult.isConfirmed) {
-          // Format data for saving
-          const predictionToSave = {
-            region_name: initialFormValues.REGION.trim().toUpperCase(),
-            country_name: initialFormValues.COUNTRYNAME.trim().toUpperCase(),
-            start_year: parseInt(initialFormValues.STARTYEAR),
-            start_month: parseInt(initialFormValues.STARTMONTH),
-            precipitation_mm: parseFloat(initialFormValues.PPT),
-            temperature_celsius: parseFloat(initialFormValues.TMAX),
-            soil_moisture_percent: parseFloat(initialFormValues.SOILMOISTURE),
-            prediction_result: result.probability > 0.5 ? 1 : 0,
-            probability: result.probability,
-          };
+          showCancelButton: true,
+          confirmButtonText: '<i class="bi bi-save"></i> SAVE PREDICTION',
+          cancelButtonText: '<i class="bi bi-x-lg"></i> CLOSE',
+          confirmButtonColor: "#198754",
+          cancelButtonColor: "#6c757d",
+          reverseButtons: true,
+          focusConfirm: false,
+          showCloseButton: true,
+          showClass: {
+            popup: "animate__animated animate__fadeInDown animate__faster",
+          },
+          hideClass: {
+            popup: "animate__animated animate__fadeOutUp animate__faster",
+          },
+          customClass: {
+            popup: "prediction-details-modal",
+          },
+        }).then((saveResult) => {
+          if (saveResult.isConfirmed) {
+            // Format data for saving
+            const predictionToSave = {
+              region_name: initialFormValues.REGION.trim().toUpperCase(),
+              country_name: initialFormValues.COUNTRYNAME.trim().toUpperCase(),
+              start_year: parseInt(initialFormValues.STARTYEAR),
+              start_month: parseInt(initialFormValues.STARTMONTH),
+              precipitation_mm: parseFloat(initialFormValues.PPT),
+              temperature_celsius: parseFloat(initialFormValues.TMAX),
+              soil_moisture_percent: parseFloat(initialFormValues.SOILMOISTURE),
+              prediction_result: result.probability > 0.5 ? 1 : 0,
+              probability: result.probability,
+            };
 
-          // Save the prediction
-          api.predictions
-            .save(predictionToSave)
-            .then(() => {
-              Swal.fire({
-                title: "Saved!",
-                text: "Your prediction has been saved.",
-                icon: "success",
-                confirmButtonColor: "#198754",
-              }).then(() => {
-                // If prediction is YES, ask if user wants to create an event/blog post
-                if (result.prediction === "yes") {
-                  Swal.fire({
-                    title: "Create Event/Blog Post?",
-                    text: "Would you like to share this prediction as a public event or blog post?",
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, Create Blog",
-                    cancelButtonText: "No",
-                    confirmButtonColor: "#4e73df",
-                    cancelButtonColor: "#6c757d",
-                    reverseButtons: true,
-                  }).then((blogResult) => {
-                    if (blogResult.isConfirmed) {
-                      // Show a form for blog post
-                      showBlogModal({
-                        user,
-                        region: initialFormValues.REGION,
-                        country: initialFormValues.COUNTRYNAME,
-                        onPublish: async (blogData) => {
-                          // Prepare form data for image upload
-                          const fd = new FormData();
-                          fd.append("title", blogData.title);
-                          fd.append("content", blogData.content);
-                          fd.append("tags", blogData.tags);
-                          fd.append("region", initialFormValues.REGION);
-                          fd.append("country", initialFormValues.COUNTRYNAME);
-                          fd.append("date", new Date().toISOString());
-                          fd.append("author", user.full_name);
-                          fd.append("user_id", user.id || "");
-                          if (blogData.imageFile) {
-                            fd.append("image", blogData.imageFile);
-                          }
-                          Swal.showLoading();
-                          fetch("/api/blogposts", {
-                            method: "POST",
-                            body: fd,
-                          })
-                            .then((res) => res.json())
-                            .then(() => {
-                              Swal.fire({
-                                title: "Published!",
-                                text: "Your event/blog post is now public.",
-                                icon: "success",
-                                confirmButtonColor: "#198754",
-                                showCancelButton: true,
-                                confirmButtonText: "View Blogs",
-                                cancelButtonText: "Close",
-                              }).then((r) => {
-                                if (r.isConfirmed) {
-                                  window.location.href = "blogs.html";
-                                }
-                              });
+            // Save the prediction
+            api.predictions
+              .save(predictionToSave)
+              .then(() => {
+                Swal.fire({
+                  title: "Saved!",
+                  text: "Your prediction has been saved.",
+                  icon: "success",
+                  confirmButtonColor: "#198754",
+                }).then(() => {
+                  // If prediction is YES, ask if user wants to create an event/blog post
+                  if (result.prediction === "yes") {
+                    Swal.fire({
+                      title: "Create Event/Blog Post?",
+                      text: "Would you like to share this prediction as a public event or blog post?",
+                      icon: "question",
+                      showCancelButton: true,
+                      confirmButtonText: "Yes, Create Blog",
+                      cancelButtonText: "No",
+                      confirmButtonColor: "#4e73df",
+                      cancelButtonColor: "#6c757d",
+                      reverseButtons: true,
+                    }).then((blogResult) => {
+                      if (blogResult.isConfirmed) {
+                        // Show a form for blog post
+                        showBlogModal({
+                          user,
+                          region: initialFormValues.REGION,
+                          country: initialFormValues.COUNTRYNAME,
+                          onPublish: async (blogData) => {
+                            // Prepare form data for image upload
+                            const fd = new FormData();
+                            fd.append("title", blogData.title);
+                            fd.append("content", blogData.content);
+                            fd.append("tags", blogData.tags);
+                            fd.append("region", initialFormValues.REGION);
+                            fd.append("country", initialFormValues.COUNTRYNAME);
+                            fd.append("date", new Date().toISOString());
+                            fd.append("author", user.full_name);
+                            fd.append("user_id", user.id || "");
+                            if (blogData.imageFile) {
+                              fd.append("image", blogData.imageFile);
+                            }
+                            Swal.showLoading();
+                            fetch("/api/blogposts", {
+                              method: "POST",
+                              body: fd,
                             })
-                            .catch(() => {
-                              Swal.fire({
-                                title: "Error",
-                                text: "Failed to publish blog post.",
-                                icon: "error",
-                                confirmButtonColor: "#dc3545",
+                              .then((res) => res.json())
+                              .then(() => {
+                                Swal.fire({
+                                  title: "Published!",
+                                  text: "Your event/blog post is now public.",
+                                  icon: "success",
+                                  confirmButtonColor: "#198754",
+                                  showCancelButton: true,
+                                  confirmButtonText: "View Blogs",
+                                  cancelButtonText: "Close",
+                                }).then((r) => {
+                                  if (r.isConfirmed) {
+                                    window.location.href = "blogs.html";
+                                  }
+                                });
+                              })
+                              .catch(() => {
+                                Swal.fire({
+                                  title: "Error",
+                                  text: "Failed to publish blog post.",
+                                  icon: "error",
+                                  confirmButtonColor: "#dc3545",
+                                });
                               });
-                            });
-                        },
-                        onPreview: () => {},
-                      });
-                    }
-                  });
-                }
+                          },
+                          onPreview: () => {},
+                        });
+                      }
+                    });
+                  }
+                });
+              })
+              .catch((error) => {
+                console.error("Error saving prediction:", error);
+                Swal.fire({
+                  title: "Error",
+                  text: "Failed to save prediction. Please try again.",
+                  icon: "error",
+                  confirmButtonColor: "#dc3545",
+                });
               });
-            })
-            .catch((error) => {
-              console.error("Error saving prediction:", error);
-              Swal.fire({
-                title: "Error",
-                text: "Failed to save prediction. Please try again.",
-                icon: "error",
-                confirmButtonColor: "#dc3545",
-              });
-            });
-        }
-      });
+          }
+        });
+      }
     });
 
     // Removed form reset to keep input values after submission
@@ -684,37 +696,50 @@ function resetPredictionForm() {
   }
 }
 
-// Initialize when DOM is loaded
-document.addEventListener("DOMContentLoaded", function () {
-  loadValidOptions();
+// Initialize the application
+async function initializeApp() {
+  await loadValidOptions();
+  
+  // Add event listener to the form
+  const form = document.getElementById("predictionForm");
+  if (form) {
+    form.addEventListener("submit", handlePredictionSubmit);
+  }
 
-  // Add event listeners for validation
+  // Add input validation
   const countryInput = document.getElementById("COUNTRYNAME");
   const regionInput = document.getElementById("REGION");
+  const startYearInput = document.getElementById("STARTYEAR");
+  const startMonthInput = document.getElementById("STARTMONTH");
+  const pptInput = document.getElementById("PPT");
+  const tmaxInput = document.getElementById("TMAX");
+  const soilMoistureInput = document.getElementById("SOILMOISTURE");
 
-  countryInput.addEventListener("change", () => {
-    validateInput(countryInput, validCountries, "country");
-  });
-
-  regionInput.addEventListener("change", () => {
-    validateInput(regionInput, validRegions, "region");
-  });
-
-  // Also validate on form submission
-  document.getElementById("predictionForm").addEventListener(
-    "submit",
-    function (event) {
-      validateInput(countryInput, validCountries, "country");
-      validateInput(regionInput, validRegions, "region");
-
-      if (!this.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
+  if (countryInput) {
+    countryInput.addEventListener("change", function () {
+      const country = this.value.trim();
+      if (country) {
+        updateRegionListForCountry(country);
       }
-    },
-    false
-  );
-});
+    });
+  }
+  
+  // Set current year as default for STARTYEAR
+  if (startYearInput) {
+    startYearInput.value = new Date().getFullYear();
+  }
+  
+  // Set default month to current month
+  if (startMonthInput) {
+    startMonthInput.value = new Date().getMonth() + 1; // Months are 0-indexed in JS
+  }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener("DOMContentLoaded", initializeApp);
+
+// Expose handlePredictionSubmit globally
+window.handlePredictionSubmit = handlePredictionSubmit;
 
 // Check if SweetAlert2 is loaded
 if (typeof Swal === "undefined") {

@@ -69,6 +69,7 @@
     .prediction-card .card {
       height: 100%;
       margin: 0;
+      box-shadow: none !important;
     }
     
     .prediction-card .card-body {
@@ -216,6 +217,156 @@
       color: #6c757d;
     }
 
+    /* Bootstrap Tab Stepper */
+    #formTabs {
+      border: none;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    #formTabs::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: #dee2e6;
+      z-index: 1;
+    }
+    
+    #formTabs .nav-item {
+      position: relative;
+      z-index: 2;
+    }
+    
+    #formTabs .nav-link {
+      border: none;
+      background: transparent;
+      color: #6c757d;
+      padding: 1rem 0.5rem;
+      border-radius: 0;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    #formTabs .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 3px;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+    
+    #formTabs .nav-link.active {
+      color: var(--primary-color);
+      background: transparent;
+    }
+    
+    #formTabs .nav-link.active::after {
+      width: 100%;
+    }
+    
+    #formTabs .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #e9ecef;
+      color: #6c757d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    #formTabs .nav-link.active .step-number {
+      background-color: var(--primary-color);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    #formTabs .nav-link.completed .step-number {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    /* Tab Content */
+    #formTabsContent {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    
+    .tab-pane {
+      padding: 2rem;
+    }
+    
+    .step-content h5 {
+      color: #2c3e50;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .step-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #eee;
+    }
+    
+    .btn-next, .btn-submit, .prev-step {
+      min-width: 120px;
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-next, .btn-submit {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .btn-next:hover, .btn-submit:hover {
+      background-color: #2c3e50;
+      border-color: #2c3e50;
+      transform: translateY(-2px);
+    }
+    
+    .prev-step {
+      background-color: #f8f9fa;
+      color: #6c757d;
+      border: 1px solid #dee2e6;
+    }
+    
+    .prev-step:hover {
+      background-color: #e9ecef;
+      transform: translateY(-2px);
+    }
+    
+    .step-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Form container adjustments */
+    .prediction-form-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
     .stat-card .card-text {
       font-size: 1.75rem;
       font-weight: 700;
@@ -247,9 +398,18 @@
       transition: transform 0.2s;
     }
 
+    /* Remove or override the card hover effect for prediction form */
+    .prediction-card .card:hover {
+      /* Remove transform on hover for prediction form card */
+      transform: none;
+    }
+
+    /* Optionally, you can comment out or remove the global .card:hover if you want to remove hover for all cards */
+    /*
     .card:hover {
       transform: translateY(-3px);
     }
+    */
 
     .table {
       border-radius: 0.5rem;
