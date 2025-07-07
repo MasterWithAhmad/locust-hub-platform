@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update current tab
         currentTab = index;
         
-        // Show the tab
+        // Show the tab using Bootstrap's tab API
         const tabElement = document.querySelector(`#step${index + 1}-tab`);
         if (tabElement) {
             const tab = new bootstrap.Tab(tabElement);
@@ -31,6 +31,34 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update navigation buttons
         updateButtons();
+        
+        // Update tab states
+        updateTabStates();
+    }
+    
+    // Function to update tab indicators (active/disabled states)
+    function updateTabIndicators() {
+        document.querySelectorAll('.nav-link[data-bs-toggle="pill"]').forEach((tab, index) => {
+            const tabElement = document.querySelector(`#step${index + 1}-tab`);
+            if (tabElement) {
+                if (index <= currentTab) {
+                    // Enable tabs up to current tab
+                    tabElement.classList.remove('disabled');
+                    tabElement.removeAttribute('disabled');
+                } else {
+                    // Disable tabs after current tab
+                    tabElement.classList.add('disabled');
+                    tabElement.setAttribute('disabled', 'disabled');
+                }
+                
+                // Update active state
+                if (index === currentTab) {
+                    tabElement.classList.add('active');
+                } else {
+                    tabElement.classList.remove('active');
+                }
+            }
+        });
     }
     
     // Function to validate current tab
@@ -57,6 +85,19 @@ document.addEventListener('DOMContentLoaded', function() {
           valid = false;
         }
       });
+      
+      // If any field is invalid, prevent form submission
+      if (!valid) {
+        const form = document.querySelector('form');
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            if (!valid) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }, { once: true });
+        }
+      }
       
       return valid;
       inputs.forEach(input => {
@@ -141,16 +182,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Tab change handler
-    document.querySelectorAll('[data-bs-toggle="pill"]').forEach(tab => {
-        tab.addEventListener('shown.bs.tab', function (e) {
-            const tabId = e.target.id;
-            if (tabId && tabId.startsWith('step') && tabId.endsWith('-tab')) {
-                currentTab = parseInt(tabId.replace('step', '').replace('-tab', '')) - 1;
-                updateButtons();
+    // Make all tabs unclickable
+    document.querySelectorAll('.nav-link[data-bs-toggle="pill"]').forEach(tab => {
+        // Remove all click events
+        tab.style.pointerEvents = 'none';
+        tab.style.cursor = 'default';
+        
+        // Remove hover effects
+        tab.style.opacity = '0.6';
+    });
+    
+    // Make current tab active and clickable for visual feedback only
+    function updateTabStates() {
+        document.querySelectorAll('.nav-link[data-bs-toggle="pill"]').forEach((tab, index) => {
+            if (index === currentTab) {
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+            } else {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
             }
         });
-    });
+    }
     
     // Initialize
     updateButtons();
