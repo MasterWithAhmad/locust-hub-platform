@@ -523,46 +523,29 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       const originalButtonHTML = submitButton.innerHTML;
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Updating...';
-      }
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Updating...';
 
       try {
-        const response = await fetch(`${window.API_BASE_URL || ''}/user/password`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(window.getAuthHeader ? window.getAuthHeader() : {}) // Ensure getAuthHeader is available
-          },
-          body: JSON.stringify({
-            current_password: currentPassword,
-            new_password: newPassword
-          })
+        // Use the API method from api.js
+        const response = await api.user.changePassword({
+          current_password: currentPassword,
+          new_password: newPassword
         });
 
-        const data = await response.json();
-        console.log('Change password response:', data);
-
-        if (!response.ok) {
-          let errorMessage = data.error || data.message || 'Failed to change password';
-          if (response.status === 401) { // Unauthorized often means wrong current password
-            errorMessage = 'Invalid current password. Please try again.';
-          }
-          throw new Error(errorMessage);
-        }
-
+        console.log('Change password response:', response);
         form.reset(); // Clear form on success
-        showSuccess(data.message || 'Password changed successfully!');
+        showSuccess(response.message || 'Password changed successfully!');
 
       } catch (error) {
         console.error('Password change error:', error);
-        showError(error.message || 'Failed to change password. Please try again.');
+        const errorMessage = error.message === 'Failed to change password' && error.response?.data?.message 
+          ? error.response.data.message 
+          : error.message || 'Failed to change password. Please try again.';
+        showError(errorMessage);
       } finally {
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.innerHTML = originalButtonHTML; // Restore original button HTML
-        }
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalButtonHTML; // Restore original button HTML
       }
     }
 
