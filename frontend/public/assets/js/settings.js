@@ -1,4 +1,31 @@
+// Toggle password visibility
+function setupPasswordToggles() {
+  document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const passwordInput = document.getElementById(targetId);
+      const icon = this.querySelector('i');
+      
+      // Toggle the input type
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      // Toggle the eye icon
+      if (type === 'password') {
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      } else {
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+      // Initialize password toggles
+      setupPasswordToggles();
+
       // Check login status
       if (!api.auth.isLoggedIn()) {
         window.location.href = '/login.html';

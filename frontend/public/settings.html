@@ -179,8 +179,13 @@
                       <label for="currentPassword" class="form-label">
                         <i class="bi bi-key-fill"></i> Current Password
                       </label>
-                      <input type="password" class="form-control" id="currentPassword" required
-                        placeholder="Enter current password">
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="currentPassword" required
+                          placeholder="Enter current password">
+                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="currentPassword">
+                          <i class="bi bi-eye-slash"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div class="col-md-4">
@@ -188,8 +193,13 @@
                       <label for="newPassword" class="form-label">
                         <i class="bi bi-key"></i> New Password
                       </label>
-                      <input type="password" class="form-control" id="newPassword" required
-                        placeholder="Enter new password" minlength="8">
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="newPassword" required
+                          placeholder="Enter new password" minlength="8">
+                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="newPassword">
+                          <i class="bi bi-eye-slash"></i>
+                        </button>
+                      </div>
                       <small class="form-text text-muted">Minimum 8 characters</small>
                     </div>
                   </div>
@@ -198,8 +208,13 @@
                       <label for="confirmPassword" class="form-label">
                         <i class="bi bi-key-fill"></i> Confirm New Password
                       </label>
-                      <input type="password" class="form-control" id="confirmPassword" required
-                        placeholder="Confirm new password">
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="confirmPassword" required
+                          placeholder="Confirm new password">
+                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirmPassword">
+                          <i class="bi bi-eye-slash"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
