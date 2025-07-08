@@ -534,15 +534,40 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         console.log('Change password response:', response);
-        form.reset(); // Clear form on success
-        showSuccess(response.message || 'Password changed successfully!');
+        
+        // Clear the form on success
+        form.reset();
+        
+        // Show success message
+        await Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Your password has been changed successfully.',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK'
+        });
 
       } catch (error) {
         console.error('Password change error:', error);
-        const errorMessage = error.message === 'Failed to change password' && error.response?.data?.message 
-          ? error.response.data.message 
-          : error.message || 'Failed to change password. Please try again.';
-        showError(errorMessage);
+        
+        // Handle specific error cases
+        let errorMessage = 'Failed to change password. Please try again.';
+        
+        if (error.message.includes('Invalid current password')) {
+          errorMessage = 'The current password you entered is incorrect. Please try again.';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMessage,
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK'
+        });
       } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalButtonHTML; // Restore original button HTML

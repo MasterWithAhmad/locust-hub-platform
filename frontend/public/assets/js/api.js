@@ -7,16 +7,36 @@ console.log('API Base URL:', API_BASE_URL);
 
 // Helper function to handle API responses
 async function handleResponse(response) {
+    // First, clone the response so we can read it multiple times
+    const responseClone = response.clone();
+    let errorData = {};
+    
+    try {
+        errorData = await responseClone.json().catch(() => ({}));
+    } catch (e) {
+        console.error('Error parsing error response:', e);
+    }
+    
+    // Handle 401 Unauthorized
     if (response.status === 401) {
-        // Token expired or invalid, redirect to login
+        const url = response.url || '';
+        // For password change endpoint, throw a specific error
+        if (url.endsWith('/user/password')) {
+            throw new Error(errorData.error || 'Invalid current password. Please try again.');
+        }
+        // For other endpoints, log the user out
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login.html';
+        return Promise.reject(new Error('Session expired. Please log in again.'));
     }
 
+    // Handle other error statuses
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const error = new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        error.status = response.status;
+        error.response = errorData;
+        throw error;
     }
     return response.json();
 }
