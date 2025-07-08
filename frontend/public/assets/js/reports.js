@@ -801,18 +801,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Apply filters
   function applyFilters() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+    const startYear = document.getElementById('startYear').value;
+    const endYear = document.getElementById('endYear').value;
     const region = document.getElementById('regionFilter').value;
     const country = document.getElementById('countryFilter').value;
     const status = document.getElementById('statusFilter').value;
 
     filteredPredictions = allPredictions.filter(p => {
-      // Date range filter
-      if (startDate || endDate) {
-        const predDate = new Date(p.created_at).toISOString().split('T')[0];
-        if (startDate && predDate < startDate) return false;
-        if (endDate && predDate > endDate) return false;
+      // Year range filter
+      if (startYear || endYear) {
+        const predYear = new Date(p.created_at).getFullYear().toString();
+        if (startYear && predYear < startYear) return false;
+        if (endYear && predYear > endYear) return false;
       }
 
       // Region filter
@@ -840,8 +840,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Clear filters
   function clearFilters() {
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
+    document.getElementById('startYear').value = '';
+    document.getElementById('endYear').value = '';
     document.getElementById('regionFilter').value = '';
     document.getElementById('countryFilter').value = '';
     document.getElementById('statusFilter').value = '';

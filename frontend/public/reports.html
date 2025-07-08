@@ -228,13 +228,13 @@
                 <span class="badge bg-primary-soft text-primary ms-2" id="activeFilterCount">0 active</span>
               </h6>
               <div class="row g-3">
-                <!-- Date Range -->
+                <!-- Year Range -->
                 <div class="col-md-6 col-lg-3">
-                  <label class="form-label small text-muted mb-1">Date Range</label>
+                  <label class="form-label small text-muted mb-1">Year Range</label>
                   <div class="input-group input-group-sm">
-                    <input type="date" id="startDate" class="form-control form-control-sm border-end-0" placeholder="Start Date">
+                    <input type="number" id="startYear" class="form-control form-control-sm border-end-0" placeholder="Start Year" min="2000" max="2100" step="1">
                     <span class="input-group-text bg-light border-0 px-2">to</span>
-                    <input type="date" id="endDate" class="form-control form-control-sm border-start-0" placeholder="End Date">
+                    <input type="number" id="endYear" class="form-control form-control-sm border-start-0" placeholder="End Year" min="2000" max="2100" step="1">
                   </div>
                 </div>
                 <!-- Region Filter -->
