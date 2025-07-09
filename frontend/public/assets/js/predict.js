@@ -113,10 +113,12 @@ async function handlePredictionSubmit(event) {
     return false;
   }
 
-  const predictButtonText = predictButton.querySelector('#predictButtonText');
-  const predictButtonLoading = predictButton.querySelector('#predictButtonLoading');
-  const predictButtonLoadingText = predictButton.querySelector('#predictButtonLoadingText');
+  // Get elements by ID directly since they are not children of the button
+  const predictButtonText = document.getElementById('predictButtonText');
+  const predictButtonLoading = document.getElementById('predictButtonLoading');
+  const predictButtonLoadingText = document.getElementById('predictButtonLoadingText');
 
+  // Set loading state
   predictButton.disabled = true;
   if (predictButtonText) predictButtonText.classList.add('d-none');
   if (predictButtonLoading) predictButtonLoading.classList.remove('d-none');
@@ -644,14 +646,16 @@ function resetPredictionForm() {
   if (form) {
     form.reset();
     
-    // Reset any custom states or UI elements
-    const predictButton = form.querySelector('button[type="submit"]');
-    if (predictButton) {
-      predictButton.disabled = false;
-      predictButton.querySelector('#predictButtonText').classList.remove('d-none');
-      predictButton.querySelector('#predictButtonLoading').classList.add('d-none');
-      predictButton.querySelector('#predictButtonLoadingText').classList.add('d-none');
-    }
+    // Reset predict button state
+    const predictButton = document.querySelector('button[type="submit"]');
+    const predictButtonText = document.getElementById('predictButtonText');
+    const predictButtonLoading = document.getElementById('predictButtonLoading');
+    const predictButtonLoadingText = document.getElementById('predictButtonLoadingText');
+    
+    if (predictButton) predictButton.disabled = false;
+    if (predictButtonText) predictButtonText.classList.remove('d-none');
+    if (predictButtonLoading) predictButtonLoading.classList.add('d-none');
+    if (predictButtonLoadingText) predictButtonLoadingText.classList.add('d-none');
     
     // Hide any previous results or error messages
     const resultDiv = document.getElementById('predictionResult');
@@ -660,39 +664,24 @@ function resetPredictionForm() {
       resultDiv.innerHTML = '';
       resultDiv.className = 'mt-3 text-center fw-bold';
     }
-    
-    // Collect form values before submission to preserve them
-    const initialFormValues = {
-      COUNTRYNAME: document.getElementById('COUNTRYNAME').value,
-      REGION: document.getElementById('REGION').value,
-      STARTYEAR: document.getElementById('STARTYEAR').value,
-      STARTMONTH: document.getElementById('STARTMONTH').value,
-      PPT: document.getElementById('PPT').value,
-      TMAX: document.getElementById('TMAX').value,
-      SOILMOISTURE: document.getElementById('SOILMOISTURE').value,
-      STARTMONTH_NAME: getMonthName(document.getElementById('STARTMONTH').value)
-    };
 
     // Reset any custom validation messages
     const formInputs = form.querySelectorAll('input, select');
     formInputs.forEach(input => {
-      input.classList.remove('is-invalid');
-      const feedback = input.nextElementSibling;
-      if (feedback && feedback.classList.contains('invalid-feedback')) {
-        feedback.remove();
+      if (input) {
+        input.classList.remove('is-invalid');
+        const feedback = input.nextElementSibling;
+        if (feedback && feedback.classList && feedback.classList.contains('invalid-feedback')) {
+          feedback.remove();
+        }
       }
     });
     
-    // Show a success message
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Form has been reset',
-      showConfirmButton: false,
-      timer: 2000,
-      timerProgressBar: true
-    });
+    // Reset to first step in the stepper
+    const firstStep = document.querySelector('.nav-link.active');
+    if (firstStep) {
+      firstStep.click();
+    }
   }
 }
 
@@ -733,6 +722,71 @@ async function initializeApp() {
   if (startMonthInput) {
     startMonthInput.value = new Date().getMonth() + 1; // Months are 0-indexed in JS
   }
+
+  // Add event listeners for country and region validation
+  document.getElementById('COUNTRYNAME')?.addEventListener('change', function() {
+    const country = this.value.trim();
+    updateRegionListForCountry(country);
+    
+    // Clear region input when country changes
+    const regionInput = document.getElementById('REGION');
+    if (regionInput) {
+      regionInput.value = '';
+    }
+  });
+  
+  // Add event listener for reset button
+  document.getElementById('resetForm')?.addEventListener('click', function() {
+    // Show confirmation dialog before resetting
+    Swal.fire({
+      title: 'Reset Form',
+      text: 'Are you sure you want to reset the form? All entered data will be lost.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, reset it!',
+      cancelButtonText: 'Cancel',
+      allowOutsideClick: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Show loading state on reset button
+        const resetButton = document.getElementById('resetForm');
+        const originalContent = resetButton.innerHTML;
+        resetButton.disabled = true;
+        resetButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Resetting...';
+        
+        // Simulate a small delay for better UX
+        // Show success toast first
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+          },
+          willClose: () => {
+            // Only reset the form after toast is closed
+            resetPredictionForm();
+            // Reset button state
+            resetButton.innerHTML = originalContent;
+            resetButton.disabled = false;
+          }
+        });
+        
+        Toast.fire({
+          icon: 'success',
+          title: 'Form has been reset',
+          background: 'var(--bs-success-bg-subtle)',
+          color: 'var(--bs-success-text)',
+          iconColor: 'var(--bs-success)'
+        });
+      }
+    });
+  });
 }
 
 // Initialize the app when DOM is loaded
