@@ -554,5 +554,5 @@ window.api = {
                 throw error;
             }
         }
-    }
+    },
 };

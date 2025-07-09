@@ -97,7 +97,7 @@
                     <i class="bi bi-lightning-charge-fill text-primary fs-4 me-2"></i>
                     <h4 class="card-title mb-0">Make a New Prediction</h4>
                   </div>
-                  <form id="predictionForm" onsubmit="return window.handlePredictionSubmit(event)">
+                  <form id="predictionForm" onsubmit="window.handlePredictionSubmit(event); return false;" novalidate>
                     <!-- Bootstrap Stepper -->
                     <ul class="nav nav-pills nav-justified mb-4" id="formTabs" role="tablist">
                       <li class="nav-item" role="presentation">
@@ -229,10 +229,12 @@
                               <i class="bi bi-cloud-rain text-primary"></i>
                             </span>
                             <div class="form-floating flex-grow-1">
-                              <input type="number" step="0.01" min="18" max="3200" class="form-control" id="PPT"
-                                placeholder="18.00 - 3200.00" required
-                                onchange="this.value = Math.min(3200, Math.max(18, parseFloat(this.value) || 18)).toFixed(2)">
-                              <label for="PPT">Precipitation (PPT) in mm</label>
+                              <input type="number" step="0.01" min="250" max="10299" class="form-control" id="PPT"
+                                placeholder="250.00 - 10,299.00" required
+                                onchange="this.value = Math.min(10299, Math.max(250, parseFloat(this.value) || 250)).toFixed(2)"
+                                oninput="validateNumberInput(this, 250, 10299, 'Precipitation must be between 250mm and 10,299mm')">
+                              <label for="PPT">Precipitation (PPT) in mm (250-10,299)</label>
+                              <div class="invalid-feedback">Please enter a value between 250 and 10,299 mm</div>
                             </div>
                           </div>
                         </div>
@@ -242,10 +244,12 @@
                               <i class="bi bi-thermometer-high text-primary"></i>
                             </span>
                             <div class="form-floating flex-grow-1">
-                              <input type="number" step="0.01" min="-24" max="58" class="form-control" id="TMAX"
-                                placeholder="-24.00 - 58.00" required
-                                onchange="this.value = Math.min(58, Math.max(-24, parseFloat(this.value) || 0)).toFixed(2)">
-                              <label for="TMAX">Max Temperature (TMAX) in °C</label>
+                              <input type="number" step="0.01" min="-24" max="57.8" class="form-control" id="TMAX"
+                                placeholder="-24.00 - 57.80" required
+                                onchange="this.value = Math.min(57.8, Math.max(-24, parseFloat(this.value) || 0)).toFixed(2)"
+                                oninput="validateNumberInput(this, -24, 57.8, 'Temperature must be between -24°C and 57.8°C')">
+                              <label for="TMAX">Max Temperature (TMAX) in °C (-24 to 57.8)</label>
+                              <div class="invalid-feedback">Please enter a temperature between -24°C and 57.8°C</div>
                             </div>
                           </div>
                         </div>
@@ -255,9 +259,11 @@
                               <i class="bi bi-droplet text-primary"></i>
                             </span>
                             <div class="form-floating flex-grow-1">
-                              <input type="number" step="1" min="0" max="100" class="form-control" id="SOILMOISTURE"
-                                placeholder="0 - 100" required>
-                              <label for="SOILMOISTURE">Soil Moisture (%)</label>
+                              <input type="number" step="0.1" min="0" max="100" class="form-control" id="SOILMOISTURE"
+                                placeholder="0 - 100" required
+                                oninput="validateNumberInput(this, 0, 100, 'Soil moisture must be between 0% and 100%')">
+                              <label for="SOILMOISTURE">Soil Moisture (0-100%)</label>
+                              <div class="invalid-feedback">Please enter a value between 0 and 100</div>
                             </div>
                           </div>
                         </div>

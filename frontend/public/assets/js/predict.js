@@ -88,10 +88,56 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 });
 
+// Function to validate all form fields
+function validateForm() {
+  let isValid = true;
+  
+  // Validate PPT (250-10299)
+  const pptInput = document.getElementById('PPT');
+  if (!validateNumberInput(pptInput, 250, 10299, 'Precipitation must be between 250mm and 10,299mm')) {
+    isValid = false;
+  }
+  
+  // Validate TMAX (-24 to 57.8)
+  const tmaxInput = document.getElementById('TMAX');
+  if (!validateNumberInput(tmaxInput, -24, 57.8, 'Temperature must be between -24°C and 57.8°C')) {
+    isValid = false;
+  }
+  
+  // Validate SOILMOISTURE (0-100)
+  const soilMoistureInput = document.getElementById('SOILMOISTURE');
+  if (!validateNumberInput(soilMoistureInput, 0, 100, 'Soil moisture must be between 0% and 100%')) {
+    isValid = false;
+  }
+  
+  // Check if any required fields are empty
+  const requiredInputs = document.querySelectorAll('input[required]');
+  requiredInputs.forEach(input => {
+    if (!input.value.trim()) {
+      input.classList.add('is-invalid');
+      input.setCustomValidity('This field is required');
+      input.reportValidity();
+      isValid = false;
+    }
+  });
+  
+  return isValid;
+}
+
 async function handlePredictionSubmit(event) {
   // Prevent default form submission and propagation
   event.preventDefault();
   event.stopPropagation();
+  
+  // Validate form before proceeding
+  if (!validateForm()) {
+    // Scroll to the first invalid input
+    const firstInvalid = document.querySelector('.is-invalid');
+    if (firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return false;
+  }
   
   // Get form reference from the event
   const form = event.target;
@@ -620,7 +666,7 @@ async function loadValidOptions() {
   }
 }
 
-// Function to validate input against allowed values
+// Function to validate dropdown/select inputs against allowed values
 function validateInput(input, validValues, fieldName) {
   const value = input.value.trim().toUpperCase();
 
@@ -639,6 +685,33 @@ function validateInput(input, validValues, fieldName) {
   }
   input.reportValidity();
 }
+
+// Function to validate number inputs with min/max range
+function validateNumberInput(input, min, max, errorMessage) {
+  const value = parseFloat(input.value);
+  const isValid = !isNaN(value) && value >= min && value <= max;
+  
+  if (!isValid) {
+    input.classList.add('is-invalid');
+    input.setCustomValidity(errorMessage);
+  } else {
+    input.classList.remove('is-invalid');
+    input.setCustomValidity("");
+  }
+  
+  // If the field is required and empty, show required validation
+  if (input.required && input.value === '') {
+    input.classList.add('is-invalid');
+    input.setCustomValidity('This field is required');
+  }
+  
+  input.reportValidity();
+  return isValid;
+}
+
+// Make the validation functions globally available
+window.validateInput = validateInput;
+window.validateNumberInput = validateNumberInput;
 
 // Function to reset the prediction form
 function resetPredictionForm() {

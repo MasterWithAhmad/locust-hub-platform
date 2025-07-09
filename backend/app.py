@@ -1335,7 +1335,13 @@ def get_blog_posts():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, user_id, title, content, region, country, date, author, image_url FROM blog_posts ORDER BY date DESC LIMIT 20")
+        cursor.execute("""
+            SELECT id, user_id, title, content, region, country, date, 
+                   author, tags, image_url 
+            FROM blog_posts 
+            ORDER BY date DESC 
+            LIMIT 20
+        """)
         posts = cursor.fetchall()
         # Format date to ISO string
         for post in posts:
@@ -1349,46 +1355,228 @@ def get_blog_posts():
         if cursor: cursor.close()
         if conn: conn.close()
 
+@app.route('/api/blogposts/<int:post_id>', methods=['GET'])
+def get_blog_post(post_id):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT * FROM blog_posts WHERE id = %s", 
+            (post_id,)
+        )
+        post = cursor.fetchone()
+        if not post:
+            return jsonify({'error': 'Blog post not found'}), 404
+            
+        # Format date
+        if post['date'] and hasattr(post['date'], 'isoformat'):
+            post['date'] = post['date'].isoformat()
+            
+        return jsonify(post), 200
+    except Exception as e:
+        print(f"Error fetching blog post: {str(e)}")
+        return jsonify({'error': 'Failed to fetch blog post'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 @app.route('/api/blogposts', methods=['POST'])
+@jwt_required()
 def create_blog_post():
     conn = None
     cursor = None
     try:
-        # Accept multipart/form-data
-        title = request.form.get('title')
-        content = request.form.get('content')
-        tags = request.form.get('tags')
-        region = request.form.get('region')
-        country = request.form.get('country')
-        author = request.form.get('author')
-        user_id = request.form.get('user_id')
-        image_file = request.files.get('image')
-        image_url = None
-        if image_file:
-            # Save image ONLY to frontend/public/assets/blog_images
-            img_dir = os.path.join(os.path.dirname(__file__), '../frontend/public/assets/blog_images')
-            img_dir = os.path.abspath(img_dir)
-            os.makedirs(img_dir, exist_ok=True)
-            ext = os.path.splitext(image_file.filename)[-1]
-            img_name = f"blog_{uuid.uuid4().hex}{ext}"
-            img_path = os.path.join(img_dir, img_name)
-            image_file.save(img_path)
-            image_url = f"/assets/blog_images/{img_name}"
-            print(f"[BLOG IMAGE] Saved to: {img_path}")
-            print(f"[BLOG IMAGE] URL: {image_url}")
+        # Get user identity from JWT
+        current_user = get_jwt_identity()
+        
+        # Accept JSON or form-data
+        if request.is_json:
+            data = request.get_json()
+            title = data.get('title')
+            content = data.get('content')
+            tags = data.get('tags')
+            region = data.get('region')
+            country = data.get('country')
+            author = data.get('author')
+            image_url = data.get('image_url')
+        else:
+            title = request.form.get('title')
+            content = request.form.get('content')
+            tags = request.form.get('tags')
+            region = request.form.get('region')
+            country = request.form.get('country')
+            author = request.form.get('author')
+            image_file = request.files.get('image')
+            image_url = None
+            
+            if image_file:
+                # Save image to frontend/public/assets/blog_images
+                img_dir = os.path.join(os.path.dirname(__file__), '../frontend/public/assets/blog_images')
+                img_dir = os.path.abspath(img_dir)
+                os.makedirs(img_dir, exist_ok=True)
+                ext = os.path.splitext(image_file.filename)[-1]
+                img_name = f"blog_{uuid.uuid4().hex}{ext}"
+                img_path = os.path.join(img_dir, img_name)
+                image_file.save(img_path)
+                image_url = f"/assets/blog_images/{img_name}"
+                print(f"[BLOG IMAGE] Saved to: {img_path}")
+
         if not title or not content:
             return jsonify({'error': 'Title and content are required'}), 400
+            
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO blog_posts (user_id, title, content, region, country, author, tags, image_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-            (user_id, title, content, region, country, author, tags, image_url)
-        )
+        cursor.execute("""
+            INSERT INTO blog_posts 
+            (user_id, title, content, region, country, author, tags, image_url) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (current_user['id'], title, content, region, country, author, tags, image_url))
+        
+        post_id = cursor.lastrowid
         conn.commit()
-        return jsonify({'message': 'Blog post created successfully'}), 201
+        
+        return jsonify({
+            'message': 'Blog post created successfully',
+            'post_id': post_id
+        }), 201
+        
     except Exception as e:
         print(f"Error creating blog post: {str(e)}")
         return jsonify({'error': 'Failed to create blog post'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@app.route('/api/blogposts/<int:post_id>', methods=['PUT'])
+@jwt_required()
+def update_blog_post(post_id):
+    conn = None
+    cursor = None
+    try:
+        current_user = get_jwt_identity()
+        
+        # Check if post exists and belongs to user
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT user_id FROM blog_posts WHERE id = %s", 
+            (post_id,)
+        )
+        post = cursor.fetchone()
+        
+        if not post:
+            return jsonify({'error': 'Blog post not found'}), 404
+            
+        if post['user_id'] != current_user['id']:
+            return jsonify({'error': 'Unauthorized to update this post'}), 403
+        
+        # Get update data
+        data = request.get_json() if request.is_json else request.form
+        
+        # Build dynamic update query
+        update_fields = []
+        update_values = []
+        
+        for field in ['title', 'content', 'tags', 'region', 'country']:
+            if field in data:
+                update_fields.append(f"{field} = %s")
+                update_values.append(data[field])
+        
+        if not update_fields:
+            return jsonify({'error': 'No fields to update'}), 400
+            
+        # Add post_id to values
+        update_values.append(post_id)
+        
+        # Execute update
+        query = f"UPDATE blog_posts SET {', '.join(update_fields)} WHERE id = %s"
+        cursor.execute(query, update_values)
+        conn.commit()
+        
+        return jsonify({'message': 'Blog post updated successfully'}), 200
+        
+    except Exception as e:
+        print(f"Error updating blog post: {str(e)}")
+        return jsonify({'error': 'Failed to update blog post'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@app.route('/api/blogposts/<int:post_id>', methods=['DELETE'])
+@jwt_required()
+def delete_blog_post(post_id):
+    conn = None
+    cursor = None
+    try:
+        current_user = get_jwt_identity()
+        
+        # Check if post exists and belongs to user
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT user_id, image_url FROM blog_posts WHERE id = %s", 
+            (post_id,)
+        )
+        post = cursor.fetchone()
+        
+        if not post:
+            return jsonify({'error': 'Blog post not found'}), 404
+            
+        if post['user_id'] != current_user['id']:
+            return jsonify({'error': 'Unauthorized to delete this post'}), 403
+        
+        # Delete image file if exists
+        if post['image_url']:
+            try:
+                img_path = os.path.join(
+                    os.path.dirname(__file__), 
+                    f"../frontend/public{post['image_url']}"
+                )
+                if os.path.exists(img_path):
+                    os.remove(img_path)
+            except Exception as e:
+                print(f"Error deleting image file: {str(e)}")
+        
+        # Delete post
+        cursor.execute("DELETE FROM blog_posts WHERE id = %s", (post_id,))
+        conn.commit()
+        
+        return jsonify({'message': 'Blog post deleted successfully'}), 200
+        
+    except Exception as e:
+        print(f"Error deleting blog post: {str(e)}")
+        return jsonify({'error': 'Failed to delete blog post'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@app.route('/api/users/<int:user_id>/blogposts', methods=['GET'])
+def get_user_blog_posts(user_id):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, title, content, region, country, date, author, image_url 
+            FROM blog_posts 
+            WHERE user_id = %s 
+            ORDER BY date DESC
+        """, (user_id,))
+        posts = cursor.fetchall()
+        
+        # Format dates
+        for post in posts:
+            if post['date'] and hasattr(post['date'], 'isoformat'):
+                post['date'] = post['date'].isoformat()
+                
+        return jsonify(posts), 200
+        
+    except Exception as e:
+        print(f"Error fetching user blog posts: {str(e)}")
+        return jsonify({'error': 'Failed to fetch user blog posts'}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
