@@ -27,13 +27,16 @@ CREATE TABLE IF NOT EXISTS predictions (
     soil_moisture FLOAT NOT NULL,
     locust_present BOOLEAN NOT NULL,
     prediction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    feedback ENUM('correct', 'incorrect') DEFAULT NULL,
+    feedback_timestamp TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Add indexes for better query performance
 CREATE INDEX idx_user_email ON users(email);
 CREATE INDEX idx_prediction_user ON predictions(user_id);
-CREATE INDEX idx_prediction_date ON predictions(prediction_date); 
+CREATE INDEX idx_prediction_date ON predictions(prediction_date);
+CREATE INDEX idx_prediction_feedback ON predictions(feedback, feedback_timestamp);
 
 -- Create blog_posts table for public event/blog posts
 CREATE TABLE IF NOT EXISTS blog_posts (
