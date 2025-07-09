@@ -801,18 +801,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Apply filters
   function applyFilters() {
-    const startYear = document.getElementById('startYear').value;
-    const endYear = document.getElementById('endYear').value;
+    const fromYear = document.getElementById('fromYear').value;
+    const toYear = document.getElementById('toYear').value;
     const region = document.getElementById('regionFilter').value;
     const country = document.getElementById('countryFilter').value;
     const status = document.getElementById('statusFilter').value;
 
     filteredPredictions = allPredictions.filter(p => {
       // Year range filter
-      if (startYear || endYear) {
+      if (fromYear || toYear) {
         const predYear = new Date(p.created_at).getFullYear().toString();
-        if (startYear && predYear < startYear) return false;
-        if (endYear && predYear > endYear) return false;
+        if (fromYear && predYear < fromYear) return false;
+        if (toYear && predYear > toYear) return false;
       }
 
       // Region filter
@@ -836,16 +836,41 @@ document.addEventListener('DOMContentLoaded', function() {
     displayPredictionsPage(filteredPredictions, currentPage);
     updateStatistics(filteredPredictions);
     updateCharts(filteredPredictions);
+    updateActiveFilterCount();
+  }
+
+  // Update active filter count
+  function updateActiveFilterCount() {
+    const fromYear = document.getElementById('fromYear').value;
+    const toYear = document.getElementById('toYear').value;
+    const region = document.getElementById('regionFilter').value;
+    const country = document.getElementById('countryFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    
+    let activeCount = 0;
+    if (fromYear) activeCount++;
+    if (toYear) activeCount++;
+    if (region) activeCount++;
+    if (country) activeCount++;
+    if (status) activeCount++;
+    
+    const activeFilterElement = document.getElementById('activeFilterCount');
+    if (activeFilterElement) {
+      activeFilterElement.textContent = `${activeCount} active`;
+      // Show/hide based on active count
+      activeFilterElement.style.display = activeCount > 0 ? 'inline-block' : 'none';
+    }
   }
 
   // Clear filters
   function clearFilters() {
-    document.getElementById('startYear').value = '';
-    document.getElementById('endYear').value = '';
+    document.getElementById('fromYear').value = '';
+    document.getElementById('toYear').value = '';
     document.getElementById('regionFilter').value = '';
     document.getElementById('countryFilter').value = '';
     document.getElementById('statusFilter').value = '';
     applyFilters();
+    updateActiveFilterCount();
   }
 
   // Export to CSV
