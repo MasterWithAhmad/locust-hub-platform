@@ -159,10 +159,19 @@ function createBlogPostCard(post) {
                         <i class="bi bi-eye me-1"></i> View
                     </button>
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary edit-post" data-id="${post.id}" title="Edit">
+                        <button class="btn btn-sm btn-outline-secondary edit-post" 
+                                data-id="${post.id}" 
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Edit Post">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger delete-post" data-id="${post.id}" data-title="${post.title}" title="Delete">
+                        <button class="btn btn-sm btn-outline-danger delete-post" 
+                                data-id="${post.id}" 
+                                data-title="${post.title}" 
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Delete Post">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -173,11 +182,24 @@ function createBlogPostCard(post) {
     
     // Add event listeners
     card.querySelector('.view-post').addEventListener('click', () => viewBlogPost(post.id));
-    card.querySelector('.edit-post').addEventListener('click', () => editBlogPost(post.id));
-    card.querySelector('.delete-post').addEventListener('click', (e) => {
+    
+    const editBtn = card.querySelector('.edit-post');
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editBlogPost(post.id);
+    });
+    
+    const deleteBtn = card.querySelector('.delete-post');
+    deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         deleteBlogPost(post.id, post.title);
     });
+    
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined') {
+        new bootstrap.Tooltip(editBtn);
+        new bootstrap.Tooltip(deleteBtn);
+    }
     
     return card;
 }
@@ -402,10 +424,521 @@ function viewBlogPost(postId) {
 
 /**
  * Edit a blog post
+ * @param {number} postId - The ID of the post to edit
  */
-function editBlogPost(postId) {
-    // Implement edit functionality
-    window.location.href = `edit-blog-post.html?id=${postId}`;
+async function editBlogPost(postId) {
+    const editModal = document.getElementById('editBlogPostModal');
+    const formContent = document.getElementById('editFormContent');
+    
+    if (!editModal) {
+        console.error('Edit modal not found');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Could not find the edit modal. Please refresh the page and try again.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Show loading state
+    const showLoading = () => {
+        if (formContent) {
+            formContent.innerHTML = `
+                <div class="text-center my-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading post data...</p>
+                </div>
+            `;
+        }
+    };
+    
+    // Show error state
+    const showError = (error) => {
+        console.error('Error in editBlogPost:', error);
+        
+        // Extract error message from different possible error formats
+        let errorMessage = 'Failed to load blog post for editing. Please try again.';
+        if (error) {
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error.response && error.response.error) {
+                errorMessage = error.response.error;
+            }
+        }
+        
+        if (formContent) {
+            formContent.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">Error</h5>
+                    <p>${errorMessage}</p>
+                    <div class="mt-3">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').querySelector('.btn-close').click()">
+                            Close
+                        </button>
+                        <button class="btn btn-primary ms-2" onclick="editBlogPost(${postId})">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    };
+    
+    try {
+        console.log(`Editing blog post with ID: ${postId}`);
+        
+        // Show the modal first
+        const modal = new bootstrap.Modal(editModal);
+        modal.show();
+        
+        // Set loading state
+        showLoading();
+        
+        // Fetch the blog post data with a timeout
+        const fetchPost = async () => {
+            try {
+                console.log('Fetching blog post data...');
+                const post = await window.api.blog.getPost(postId);
+                console.log('Received post data:', post);
+                
+                if (!post) {
+                    throw new Error('No post data returned from the server');
+                }
+                
+                // Populate the form with the post data
+                populateEditForm(post);
+                
+            } catch (apiError) {
+                console.error('API Error in fetchPost:', apiError);
+                throw apiError;
+            }
+        };
+        
+        // Set a timeout for the API call
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error('Request timed out. Please check your internet connection and try again.'));
+            }, 10000); // 10 second timeout
+        });
+        
+        // Race the API call against the timeout
+        await Promise.race([fetchPost(), timeoutPromise]);
+        
+    } catch (error) {
+        showError(error);
+    }
+}
+
+/**
+ * Populate the edit form with blog post data
+ * @param {Object} post - The blog post data
+ */
+function populateEditForm(post) {
+    const formContent = document.getElementById('editFormContent');
+    const imagePreview = document.getElementById('editPostImagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    
+    if (!formContent) return;
+    
+    // Format the date for the datetime-local input
+    const postDate = new Date(post.date);
+    const formattedDate = postDate.toISOString().slice(0, 16);
+    
+    // Create the edit form content (left side)
+    formContent.innerHTML = `
+        <form id="editBlogPostForm" data-post-id="${post.id}">
+            <div class="mb-3">
+                <label for="editPostTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editPostTitle" value="${escapeHtml(post.title || '')}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="editPostContent" class="form-label">Content <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="editPostContent" rows="10" required>${escapeHtml(post.content || '')}</textarea>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="editPostRegion" class="form-label">Region</label>
+                    <input type="text" class="form-control" id="editPostRegion" 
+                           value="${escapeHtml(post.region || '')}" 
+                           placeholder="e.g., North America">
+                </div>
+                <div class="col-md-6">
+                    <label for="editPostCountry" class="form-label">Country</label>
+                    <input type="text" class="form-control" id="editPostCountry" 
+                           value="escapeHtml(post.country || '')}" 
+                           placeholder="e.g., United States">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="editPostTags" class="form-label mt-3">Tags</label>
+                <input type="text" class="form-control" id="editPostTags" 
+                       value="${escapeHtml(post.tags || '')}" 
+                       placeholder="Comma-separated tags (e.g., agriculture, locust, forecast)">
+                <div class="form-text">Separate tags with commas</div>
+            </div>
+        </form>
+    `;
+    
+    // Update the image preview (right side)
+    if (imagePreview) {
+        if (post.image_url) {
+            imagePreview.src = post.image_url;
+            imagePreview.onerror = function() {
+                this.src = 'https://via.placeholder.com/800x400?text=Image+Not+Found';
+            };
+            if (removeImageBtn) {
+                removeImageBtn.disabled = false;
+            }
+        } else {
+            imagePreview.src = 'https://via.placeholder.com/800x400?text=No+Image';
+            if (removeImageBtn) {
+                removeImageBtn.disabled = true;
+            }
+        }
+    }
+    
+    // Initialize event listeners for the form
+    setupEditFormEventListeners(post);
+}
+
+/**
+ * Set up event listeners for the edit form
+ * @param {Object} post - The blog post data
+ */
+function setupEditFormEventListeners(post) {
+    const editForm = document.getElementById('editBlogPostForm');
+    const imageInput = document.getElementById('editPostImage');
+    const imagePreview = document.getElementById('editPostImagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const saveChangesBtn = document.getElementById('saveChangesBtn');
+    
+    if (!editForm || !imageInput || !imagePreview || !removeImageBtn || !saveChangesBtn) {
+        console.error('Required form elements not found');
+        return;
+    }
+    
+    // Handle image preview
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File too large',
+                    text: 'Maximum file size is 5MB. Please choose a smaller image.'
+                });
+                this.value = ''; // Clear the file input
+                return;
+            }
+            
+            // Check file type
+            if (!file.type.match('image.*')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid file type',
+                    text: 'Please select a valid image file (JPEG, PNG, etc.)'
+                });
+                this.value = ''; // Clear the file input
+                return;
+            }
+            
+            // Create a preview URL for the selected image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                removeImageBtn.disabled = false;
+                removeImageBtn.dataset.imageRemoved = 'false';
+            };
+            reader.onerror = function() {
+                console.error('Error reading image file');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load the selected image. Please try again.'
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle remove image button
+    removeImageBtn.addEventListener('click', function() {
+        imagePreview.src = 'https://via.placeholder.com/800x400?text=No+Image';
+        imageInput.value = ''; // Clear the file input
+        removeImageBtn.disabled = true;
+        
+        // Set a flag to indicate the image was removed
+        removeImageBtn.dataset.imageRemoved = 'true';
+    });
+    
+    // Handle form submission
+    editForm.addEventListener('submit', handleEditFormSubmit);
+    
+    // Also handle the save changes button click (in case the form doesn't submit properly)
+    saveChangesBtn.addEventListener('click', function() {
+        // Trigger the form submission
+        const submitEvent = new Event('submit', {
+            bubbles: true,
+            cancelable: true
+        });
+        editForm.dispatchEvent(submitEvent);
+    });
+    
+    // Add keyboard shortcut (Ctrl+Enter) to save the form
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            if (document.activeElement.closest('#editBlogPostModal')) {
+                e.preventDefault();
+                saveChangesBtn.click();
+            }
+        }
+    });
+}
+
+/**
+ * Handle edit form submission
+ * @param {Event} e - The form submission event
+ */
+async function handleEditFormSubmit(e) {
+    const form = document.getElementById('editBlogPostForm');
+    if (!form) return;
+    
+    const postId = form.dataset.postId;
+    const title = document.getElementById('editPostTitle')?.value.trim();
+    const content = document.getElementById('editPostContent')?.value.trim();
+    const region = document.getElementById('editPostRegion')?.value.trim();
+    const country = document.getElementById('editPostCountry')?.value.trim();
+    const tags = document.getElementById('editPostTags')?.value.trim();
+    const imageInput = document.getElementById('editPostImage');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    
+    // Validate required fields
+    if (!title || !content) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Title and content are required.'
+        });
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveChangesBtn');
+    const saveBtnSpinner = saveBtn?.querySelector('.spinner-border');
+    const saveBtnText = saveBtn?.querySelector('span:not(.spinner-border)');
+    
+    if (saveBtn && saveBtnSpinner && saveBtnText) {
+        saveBtn.disabled = true;
+        saveBtnSpinner.classList.remove('d-none');
+        saveBtnText.textContent = ' Saving...';
+    }
+    
+    try {
+        let imageUrl = '';
+        
+        // Handle image upload if a new file was selected
+        if (newImageFile) {
+            try {
+                const uploadResponse = await window.api.blog.uploadImage(newImageFile);
+                imageUrl = uploadResponse.imageUrl;
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                throw new Error('Failed to upload image. Please try again.');
+            }
+        } else if (removeImageBtn && removeImageBtn.disabled) {
+            // Image was removed
+            imageUrl = '';
+        }
+        
+        // Prepare the post data
+        const postData = {
+            title,
+            content,
+            region: region || null,
+            country: country || null,
+            tags: tags || null
+        };
+        
+        // Only include image_url if it was changed
+        if (imageUrl !== undefined) {
+            postData.image_url = imageUrl;
+        }
+        
+        // Update the blog post
+        const response = await window.api.blog.updatePost(postId, postData);
+        
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Blog post updated successfully!',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editBlogPostModal'));
+        if (modal) modal.hide();
+        
+        // Reload the posts
+        loadUserBlogPosts();
+        
+    } catch (error) {
+        console.error('Error updating blog post:', error);
+        
+        // Show error message
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Failed to update blog post. Please try again.'
+        });
+    } finally {
+        // Reset button state
+        if (saveBtn && saveBtnSpinner && saveBtnText) {
+            saveBtn.disabled = false;
+            saveBtnSpinner.classList.add('d-none');
+            saveBtnText.textContent = 'Save Changes';
+        }
+    }
+}
+
+
+/**
+ * Handle edit form submission
+ * @param {Event} e - The form submission event
+ */
+async function handleEditFormSubmit(e) {
+    e.preventDefault();
+    
+    const form = document.getElementById('editBlogPostForm');
+    if (!form) return;
+    
+    const postId = form.dataset.postId;
+    const title = document.getElementById('editPostTitle')?.value.trim();
+    const content = document.getElementById('editPostContent')?.value.trim();
+    const region = document.getElementById('editPostRegion')?.value.trim();
+    const country = document.getElementById('editPostCountry')?.value.trim();
+    const tags = document.getElementById('editPostTags')?.value.trim();
+    const imageInput = document.getElementById('editPostImage');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveChangesBtn');
+    const saveBtnSpinner = saveBtn?.querySelector('.spinner-border');
+    const saveBtnText = saveBtn?.querySelector('span:not(.spinner-border)');
+    
+    if (saveBtn && saveBtnSpinner && saveBtnText) {
+        saveBtn.disabled = true;
+        saveBtnSpinner.classList.remove('d-none');
+        saveBtnText.textContent = ' Saving...';
+    }
+    
+    try {
+        // Validate required fields
+        if (!title || !content) {
+            throw new Error('Title and content are required');
+        }
+        
+        let imageUrl = null;
+        
+        // Handle image upload if a new file was selected
+        const file = imageInput?.files[0];
+        if (file) {
+            try {
+                const uploadResponse = await window.api.blog.uploadImage(file);
+                imageUrl = uploadResponse.imageUrl;
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                throw new Error('Failed to upload image. Please try again.');
+            }
+        } else if (removeImageBtn && removeImageBtn.disabled) {
+            // Image was removed
+            imageUrl = '';
+        }
+        
+        // Prepare the post data
+        const postData = {
+            title,
+            content,
+            region: region || null,
+            country: country || null,
+            tags: tags || null
+        };
+        
+        // Only include image_url if it was changed
+        if (imageUrl !== null) {
+            postData.image_url = imageUrl;
+        }
+        
+        // Update the blog post
+        const response = await window.api.blog.updatePost(postId, postData);
+        
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Blog post updated successfully!',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editBlogPostModal'));
+        if (modal) modal.hide();
+        
+        // Reload the posts
+        loadUserBlogPosts();
+        
+    } catch (error) {
+        console.error('Error updating blog post:', error);
+        
+        // Show error message
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Failed to update blog post. Please try again.'
+        });
+    } finally {
+        // Reset button state
+        if (saveBtn && saveBtnSpinner && saveBtnText) {
+            saveBtn.disabled = false;
+            saveBtnSpinner.classList.add('d-none');
+            saveBtnText.textContent = 'Save Changes';
+        }
+    }
+}
+
+/**
+ * Confirm blog post deletion
+ * @param {number} postId - The ID of the post to delete
+ * @param {string} postTitle - The title of the post (for confirmation)
+ */
+function confirmDeleteBlogPost(postId, postTitle) {
+    Swal.fire({
+        title: 'Delete Blog Post',
+        html: `Are you sure you want to delete <strong>${escapeHtml(postTitle)}</strong>?<br>This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteBlogPost(postId, postTitle);
+        }
+    });
 }
 
 /**

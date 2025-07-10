@@ -574,12 +574,28 @@ window.api = {
         
         // Get a single blog post by ID
         getPost: async (postId) => {
-            const response = await fetch(`${API_BASE_URL}/blogposts/${postId}`, {
-                method: 'GET',
-                headers: getAuthHeader(),
-                credentials: 'include'
-            });
-            return handleResponse(response);
+            try {
+                console.log(`Fetching blog post with ID: ${postId}`);
+                const url = `${API_BASE_URL}/blogposts/${postId}`;
+                console.log('API URL:', url);
+                
+                const headers = getAuthHeader();
+                console.log('Request headers:', headers);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await handleResponse(response);
+                console.log('Blog post data received:', data);
+                return data;
+            } catch (error) {
+                console.error('Error in getPost API call:', error);
+                throw error; // Re-throw to be handled by the caller
+            }
         },
         
         // Create a new blog post
