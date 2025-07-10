@@ -46,6 +46,17 @@ def after_request(response):
     # We only need to add any additional headers not covered by CORS
     return response
 
+# JWT Configuration
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']
+app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # Set to True in production
+app.config['JWT_CSRF_CHECK_FORM'] = True
+
+# Initialize JWT Manager
+jwt = JWTManager(app)
+
 # Add request logging middleware
 @app.before_request
 def log_request_info():
@@ -1388,8 +1399,13 @@ def create_blog_post():
     conn = None
     cursor = None
     try:
-        # Get user identity from JWT
-        current_user = get_jwt_identity()
+        # Get user ID from JWT token
+        current_user_id = get_jwt_identity()
+        
+        if not current_user_id:
+            return jsonify({'error': 'User not authenticated'}), 401
+            
+        print(f"[DEBUG] Creating blog post for user ID: {current_user_id}")
         
         # Accept JSON or form-data
         if request.is_json:
@@ -1428,11 +1444,19 @@ def create_blog_post():
             
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Get user's full name for the author field if not provided
+        if not author:
+            cursor.execute("SELECT full_name FROM users WHERE id = %s", (current_user_id,))
+            user = cursor.fetchone()
+            if user and user[0]:
+                author = user[0]
+        
         cursor.execute("""
             INSERT INTO blog_posts 
             (user_id, title, content, region, country, author, tags, image_url) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (current_user['id'], title, content, region, country, author, tags, image_url))
+        """, (current_user_id, title, content, region, country, author, tags, image_url))
         
         post_id = cursor.lastrowid
         conn.commit()
@@ -1455,7 +1479,13 @@ def update_blog_post(post_id):
     conn = None
     cursor = None
     try:
-        current_user = get_jwt_identity()
+        # Get user ID from JWT token
+        current_user_id = get_jwt_identity()
+        
+        if not current_user_id:
+            return jsonify({'error': 'User not authenticated'}), 401
+            
+        print(f"[DEBUG] Updating blog post {post_id} for user ID: {current_user_id}")
         
         # Check if post exists and belongs to user
         conn = get_db_connection()
@@ -1469,8 +1499,17 @@ def update_blog_post(post_id):
         if not post:
             return jsonify({'error': 'Blog post not found'}), 404
             
-        if post['user_id'] != current_user['id']:
-            return jsonify({'error': 'Unauthorized to update this post'}), 403
+        # Convert both to integers for comparison
+        try:
+            post_user_id = int(post.get('user_id'))
+            current_user_id_int = int(current_user_id)
+            
+            if post_user_id != current_user_id_int:
+                return jsonify({'error': 'Unauthorized to update this post'}), 403
+                
+        except (ValueError, TypeError) as e:
+            print(f"Error comparing user IDs: {e}")
+            return jsonify({'error': 'Invalid user ID format'}), 400
         
         # Get update data
         data = request.get_json() if request.is_json else request.form
@@ -1510,22 +1549,43 @@ def delete_blog_post(post_id):
     conn = None
     cursor = None
     try:
-        current_user = get_jwt_identity()
+        # Get the JWT identity (should be the user ID)
+        current_user_id = get_jwt_identity()
+        
+        if not current_user_id:
+            return jsonify({'error': 'Invalid authentication'}), 401
+            
+        print(f"Current user ID from JWT: {current_user_id}")
         
         # Check if post exists and belongs to user
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
-            "SELECT user_id, image_url FROM blog_posts WHERE id = %s", 
+            "SELECT id, user_id, image_url FROM blog_posts WHERE id = %s", 
             (post_id,)
         )
         post = cursor.fetchone()
         
         if not post:
+            print(f"Post {post_id} not found")
             return jsonify({'error': 'Blog post not found'}), 404
             
-        if post['user_id'] != current_user['id']:
-            return jsonify({'error': 'Unauthorized to delete this post'}), 403
+        print(f"Post found: {post}")
+        print(f"Post user_id: {post.get('user_id')}, Current user ID: {current_user_id}")
+        print(f"Type comparison - post_user_id: {type(post.get('user_id'))}, current_user_id: {type(current_user_id)}")
+            
+        # Convert both to integers for comparison to ensure type consistency
+        try:
+            post_user_id = int(post.get('user_id'))
+            current_user_id_int = int(current_user_id)
+            
+            if post_user_id != current_user_id_int:
+                print(f"Unauthorized: User {current_user_id_int} cannot delete post {post_id} owned by {post_user_id}")
+                return jsonify({'error': 'Unauthorized to delete this post'}), 403
+                
+        except (ValueError, TypeError) as e:
+            print(f"Error comparing user IDs: {e}")
+            return jsonify({'error': 'Invalid user ID format'}), 400
         
         # Delete image file if exists
         if post['image_url']:
@@ -1552,11 +1612,15 @@ def delete_blog_post(post_id):
         if cursor: cursor.close()
         if conn: conn.close()
 
-@app.route('/api/users/<int:user_id>/blogposts', methods=['GET'])
-def get_user_blog_posts(user_id):
+@app.route('/api/users/me/blogposts', methods=['GET'])
+@jwt_required()
+def get_current_user_blog_posts():
     conn = None
     cursor = None
     try:
+        # Get the current user ID from the JWT token
+        current_user_id = get_jwt_identity()
+        
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
@@ -1564,7 +1628,7 @@ def get_user_blog_posts(user_id):
             FROM blog_posts 
             WHERE user_id = %s 
             ORDER BY date DESC
-        """, (user_id,))
+        """, (current_user_id,))
         posts = cursor.fetchall()
         
         # Format dates

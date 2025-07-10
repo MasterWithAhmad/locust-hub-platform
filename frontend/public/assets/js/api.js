@@ -3,6 +3,9 @@ const API_BASE_URL = window.location.origin.includes('3000')
     ? 'http://localhost:5000/api'
     : `${window.location.origin}/api`;
 
+// Expose to window for global access
+window.API_BASE_URL = API_BASE_URL;
+
 console.log('API Base URL:', API_BASE_URL);
 
 // Helper function to handle API responses
@@ -555,4 +558,80 @@ window.api = {
             }
         }
     },
+    blog: {
+        // Get all blog posts for the current user
+        getPosts: async () => {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!user?.id) throw new Error('User not authenticated');
+            
+            const response = await fetch(`${API_BASE_URL}/users/${user.id}/blogposts`, {
+                method: 'GET',
+                headers: getAuthHeader(),
+                credentials: 'include'
+            });
+            return handleResponse(response);
+        },
+        
+        // Get a single blog post by ID
+        getPost: async (postId) => {
+            const response = await fetch(`${API_BASE_URL}/blogposts/${postId}`, {
+                method: 'GET',
+                headers: getAuthHeader(),
+                credentials: 'include'
+            });
+            return handleResponse(response);
+        },
+        
+        // Create a new blog post
+        createPost: async (postData) => {
+            const response = await fetch(`${API_BASE_URL}/blogposts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeader()
+                },
+                credentials: 'include',
+                body: JSON.stringify(postData)
+            });
+            return handleResponse(response);
+        },
+        
+        // Update an existing blog post
+        updatePost: async (postId, postData) => {
+            const response = await fetch(`${API_BASE_URL}/blogposts/${postId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeader()
+                },
+                credentials: 'include',
+                body: JSON.stringify(postData)
+            });
+            return handleResponse(response);
+        },
+        
+        // Delete a blog post
+        deletePost: async (postId) => {
+            const response = await fetch(`${API_BASE_URL}/blogposts/${postId}`, {
+                method: 'DELETE',
+                headers: getAuthHeader(),
+                credentials: 'include'
+            });
+            return handleResponse(response);
+        },
+        
+        // Upload an image for a blog post
+        uploadImage: async (file) => {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const response = await fetch(`${API_BASE_URL}/blogposts/upload`, {
+                method: 'POST',
+                headers: getAuthHeader(),
+                credentials: 'include',
+                body: formData
+            });
+            return handleResponse(response);
+        }
+    }
 };
