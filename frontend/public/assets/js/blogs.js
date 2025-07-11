@@ -151,51 +151,122 @@ function createPostElement(post, index) {
   const modalId = `blogModal_${post.id}`;
 
   col.innerHTML = `
-    <div class="blog-post-card card mb-4 fade-in">
-      <div class="card-img-container position-relative">
-        <img src="${image}" class="card-img-top" alt="${post.title}">
+    <div class="blog-post-card card mb-4 fade-in h-100">
+      <div class="card-img-container position-relative" style="height: 200px; overflow: hidden;">
+        <img src="${image}" class="card-img-top h-100 w-100" alt="${post.title}" style="object-fit: cover;">
         <div class="img-gradient-overlay"></div>
-        <span class="badge position-absolute top-0 start-0 m-3 blog-post-category">${tag}</span>
-      </div>
-          <div class="card-body d-flex flex-column">
-        <h5 class="card-title blog-post-title">${post.title}</h5>
-        <div class="blog-post-excerpt">${excerpt}</div>
-        <div class="blog-post-meta d-flex align-items-center mt-2">
-          ${avatar}
-          <span class="ms-2">${post.author || 'Unknown'}</span>
-          <span class="mx-2">·</span>
-          <span class="blog-post-date"><i class="bi bi-calendar"></i> ${formattedDate}</span>
+        <span class="badge bg-primary position-absolute top-0 start-0 m-3">${tag}</span>
+        <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+          <h5 class="card-title mb-1 text-white">${post.title}</h5>
+          <div class="d-flex align-items-center small">
+            ${avatar}
+            <span class="ms-2">${post.author || 'Unknown'}</span>
+          </div>
         </div>
-        <div class="blog-post-tags mt-2">${tagsHtml}</div>
-        <div class="blog-post-actions d-flex align-items-center mt-3">
-          <button class="btn btn-link p-0 me-3" title="Like"><i class="bi bi-heart"></i></button>
-          <button class="btn btn-link p-0 me-3" title="Comment"><i class="bi bi-chat"></i></button>
-          <button class="btn btn-link p-0 me-3" title="Bookmark"><i class="bi bi-bookmark"></i></button>
-          <button class="btn btn-primary ms-auto view-btn" data-bs-toggle="modal" data-bs-target="#${modalId}"><i class="bi bi-eye"></i> View</button>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <div class="blog-post-excerpt mb-3">${excerpt}</div>
+        <div class="d-flex justify-content-between align-items-center mt-auto">
+          <div class="blog-post-meta d-flex align-items-center">
+            <span class="text-muted small"><i class="bi bi-calendar me-1"></i>${formattedDate}</span>
+          </div>
+          <button class="btn btn-sm btn-outline-primary view-btn" data-bs-toggle="modal" data-bs-target="#${modalId}">
+            Read More <i class="bi bi-arrow-right ms-1"></i>
+          </button>
         </div>
       </div>
     </div>
-    <!-- Modal for full content -->
+
+    <!-- Enhanced Modal -->
     <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${modalId}_label" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="${modalId}_label">${post.title}</h5>
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+          <!-- Modal Header -->
+          <div class="modal-header border-0 pb-0 position-sticky top-0 bg-white" style="z-index: 1050;">
+            <div>
+              <div class="d-flex align-items-center mb-2">
+                ${avatar}
+                <div class="ms-2">
+                  <div class="fw-medium">${post.author || 'Unknown'}</div>
+                  <div class="text-muted small">${formattedDate}</div>
+                </div>
+              </div>
+              <h2 class="modal-title h3 mb-0" id="${modalId}_label">${post.title}</h2>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body py-4">
+            ${post.image_url ? `
+              <div class="text-center mb-4">
+                <img src="${post.image_url}" class="img-fluid rounded-3 shadow" alt="${post.title}">
+              </div>
+            ` : ''}
+            
+            <article class="blog-content" style="line-height: 1.8; font-size: 1.1rem;">
+              ${post.content || '<p class="text-muted">No content available.</p>'}
+            </article>
+
+            ${tagsHtml ? `
+              <div class="mt-5 pt-3 border-top">
+                <h6 class="mb-3">Tags</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  ${tagsHtml}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer border-0 bg-light">
+            <div class="d-flex justify-content-between w-100 align-items-center">
+              <div class="social-share">
+                <span class="text-muted me-2">Share:</span>
+                <a href="#" class="text-muted me-3" onclick="shareOnTwitter('${post.title}', window.location.href); return false;">
+                  <i class="bi bi-twitter-x"></i>
+                </a>
+                <a href="#" class="text-muted me-3" onclick="shareOnFacebook(window.location.href); return false;">
+                  <i class="bi bi-facebook"></i>
+                </a>
+                <a href="#" class="text-muted" onclick="shareOnLinkedIn('${post.title}', window.location.href); return false;">
+                  <i class="bi bi-linkedin"></i>
+                </a>
+              </div>
+              <div>
+                <button class="btn btn-sm btn-outline-secondary me-2" title="Save for later">
+                  <i class="bi bi-bookmark"></i> Save
+                </button>
+                <button class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+              </div>
             </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <span class="badge bg-primary">${tag}</span>
-              <span class="ms-2 text-muted"><i class="bi bi-calendar"></i> ${formattedDate}</span>
-              <span class="ms-2 text-muted"><i class="bi bi-person"></i> ${post.author || 'Unknown'}</span>
-            </div>
-            <div>${post.content || 'No content available.'}</div>
-            <div class="mt-3">${tagsHtml}</div>
           </div>
         </div>
       </div>
     </div>
-      `;
+  `;
+
+  // Add social sharing functions to window object if they don't exist
+  if (!window.shareOnTwitter) {
+    window.shareOnTwitter = function(title, url) {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`, '_blank');
+      return false;
+    };
+  }
+
+  if (!window.shareOnFacebook) {
+    window.shareOnFacebook = function(url) {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+      return false;
+    };
+  }
+
+  if (!window.shareOnLinkedIn) {
+    window.shareOnLinkedIn = function(title, url) {
+      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`, '_blank');
+      return false;
+    };
+  }
   return col;
 }
 
@@ -525,12 +596,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
-
-function getReadingTime(text) {
-  const plain = text.replace(/<[^>]+>/g, '');
-  const words = plain.trim().split(/\s+/).length;
-  return Math.max(1, Math.round(words / 200)); // 200 wpm
-}
 
 function getAuthorAvatar(author) {
   if (!author) return `<div class="avatar-circle"><span>A</span></div>`;
