@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, url_for
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from werkzeug.utils import secure_filename
 import mysql.connector
 import bcrypt
 from datetime import datetime, timedelta
@@ -38,6 +39,19 @@ cors = CORS(app,
              "expose_headers": ["Content-Type", "Authorization"]
          }
      })
+
+# Image upload configuration
+UPLOAD_FOLDER = os.path.abspath(os.path.join('frontend', 'public', 'assets', 'images', 'blog'))
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
+
+# Create upload directory if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Set CORS headers for all responses - simplified as CORS middleware handles most headers
 @app.after_request
@@ -1339,6 +1353,101 @@ def reset_password():
             conn.close()
 
 # --- BLOG POSTS API ---
+@app.route('/api/blogposts/upload', methods=['POST'])
+@jwt_required()
+def upload_blog_image():
+    """
+    Upload an image for a blog post
+    ---
+    tags:
+      - Blog Posts
+    security:
+      - JWT: []
+    consumes:
+      - multipart/form-data
+    parameters:
+      - in: formData
+        name: image
+        type: file
+        required: true
+        description: The image file to upload
+    responses:
+      200:
+        description: Image uploaded successfully
+        schema:
+          type: object
+          properties:
+            url:
+              type: string
+              description: URL to access the uploaded image
+      400:
+        description: No file part or invalid file
+      401:
+        description: Unauthorized
+    """
+    try:
+        print("Upload request received. Files:", request.files)  # Debug log
+        
+        # Check if the post request has the file part
+        if 'image' not in request.files:
+            print("No 'image' in request.files")  # Debug log
+            return jsonify({'error': 'No file part', 'details': 'No image field in the request'}), 400
+        
+        file = request.files['image']
+        print("File object:", file)  # Debug log
+        
+        # If user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            print("No file selected")  # Debug log
+            return jsonify({'error': 'No selected file'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Generate a secure filename with timestamp
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            filename = secure_filename(file.filename)
+            filename = f"{timestamp}_{filename}"
+            
+            # Ensure upload directory exists
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            
+            # Save the file
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            print(f"Saving file to: {filepath}")  # Debug log
+            file.save(filepath)
+            
+            # Verify file was saved
+            if not os.path.exists(filepath):
+                print(f"Failed to save file: {filepath}")  # Debug log
+                return jsonify({'error': 'Failed to save file'}), 500
+            
+            # Return the URL where the file can be accessed
+            file_url = f"/assets/images/blog/{filename}"
+            
+            print(f"File uploaded successfully: {file_url}")  # Debug log
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'url': file_url,
+                'filename': filename,
+                'imageUrl': file_url  # Add this line to match frontend expectation
+            }), 200
+        else:
+            print(f"File not allowed: {file.filename if file else 'No file'}")  # Debug log
+            return jsonify({
+                'error': 'File type not allowed',
+                'allowed': list(ALLOWED_EXTENSIONS)
+            }), 400
+            
+    except Exception as e:
+        print(f"Error uploading image: {str(e)}")
+        import traceback
+        traceback.print_exc()  # Print full traceback
+        return jsonify({
+            'error': 'Failed to upload image',
+            'details': str(e)
+        }), 500
+
 @app.route('/api/blogposts', methods=['GET'])
 def get_blog_posts():
     conn = None

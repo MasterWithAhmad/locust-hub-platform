@@ -641,13 +641,22 @@ window.api = {
             const formData = new FormData();
             formData.append('image', file);
             
-            const response = await fetch(`${API_BASE_URL}/blogposts/upload`, {
-                method: 'POST',
-                headers: getAuthHeader(),
-                credentials: 'include',
-                body: formData
-            });
-            return handleResponse(response);
+            // Get auth headers but remove Content-Type to let the browser set it with the correct boundary
+            const headers = getAuthHeader();
+            delete headers['Content-Type'];
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/blogposts/upload`, {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: formData
+                });
+                return await handleResponse(response);
+            } catch (error) {
+                console.error('Upload error:', error);
+                throw error;
+            }
         }
     }
 };

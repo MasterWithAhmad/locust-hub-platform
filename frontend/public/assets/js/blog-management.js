@@ -35,56 +35,60 @@ function waitForAPI() {
 
 // Initialize the application
 async function initializeApp() {
+    console.log('Initializing blog management...');
+    
     try {
-        console.log('Initializing application...');
-        
-        // Wait for API with timeout
-        try {
-            await waitForAPI();
-        } catch (error) {
-            console.error('API initialization error:', error);
-            throw new Error('Failed to initialize application. Please refresh the page.');
+        // Wait for the DOM to be fully loaded
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
         }
+        
+        // Wait for the API to be fully loaded
+        await waitForAPI();
         
         // Check if user is logged in
-        try {
-            const user = window.api.auth.getCurrentUser();
-            if (!user || !user.id) {
-                console.log('User not authenticated, redirecting to login...');
-                window.location.href = '/login.html';
-                return;
-            }
-
-            // Initialize the page
-            initPage();
-            await loadUserBlogPosts();
-
-            // Set up event listeners
-            const createBtn = document.getElementById('createBlogPostBtn');
-            if (createBtn) {
-                createBtn.addEventListener('click', showCreateBlogPostModal);
-            }
-            
-            console.log('Application initialized successfully');
-        } catch (error) {
-            console.error('Application initialization error:', error);
-            throw new Error('Failed to load the application. Please try again.');
+        const user = window.api.auth.getCurrentUser();
+        if (!user || !user.id) {
+            console.log('User not authenticated, redirecting to login...');
+            window.location.href = '/login.html';
+            return;
         }
-    } catch (error) {
-        console.error('Fatal initialization error:', error);
-        // Show user-friendly error message
-        Swal.fire({
-            icon: 'error',
-            title: 'Initialization Error',
-            text: error.message || 'Failed to initialize the application. Please refresh the page.',
-            confirmButtonText: 'Refresh',
-            allowOutsideClick: false
-        }).then(() => {
-            window.location.reload();
-        });
         
-        // Re-throw to be caught by the global error handler
-        throw error;
+        // Initialize the page
+        await initPage();
+        await loadUserBlogPosts();
+
+        // Set up event listeners
+        const createBtn = document.getElementById('createBlogPostBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', showCreateBlogPostModal);
+        }
+        
+        console.log('Application initialized successfully');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        
+        // Show user-friendly error message
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Initialization Error',
+                text: error.message || 'Failed to initialize the application. Please refresh the page.',
+                confirmButtonText: 'Refresh',
+                allowOutsideClick: false
+            }).then(() => {
+                window.location.reload();
+            });
+        } else {
+            // Fallback to simple alert if Swal is not available
+            const errorContainer = document.getElementById('errorContainer');
+            if (errorContainer) {
+                errorContainer.textContent = 'Failed to initialize application. Please refresh the page.';
+                errorContainer.classList.remove('d-none');
+            } else {
+                alert('Failed to initialize application. Please refresh the page.');
+            }
+        }
     }
 }
 
@@ -416,10 +420,115 @@ async function createBlogPost(postData) {
 }
 
 /**
- * View a blog post
+ * View a blog post in a modal
+ * @param {number} postId - The ID of the post to view
  */
-function viewBlogPost(postId) {
-    window.location.href = `blog-post.html?id=${postId}`;
+async function viewBlogPost(postId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewBlogPostModal'));
+    const loadingElement = document.getElementById('viewPostLoading');
+    const contentElement = document.getElementById('viewPostContent');
+    const errorElement = document.getElementById('viewPostError');
+    
+    try {
+        // Show loading state
+        loadingElement.classList.remove('d-none');
+        contentElement.classList.add('d-none');
+        errorElement.classList.add('d-none');
+        
+        // Show the modal
+        modal.show();
+        
+        // Fetch the blog post
+        const post = await window.api.blog.getPost(postId);
+        
+        if (!post) {
+            throw new Error('Blog post not found');
+        }
+        
+        // Populate the modal with post data
+        populateViewModal(post);
+        
+        // Set up the edit button to open the edit modal
+        const editBtn = document.getElementById('editPostBtn');
+        if (editBtn) {
+            editBtn.onclick = () => {
+                modal.hide();
+                editBlogPost(postId);
+            };
+        }
+        
+        // Show the content
+        loadingElement.classList.add('d-none');
+        contentElement.classList.remove('d-none');
+        
+    } catch (error) {
+        console.error('Error loading blog post:', error);
+        loadingElement.classList.add('d-none');
+        errorElement.classList.remove('d-none');
+        errorElement.textContent = error.message || 'Failed to load the blog post. Please try again.';
+    }
+}
+
+/**
+ * Populate the view modal with blog post data
+ * @param {Object} post - The blog post data
+ */
+function populateViewModal(post) {
+    // Set the title
+    document.getElementById('viewPostTitle').textContent = post.title || 'Untitled Post';
+    
+    // Set the image
+    const imageElement = document.getElementById('viewPostImage');
+    if (post.image_url) {
+        imageElement.src = post.image_url;
+        imageElement.style.display = 'block';
+    } else {
+        imageElement.style.display = 'none';
+    }
+    
+    // Set the date
+    const dateElement = document.getElementById('viewPostDate');
+    if (post.created_at) {
+        const postDate = new Date(post.created_at);
+        dateElement.textContent = postDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } else {
+        dateElement.textContent = '';
+    }
+    
+    // Set the author
+    const authorElement = document.getElementById('viewPostAuthor');
+    if (post.author) {
+        authorElement.textContent = `By ${post.author}`;
+    } else {
+        authorElement.textContent = '';
+    }
+    
+    // Set the content
+    const contentElement = document.getElementById('viewPostContentBody');
+    contentElement.innerHTML = post.content || '<p>No content available.</p>';
+    
+    // Set the tags
+    const tagsElement = document.getElementById('viewPostTags');
+    if (post.tags) {
+        // If tags is a string, split it by comma, otherwise use as is
+        const tagsArray = typeof post.tags === 'string' 
+            ? post.tags.split(',').map(tag => tag.trim()).filter(tag => tag) 
+            : (Array.isArray(post.tags) ? post.tags : []);
+            
+        if (tagsArray.length > 0) {
+            tagsElement.innerHTML = tagsArray.map(tag => 
+                `<span class="badge bg-secondary me-1">${tag}</span>`
+            ).join('');
+        } else {
+            tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
+        }
+    } else {
+        tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
+    }
 }
 
 /**
@@ -854,15 +963,45 @@ async function handleEditFormSubmit(e) {
         const file = imageInput?.files[0];
         if (file) {
             try {
+                console.log('Uploading file:', file.name, 'Size:', file.size, 'bytes');
                 const uploadResponse = await window.api.blog.uploadImage(file);
-                imageUrl = uploadResponse.imageUrl;
+                console.log('Upload response:', uploadResponse);
+                
+                // Make sure we have a valid URL (handle both response formats)
+                imageUrl = uploadResponse.url || uploadResponse.imageUrl;
+                if (!imageUrl) {
+                    throw new Error('No URL returned from server');
+                }
+                
+                console.log('Image uploaded successfully. URL:', imageUrl);
+                
+                // Update the preview immediately
+                const preview = document.getElementById('editPostImagePreview');
+                if (preview) {
+                    preview.src = imageUrl;
+                    preview.classList.remove('d-none');
+                }
+                
+                // Enable the remove image button if it exists
+                if (removeImageBtn) {
+                    removeImageBtn.disabled = false;
+                }
+                
             } catch (error) {
                 console.error('Error uploading image:', error);
                 throw new Error('Failed to upload image. Please try again.');
             }
         } else if (removeImageBtn && removeImageBtn.disabled) {
             // Image was removed
+            console.log('Image was removed');
             imageUrl = '';
+            
+            // Clear the preview
+            const preview = document.getElementById('editPostImagePreview');
+            if (preview) {
+                preview.src = '#';
+                preview.classList.add('d-none');
+            }
         }
         
         // Prepare the post data

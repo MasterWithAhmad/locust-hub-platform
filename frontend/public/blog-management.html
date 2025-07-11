@@ -160,6 +160,47 @@
     <!-- Page Specific JS -->
     <script src="/assets/js/blog-management.js"></script>
     
+    <!-- View Blog Post Modal -->
+    <div class="modal fade" id="viewBlogPostModal" tabindex="-1" aria-labelledby="viewBlogPostModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="viewBlogPostModalLabel">View Blog Post</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="viewPostLoading" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading post...</p>
+            </div>
+            <div id="viewPostContent" class="d-none">
+              <div class="text-center mb-4">
+                <img id="viewPostImage" src="" class="img-fluid rounded mb-3" alt="Post Image" style="max-height: 400px; width: auto; margin: 0 auto;">
+              </div>
+              <h3 id="viewPostTitle" class="mb-3"></h3>
+              <div class="d-flex align-items-center mb-4 text-muted">
+                <small id="viewPostDate" class="me-3"></small>
+                <small id="viewPostAuthor"></small>
+              </div>
+              <div id="viewPostContentBody" class="mb-4"></div>
+              <div id="viewPostTags" class="mb-3"></div>
+            </div>
+            <div id="viewPostError" class="alert alert-danger d-none" role="alert">
+              Failed to load the blog post. Please try again.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button id="editPostBtn" type="button" class="btn btn-primary">
+              <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit Blog Post Modal -->
     <div class="modal fade" id="editBlogPostModal" tabindex="-1" aria-labelledby="editBlogPostModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl">
