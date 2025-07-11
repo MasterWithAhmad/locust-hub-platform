@@ -175,8 +175,85 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       }
 
-      // Call the fetch function
+      // Fetch and display blog statistics
+      async function fetchBlogStats() {
+        console.log('1. Starting fetchBlogStats...');
+        
+        try {
+          // Get current user
+          const user = window.api?.auth?.getCurrentUser?.();
+          if (!user?.id) {
+            console.warn('User not authenticated, cannot fetch blog posts');
+            return;
+          }
+          
+          console.log('2. Fetching blog posts from /api/users/me/blogposts');
+          const response = await fetch('/api/users/me/blogposts', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${window.localStorage.getItem('token')}`
+            },
+            credentials: 'include'
+          });
+          
+          console.log('3. Response status:', response.status);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Failed to fetch blog posts:', response.status, errorText);
+            return [];
+          }
+          
+          const blogs = await response.json();
+          console.log('4. Found blog posts:', blogs);
+          
+          // Update the blog count
+          const blogCountElement = document.getElementById('blogCount');
+          const blogTrendElement = document.querySelector('#blogStatsCard #blogTrend');
+          
+          if (blogCountElement) {
+            const count = Array.isArray(blogs) ? blogs.length : 0;
+            blogCountElement.textContent = count;
+            console.log('5. Updated blog count to:', count);
+          } else {
+            console.error('Blog count element not found');
+          }
+          
+          if (blogTrendElement) {
+            const thisWeekCount = Array.isArray(blogs) ? blogs.length : 0;
+            const trendText = `${thisWeekCount} ${thisWeekCount === 1 ? 'post' : 'posts'}`;
+            blogTrendElement.textContent = trendText;
+            console.log('6. Updated blog trend text to:', trendText);
+          } else {
+            console.error('Blog trend element not found');
+          }
+          
+          return Array.isArray(blogs) ? blogs : [];
+          
+        } catch (error) {
+          console.error('Error in fetchBlogStats:', error);
+          console.error('Error details:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+          });
+          
+          // Update UI to show error state
+          const blogCountElement = document.getElementById('blogCount');
+          const blogTrendElement = document.getElementById('blogTrend');
+          
+          if (blogCountElement) blogCountElement.textContent = '0';
+          if (blogTrendElement) {
+            blogTrendElement.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Error loading';
+          }
+          return [];
+        }
+      }
+
+      // Call the fetch functions
       fetchPredictionStats();
+      fetchBlogStats();
       
       // Initialize charts
       initializeCharts();

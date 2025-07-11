@@ -559,17 +559,20 @@ window.api = {
         }
     },
     blog: {
-        // Get all blog posts for the current user
+        // Get all blog posts
         getPosts: async () => {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (!user?.id) throw new Error('User not authenticated');
-            
-            const response = await fetch(`${API_BASE_URL}/users/${user.id}/blogposts`, {
+            const response = await fetch(`${API_BASE_URL}/blogposts`, {
                 method: 'GET',
                 headers: getAuthHeader(),
                 credentials: 'include'
             });
-            return handleResponse(response);
+            const data = await handleResponse(response);
+            // Filter posts for the current user on the client side
+            const currentUser = await api.auth.getCurrentUser();
+            if (currentUser && currentUser.data) {
+                data.data = data.data.filter(post => post.user_id === currentUser.data.id);
+            }
+            return data;
         },
         
         // Get a single blog post by ID

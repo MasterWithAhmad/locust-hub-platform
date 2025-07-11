@@ -253,6 +253,23 @@ def init_db():
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ''')
         
+        # Create blog_posts table if it doesn't exist
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS blog_posts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            content LONGTEXT NOT NULL,
+            region VARCHAR(100),
+            country VARCHAR(100),
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            author VARCHAR(100),
+            tags TEXT,
+            image_url VARCHAR(255),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ''')
+        
         conn.commit()
         print("Database tables verified/created successfully")
         
@@ -1500,19 +1517,29 @@ def upload_blog_image():
         }), 500
 
 @app.route('/api/blogposts', methods=['GET'])
+@jwt_required()
 def get_blog_posts():
     conn = None
     cursor = None
     try:
+        # Get the current user's ID from the JWT token
+        current_user = get_jwt_identity()
+        if not current_user:
+            return jsonify({'error': 'User not authenticated'}), 401
+            
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        
+        # Only fetch posts for the current user
         cursor.execute("""
             SELECT id, user_id, title, content, region, country, date, 
                    author, tags, image_url 
             FROM blog_posts 
+            WHERE user_id = %s
             ORDER BY date DESC 
             LIMIT 20
-        """)
+        """, (current_user,))
+        
         posts = cursor.fetchall()
         # Format date to ISO string
         for post in posts:
