@@ -70,6 +70,17 @@ body {
   margin: 0 auto 0.5rem auto;
 }
 
+/* SweetAlert2 Large Modal */
+.swal2-popup.swal2-large {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.swal2-popup.swal2-large .swal2-html-container {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
 /* Layout */
 .wrapper {
   display: flex;

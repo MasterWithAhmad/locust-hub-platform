@@ -80,16 +80,25 @@ db_config = {
 app = Flask(__name__, static_folder='../frontend/public', static_url_path='')
 
 # Configure CORS with credentials support
-cors = CORS(app, 
-     resources={
-         r"/api/*": {
-             "origins": ["http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"],
-             "supports_credentials": True,
-             "allow_headers": ["Content-Type", "Authorization", "Accept"],
-             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-             "expose_headers": ["Content-Type", "Authorization"]
-         }
-     })
+cors = CORS()
+cors.init_app(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:5000",
+                "http://127.0.0.1:5000"
+            ],
+            "supports_credentials": True,
+            "allow_headers": ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+            "expose_headers": ["Content-Type", "Authorization", "X-Total-Count"],
+            "max_age": 600  # 10 minutes
+        }
+    }
+)
 
 # Image upload configuration
 UPLOAD_FOLDER = os.path.abspath(os.path.join('frontend', 'public', 'assets', 'images', 'blog'))

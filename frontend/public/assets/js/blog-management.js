@@ -33,6 +33,34 @@ function waitForAPI() {
     });
 }
 
+// Global reference to the initialization function
+window.initializeBlogManagement = async function() {
+    console.log('Initializing blog management...');
+    
+    try {
+        // Wait for the DOM to be fully loaded
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+        }
+        
+        // Wait for the API to be fully loaded
+        await waitForAPI();
+        
+        // Initialize the page
+        await initPage();
+        
+    } catch (error) {
+        console.error('Error initializing blog management:', error);
+        // Show error to user
+        Swal.fire({
+            icon: 'error',
+            title: 'Initialization Error',
+            text: 'Failed to initialize the blog management system. Please refresh the page and try again.',
+            confirmButtonText: 'OK'
+        });
+    }
+};
+
 // Initialize the application
 async function initializeApp() {
     console.log('Initializing blog management...');
@@ -231,7 +259,9 @@ async function loadUserBlogPosts() {
         const user = window.api?.auth?.getCurrentUser?.();
         if (!user?.id) {
             console.warn('User not authenticated, redirecting to login...');
-            window.location.href = '/login.html';
+            // Store current URL to redirect back after login
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = `/login.html?returnUrl=${returnUrl}`;
             return;
         }
 
@@ -245,12 +275,34 @@ async function loadUserBlogPosts() {
 
             console.log('Response status:', response.status);
             
+            if (response.status === 401) {
+                // Token expired or invalid, log out and redirect to login
+                console.log('Authentication required, redirecting to login...');
+                if (window.api?.auth?.logout) {
+                    window.api.auth.logout();
+                }
+                const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                window.location.href = `/login.html?returnUrl=${returnUrl}`;
+                return;
+            }
+            
             if (!response.ok) {
                 let errorMessage = 'Failed to load blog posts';
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
+                    errorMessage = errorData.msg || errorData.error || errorMessage;
                     console.error('API Error:', errorData);
+                    
+                    // Handle token expiration specifically
+                    if (errorData.msg === 'Token has expired' || errorData.error === 'Token has expired') {
+                        console.log('Token expired, logging out and redirecting to login...');
+                        if (window.api?.auth?.logout) {
+                            window.api.auth.logout();
+                        }
+                        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                        window.location.href = `/login.html?returnUrl=${returnUrl}`;
+                        return;
+                    }
                 } catch (e) {
                     const errorText = await response.text();
                     console.error('Error parsing error response:', e, 'Response:', errorText);
@@ -321,50 +373,316 @@ async function loadUserBlogPosts() {
  * Show the create blog post modal
  */
 function showCreateBlogPostModal() {
-    // You can implement a modal or redirect to a new page for creating a post
-    // For now, we'll just show an alert
+    // Create a unique ID for the editor container
+    const editorId = 'blogEditor' + Date.now();
+    const previewId = 'blogPreview' + Date.now();
+    
     Swal.fire({
         title: 'Create New Blog Post',
+        width: '95vw',
+        customClass: {
+            popup: 'swal2-large'
+        },
+        showCloseButton: true,
+        showConfirmButton: true,
+        confirmButtonText: 'Publish Post',
+        showCancelButton: true,
+        cancelButtonText: 'Cancel',
+        didOpen: async () => {
+            // Use a small delay to ensure the modal content is fully rendered
+            setTimeout(async () => {
+                try {
+                    console.log('Fetching options from API...');
+                    // Use axios for better CORS handling
+                    const response = await axios.get('/api/options', {
+                        withCredentials: true,
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const options = response.data;
+                    console.log('API Options received:', options);
+                    
+                    // Get the country and region input elements
+                    const countryInput = document.getElementById('postCountry');
+                    const regionInput = document.getElementById('postRegion');
+                    const countryList = document.getElementById('countryList');
+                    const regionList = document.getElementById('regionList');
+
+                    console.log('Form elements:', { countryInput, regionInput, countryList, regionList });
+
+                    if (!countryInput || !regionInput || !countryList || !regionList) {
+                        console.error('One or more required elements not found');
+                        return;
+                    }
+                    
+                    if (!options || !options.countries || !options.regions) {
+                        console.error('Invalid options format from API:', options);
+                        throw new Error('Invalid response format from server');
+                    }
+
+                    // Clear existing options
+                    countryList.innerHTML = '';
+                    regionList.innerHTML = '';
+
+                    // Populate countries
+                    options.countries.forEach(country => {
+                        const option = document.createElement('option');
+                        option.value = country;
+                        countryList.appendChild(option);
+                    });
+
+                    // Function to update region list based on selected country
+                    const updateRegionList = (country) => {
+                        if (!country) {
+                            regionInput.disabled = true;
+                            regionInput.placeholder = 'Select a country first';
+                            regionInput.value = '';
+                            return;
+                        }
+                        
+                        regionList.innerHTML = '';
+                        
+                        // Special handling for Somalia/Somaliland
+                        if (['Somalia', 'Somaliland', 'Somalia Republic', 'Somali Republic'].includes(country)) {
+                            country = 'Somalia';
+                        }
+                        
+                        // Find regions for the selected country
+                        const regions = options.regions.filter(region => {
+                            return region.startsWith(`${country} - `) || region === country;
+                        }).map(region => region.replace(`${country} - `, ''));
+                        
+                        if (regions && regions.length > 0) {
+                            regionInput.disabled = false;
+                            regionInput.placeholder = 'Select region...';
+                            
+                            regions.forEach(region => {
+                                const option = document.createElement('option');
+                                option.value = region;
+                                regionList.appendChild(option);
+                            });
+                        } else {
+                            regionInput.disabled = true;
+                            regionInput.placeholder = 'No regions available';
+                            regionInput.value = '';
+                        }
+                    };
+
+                    // Handle country input changes
+                    countryInput.addEventListener('input', () => {
+                        const country = countryInput.value.trim();
+                        updateRegionList(country);
+                    });
+
+                    // Initialize with empty region list
+                    regionInput.disabled = true;
+                    regionInput.placeholder = 'Select a country first';
+                    
+                } catch (error) {
+                    console.error('Error initializing country/region fields:', error);
+                    // Show error to user
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load country and region data. Please refresh the page to try again.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            }, 100); // Small delay to ensure DOM is ready
+        },
         html: `
-            <div class="mb-3">
-                <label for="postTitle" class="form-label">Title</label>
-                <input type="text" class="form-control" id="postTitle" required>
-            </div>
-            <div class="mb-3">
-                <label for="postContent" class="form-label">Content</label>
-                <textarea class="form-control" id="postContent" rows="5" required></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="postRegion" class="form-label">Region</label>
-                    <input type="text" class="form-control" id="postRegion">
+            <div class="container-fluid">
+                <div class="row g-3 mb-3">
+                    <!-- Title -->
+                    <div class="col-12">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-card-heading text-primary me-2 fs-4"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-1">Title</h6>
+                                        <input type="text" class="form-control form-control-sm" id="postTitle" 
+                                               placeholder="Enter blog post title" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Country & Region -->
+                    <div class="col-md-6">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-geo-alt text-primary me-2 fs-4"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-1">Country</h6>
+                                        <input type="text" class="form-control form-control-sm" id="postCountry" 
+                                               list="countryList" placeholder="Start typing country name..." autocomplete="off">
+                                        <datalist id="countryList"></datalist>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-globe text-primary me-2 fs-4"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-1">Region</h6>
+                                        <input type="text" class="form-control form-control-sm" id="postRegion" 
+                                               list="regionList" placeholder="Select country first" disabled>
+                                        <datalist id="regionList"></datalist>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tags & Image -->
+                    <div class="col-md-6">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-tags text-primary me-2 fs-4"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-1">Tags</h6>
+                                        <input type="text" class="form-control form-control-sm" id="postTags" 
+                                               placeholder="e.g., locust, agriculture, prediction">
+                                        <div class="form-text small">Separate tags with commas</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-image text-primary me-2 fs-4"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-1">Featured Image</h6>
+                                        <input type="file" class="form-control form-control-sm" id="postImage" accept="image/*">
+                                        <div class="form-text small">Recommended: 1200x630px</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Editor -->
+                    <div class="col-12">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-text-paragraph text-primary me-2 fs-4 mt-1"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-2">Content</h6>
+                                        <div id="${editorId}" style="min-height: 300px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="col-12">
+                        <div class="card bg-light border">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-eye text-primary me-2 fs-4"></i>
+                                    <div class="w-100">
+                                        <h6 class="card-title mb-2">Preview</h6>
+                                        <div id="${previewId}" class="p-3 bg-white border rounded" style="min-height: 200px;">
+                                            <p class="text-muted small mb-0">Your post preview will appear here as you type</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="postCountry" class="form-label">Country</label>
-                    <input type="text" class="form-control" id="postCountry">
-                </div>
             </div>
-            <div class="mb-3">
-                <label for="postTags" class="form-label">Tags (comma-separated)</label>
-                <input type="text" class="form-control" id="postTags" placeholder="e.g., locust, agriculture, prediction">
             </div>
         `,
         showCancelButton: true,
-        confirmButtonText: 'Publish',
+        confirmButtonText: 'Publish Post',
         cancelButtonText: 'Cancel',
-        preConfirm: () => {
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        width: '800px',
+        padding: '2rem',
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+        },
+        didOpen: () => {
+            // Initialize Quill editor
+            const quill = new Quill(`#${editorId}`, {
+                theme: 'snow',
+                placeholder: 'Write your blog post content here...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            // Store Quill instance for later use
+            window.quillInstance = quill;
+        },
+        preConfirm: async () => {
+            const title = document.getElementById('postTitle').value.trim();
+            const content = window.quillInstance?.root.innerHTML || '';
+            const region = document.getElementById('postRegion').value;
+            const country = document.getElementById('postCountry').value.trim();
+            const tags = document.getElementById('postTags').value;
+            const imageFile = document.getElementById('postImage').files[0];
+
+            if (!title) {
+                Swal.showValidationMessage('Please enter a title');
+                return false;
+            }
+
+            if (!content || content === '<p><br></p>') {
+                Swal.showValidationMessage('Please enter some content');
+                return false;
+            }
+
             return {
-                title: document.getElementById('postTitle').value,
-                content: document.getElementById('postContent').value,
-                region: document.getElementById('postRegion').value,
-                country: document.getElementById('postCountry').value,
-                tags: document.getElementById('postTags').value
+                title,
+                content,
+                region: region || null,
+                country: country || null,
+                tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+                image: imageFile
             };
         }
     }).then((result) => {
         if (result.isConfirmed && result.value) {
             createBlogPost(result.value);
         }
+        // Clean up Quill instance
+        window.quillInstance = null;
     });
 }
 
@@ -378,17 +696,26 @@ async function createBlogPost(postData) {
             throw new Error('User not found');
         }
 
+        const formData = new FormData();
+        formData.append('title', postData.title);
+        formData.append('content', postData.content);
+        formData.append('user_id', user.id);
+        
+        if (postData.region) formData.append('region', postData.region);
+        if (postData.country) formData.append('country', postData.country);
+        if (postData.tags && postData.tags.length > 0) {
+            formData.append('tags', JSON.stringify(postData.tags));
+        }
+        if (postData.image) {
+            formData.append('image', postData.image);
+        }
+
         const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/blogposts`, {
             method: 'POST',
-            headers: getAuthHeader(),
-            body: JSON.stringify({
-                title: postData.title,
-                content: postData.content,
-                region: postData.region || null,
-                country: postData.country || null,
-                tags: postData.tags ? postData.tags.split(',').map(tag => tag.trim()) : [],
-                user_id: user.id
-            })
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
         });
 
         if (!response.ok) {
@@ -398,7 +725,8 @@ async function createBlogPost(postData) {
 
         const newPost = await response.json();
         
-        Swal.fire({
+        // Show success message
+        await Swal.fire({
             icon: 'success',
             title: 'Success!',
             text: 'Your blog post has been published.',
@@ -407,14 +735,15 @@ async function createBlogPost(postData) {
         });
 
         // Reload the posts
-        loadUserBlogPosts();
-
+        await loadUserBlogPosts();
+        
     } catch (error) {
         console.error('Error creating blog post:', error);
-        Swal.fire({
+        await Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: error.message || 'Failed to create blog post. Please try again.'
+            text: error.message || 'Failed to create blog post. Please try again.',
+            confirmButtonColor: '#0d6efd'
         });
     }
 }
@@ -645,50 +974,85 @@ function populateViewModal(post) {
     contentElement.innerHTML = cleanedContent;
     
     // Initialize any plugins or components within the blog content
-    initializeBlogContent(contentElement);
+    initializeBlogContent(contentElement, post);
 }
 
 /**
  * Initialize any plugins or components within the blog content
  * @param {HTMLElement} container - The container element to initialize components in
+ * @param {Object} post - The blog post data (optional)
  */
-function initializeBlogContent(container) {
+function initializeBlogContent(container, post) {
     if (!container) return;
     
-    // Initialize any tooltips within the content
-    const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    // Initialize any popovers within the content
-    const popoverTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="popover"]'));
-    popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
-    });
-    
-    // Add any other plugin initializations here
-}
-    
-    
-    // Set the tags
-    const tagsElement = document.getElementById('viewPostTags');
-    if (post.tags) {
-        // If tags is a string, split it by comma, otherwise use as is
-        const tagsArray = typeof post.tags === 'string' 
-            ? post.tags.split(',').map(tag => tag.trim()).filter(tag => tag) 
-            : (Array.isArray(post.tags) ? post.tags : []);
-            
-        if (tagsArray.length > 0) {
-            tagsElement.innerHTML = tagsArray.map(tag => 
-                `<span class="badge bg-secondary me-1">${tag}</span>`
-            ).join('');
-        } else {
-            tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
+    try {
+        // Initialize any tooltips within the content
+        const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            try {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            } catch (error) {
+                console.error('Error initializing tooltip:', error);
+            }
+        });
+        
+        // Initialize any popovers within the content
+        const popoverTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="popover"]'));
+        popoverTriggerList.forEach(function (popoverTriggerEl) {
+            try {
+                return new bootstrap.Popover(popoverTriggerEl);
+            } catch (error) {
+                console.error('Error initializing popover:', error);
+            }
+        });
+        
+        // Process any code blocks with syntax highlighting if post content has them
+        const codeBlocks = container.querySelectorAll('pre code');
+        if (codeBlocks.length > 0 && typeof hljs !== 'undefined') {
+            codeBlocks.forEach((block) => {
+                try {
+                    hljs.highlightElement(block);
+                } catch (error) {
+                    console.error('Error highlighting code block:', error);
+                }
+            });
         }
-    } else {
-        tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
+        
+        // Process any images to make them responsive
+        const images = container.querySelectorAll('img');
+        images.forEach((img) => {
+            if (!img.classList.contains('img-fluid')) {
+                img.classList.add('img-fluid');
+            }
+        });
+        
+        // Set the tags if post data is provided
+        if (post) {
+            const tagsElement = document.getElementById('viewPostTags');
+            if (tagsElement) {
+                if (post.tags) {
+                    // If tags is a string, split it by comma, otherwise use as is
+                    const tagsArray = typeof post.tags === 'string' 
+                        ? post.tags.split(',').map(tag => tag.trim()).filter(tag => tag) 
+                        : (Array.isArray(post.tags) ? post.tags : []);
+                        
+                    if (tagsArray.length > 0) {
+                        tagsElement.innerHTML = tagsArray.map(tag => 
+                            `<span class="badge bg-secondary me-1">${escapeHtml(tag)}</span>`
+                        ).join('');
+                    } else {
+                        tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
+                    }
+                } else {
+                    tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error initializing blog content:', error);
     }
+}
 
 
 /**
@@ -1368,6 +1732,8 @@ async function deleteBlogPost(postId, postTitle) {
         });
     }
 }
+
+
 
 /**
  * Helper function to escape HTML
