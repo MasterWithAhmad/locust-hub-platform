@@ -84,7 +84,7 @@ cors = CORS()
 cors.init_app(
     app,
     resources={
-        r"/api/*": {
+        r"/*": {  # Apply to all routes
             "origins": [
                 "http://localhost:3000",
                 "http://127.0.0.1:3000",
@@ -1556,8 +1556,38 @@ def get_blog_posts():
                 post['date'] = post['date'].isoformat()
         return jsonify(posts), 200
     except Exception as e:
-        print(f"Error fetching blog posts: {str(e)}")
+        print(f"Error fetching user's blog posts: {str(e)}")
         return jsonify({'error': 'Failed to fetch blog posts'}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+@app.route('/api/blogposts/public', methods=['GET'])
+def get_public_blog_posts():
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Fetch all public posts (no user filter)
+        cursor.execute("""
+            SELECT id, user_id, title, content, region, country, date, 
+                   author, tags, image_url 
+            FROM blog_posts 
+            ORDER BY date DESC 
+            LIMIT 50
+        """)
+        
+        posts = cursor.fetchall()
+        # Format date to ISO string
+        for post in posts:
+            if post['date'] and hasattr(post['date'], 'isoformat'):
+                post['date'] = post['date'].isoformat()
+        return jsonify(posts), 200
+    except Exception as e:
+        print(f"Error fetching public blog posts: {str(e)}")
+        return jsonify({'error': 'Failed to fetch public blog posts'}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()

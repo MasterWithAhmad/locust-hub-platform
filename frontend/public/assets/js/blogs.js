@@ -24,10 +24,6 @@ let filteredPosts = [];
 let currentPage = 1;
 const postsPerPage = 6;
 
-// API base URL - use the same logic as in api.js
-const API_BASE_URL = window.location.origin.includes("3000")
-  ? "http://localhost:5000/api"
-  : `${window.location.origin}/api`;
 
 // Initialize the blog page
 document.addEventListener("DOMContentLoaded", function () {
@@ -37,36 +33,54 @@ document.addEventListener("DOMContentLoaded", function () {
 // Load blog posts from the API
 async function loadBlogPosts() {
   try {
-    console.log("Loading blog posts from:", `${API_BASE_URL}/blogposts`);
-
-    const response = await fetch(`${API_BASE_URL}/blogposts`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    console.log("1. Starting to load blog posts...");
+    
+    // Check if API is available
+    if (!window.api || !window.api.blog) {
+      console.error("API not available!");
+      throw new Error("API not initialized");
     }
-
-    const data = await response.json();
-    console.log("Blog posts loaded:", data);
-    // Debug: print the actual structure
-    if (Array.isArray(data) && data.length > 0) {
-      console.log("First post structure:", JSON.stringify(data[0], null, 2));
+    
+    console.log("2. API is available, fetching public posts...");
+    
+    // Use the public endpoint to get all blog posts
+    try {
+      console.log("3. Calling getPublicPosts()...");
+      const posts = await window.api.blog.getPublicPosts();
+      console.log("4. Received response:", posts);
+      
+      if (posts && Array.isArray(posts)) {
+        console.log(`5. Successfully loaded ${posts.length} posts`);
+        processBlogPosts(posts);
+        return;
+      } else {
+        console.error("6. Invalid posts data received:", posts);
+        throw new Error("Invalid posts data format");
+      }
+    } catch (error) {
+      console.error("7. Error in getPublicPosts():", error);
+      throw error;
     }
-
-    allPosts = Array.isArray(data) ? data : [];
-    filteredPosts = [...allPosts];
-
-    displayPosts();
-    setupPagination();
   } catch (error) {
-    console.error("Error loading blog posts:", error);
+    console.error("8. Fatal error in loadBlogPosts():", error);
     displayErrorMessage();
   }
+}
+
+// Process and display blog posts
+function processBlogPosts(posts) {
+  console.log("Blog posts loaded:", posts);
+  
+  // Debug: print the actual structure
+  if (Array.isArray(posts) && posts.length > 0) {
+    console.log("First post structure:", JSON.stringify(posts[0], null, 2));
+  }
+
+  allPosts = Array.isArray(posts) ? posts : [];
+  filteredPosts = [...allPosts];
+
+  displayPosts();
+  setupPagination();
 }
 
 // Display blog posts

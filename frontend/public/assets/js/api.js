@@ -1,11 +1,31 @@
-// API base URL - use the current origin to avoid CORS issues
-const API_BASE_URL = window.location.origin.includes('3000')
-    ? 'http://localhost:5000/api'
-    : `${window.location.origin}/api`;
+// API base URL configuration
+let API_BASE_URL;
+
+// Determine the environment and set the appropriate API URL
+const isLocalhost = window.location.hostname === 'localhost' || 
+                   window.location.hostname === '127.0.0.1' ||
+                   window.location.hostname === '';
+
+if (isLocalhost) {
+    // Development environment - use the same origin as the frontend
+    API_BASE_URL = window.location.origin.replace(/\/+$/, '');
+    
+    // If the frontend is running on port 3000, assume backend is on 5000
+    if (window.location.port === '3000') {
+        API_BASE_URL = API_BASE_URL.replace(':3000', ':5000');
+    }
+} else {
+    // Production environment - use the same origin
+    API_BASE_URL = window.location.origin.replace(/\/+$/, '');
+}
+
+// Ensure we don't have double slashes in the URL
+API_BASE_URL = API_BASE_URL.replace(/([^:])\/+/g, '$1/');
 
 // Expose to window for global access
 window.API_BASE_URL = API_BASE_URL;
 
+console.log('Frontend Origin:', window.location.origin);
 console.log('API Base URL:', API_BASE_URL);
 
 // Helper function to handle API responses
@@ -65,14 +85,17 @@ async function register(fullName, email, password, securityQuestion, securityAns
 async function login(email, password) {
     try {
         console.log('Attempting login with email:', email);
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`${API_BASE_URL}/api/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             body: JSON.stringify({ email, password }),
+            credentials: 'include'  // Important for cookies/session
         });
+        
+        console.log('Login response status:', response.status);
 
         const data = await handleResponse(response);
 
@@ -187,7 +210,7 @@ async function sendContactMessage({ name, email, phone, message }) {
 // Prediction functions
 async function savePrediction(predictionData) {
     const user = getCurrentUser();
-    const response = await fetch(`${API_BASE_URL}/save_prediction`, {
+    const response = await fetch(`${API_BASE_URL}/api/save_prediction`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -214,7 +237,7 @@ async function getAllPredictions() {
         const headers = getAuthHeader();
         console.log('Request headers:', headers);
 
-        const response = await fetch(`${API_BASE_URL}/predictions`, {
+        const response = await fetch(`${API_BASE_URL}/api/predictions`, {
             method: 'GET',
             headers: {
                 ...headers,
@@ -253,7 +276,7 @@ async function getAllPredictions() {
 }
 
 async function deletePrediction(predictionId) {
-    const response = await fetch(`${API_BASE_URL}/predictions/${predictionId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/predictions/${predictionId}`, {
         method: 'DELETE',
         headers: getAuthHeader()
     });
@@ -273,7 +296,7 @@ async function predict(predictionInputData) {
     if (predictionInputData.MODEL_NAME) {
         body.MODEL_NAME = predictionInputData.MODEL_NAME;
     }
-    const response = await fetch(`${API_BASE_URL}/predict`, {
+    const response = await fetch(`${API_BASE_URL}/api/predict`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -287,7 +310,7 @@ async function predict(predictionInputData) {
 // Options functions
 async function getOptions() {
     console.log('Calling getOptions API...');
-    const response = await fetch(`${API_BASE_URL}/options`, {
+    const response = await fetch(`${API_BASE_URL}/api/options`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -301,7 +324,7 @@ async function getOptions() {
 // Analytics functions
 async function getPredictionSummary() {
     console.log('Calling getPredictionSummary API...');
-    const response = await fetch(`${API_BASE_URL}/analytics/prediction_summary`, {
+    const response = await fetch(`${API_BASE_URL}/api/analytics/prediction_summary`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -314,7 +337,7 @@ async function getPredictionSummary() {
 
 async function getPredictionsOverTime() {
     console.log('Calling getPredictionsOverTime API...');
-    const response = await fetch(`${API_BASE_URL}/analytics/predictions_over_time`, {
+    const response = await fetch(`${API_BASE_URL}/api/analytics/predictions_over_time`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -327,7 +350,7 @@ async function getPredictionsOverTime() {
 
 async function getPredictionsByLocation() {
     console.log('Calling getPredictionsByLocation API...');
-    const response = await fetch(`${API_BASE_URL}/analytics/predictions_by_location`, {
+    const response = await fetch(`${API_BASE_URL}/api/analytics/predictions_by_location`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -340,7 +363,7 @@ async function getPredictionsByLocation() {
 
 async function getEnvironmentalFactorsSummary() {
     console.log('Calling getEnvironmentalFactorsSummary API...');
-    const response = await fetch(`${API_BASE_URL}/analytics/environmental_factors_summary`, {
+    const response = await fetch(`${API_BASE_URL}/api/analytics/environmental_factors_summary`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -353,7 +376,7 @@ async function getEnvironmentalFactorsSummary() {
 
 async function getFeedbackAnalytics() {
     console.log('Calling getFeedbackAnalytics API...');
-    const response = await fetch(`${API_BASE_URL}/analytics/feedback`, {
+    const response = await fetch(`${API_BASE_URL}/api/analytics/feedback`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -365,7 +388,7 @@ async function getFeedbackAnalytics() {
 }
 
 async function submitPredictionFeedback(predictionId, feedback) {
-    const response = await fetch(`${API_BASE_URL}/predictions/${predictionId}/feedback`, {
+    const response = await fetch(`${API_BASE_URL}/api/predictions/${predictionId}/feedback`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: JSON.stringify({ feedback })
@@ -559,27 +582,39 @@ window.api = {
         }
     },
     blog: {
-        // Get all blog posts
+        // Get all blog posts (authenticated user only)
         getPosts: async () => {
-            const response = await fetch(`${API_BASE_URL}/blogposts`, {
+            const response = await fetch(`${API_BASE_URL}/api/blogposts`, {
                 method: 'GET',
                 headers: getAuthHeader(),
                 credentials: 'include'
             });
-            const data = await handleResponse(response);
-            // Filter posts for the current user on the client side
-            const currentUser = await api.auth.getCurrentUser();
-            if (currentUser && currentUser.data) {
-                data.data = data.data.filter(post => post.user_id === currentUser.data.id);
-            }
-            return data;
+            return handleResponse(response);
+        },
+        
+        // Get all public blog posts (no auth required)
+        getPublicPosts: async () => {
+            const url = `${API_BASE_URL}/api/blogposts/public`;
+            console.log('Fetching public posts from:', url);
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            console.log('Response status:', response.status);
+            return handleResponse(response);
         },
         
         // Get a single blog post by ID
         getPost: async (postId) => {
             try {
                 console.log(`Fetching blog post with ID: ${postId}`);
-                const url = `${API_BASE_URL}/blogposts/${postId}`;
+                const url = `${API_BASE_URL}/api/blogposts/${postId}`;
                 console.log('API URL:', url);
                 
                 const headers = getAuthHeader();
@@ -603,7 +638,7 @@ window.api = {
         
         // Create a new blog post
         createPost: async (postData) => {
-            const response = await fetch(`${API_BASE_URL}/blogposts`, {
+            const response = await fetch(`${API_BASE_URL}/api/blogposts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -617,7 +652,7 @@ window.api = {
         
         // Update an existing blog post
         updatePost: async (postId, postData) => {
-            const response = await fetch(`${API_BASE_URL}/blogposts/${postId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/blogposts/${postId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -631,7 +666,7 @@ window.api = {
         
         // Delete a blog post
         deletePost: async (postId) => {
-            const response = await fetch(`${API_BASE_URL}/blogposts/${postId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/blogposts/${postId}`, {
                 method: 'DELETE',
                 headers: getAuthHeader(),
                 credentials: 'include'
