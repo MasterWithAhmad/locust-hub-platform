@@ -459,24 +459,75 @@ async function handlePredictionSubmit(event) {
                           onPublish: async (blogData) => {
                             // Prepare form data for image upload
                             const fd = new FormData();
+                            
+                            // Function to clean HTML content
+                            const cleanHtmlContent = (html) => {
+                              if (!html) return '';
+                              
+                              // Create a temporary div to parse the HTML
+                              const tempDiv = document.createElement('div');
+                              tempDiv.innerHTML = html;
+                              
+                              // Remove any script tags and event handlers for security
+                              const scripts = tempDiv.getElementsByTagName('script');
+                              while (scripts[0]) {
+                                scripts[0].parentNode.removeChild(scripts[0]);
+                              }
+                              
+                              // Remove any style attributes that might contain dangerous content
+                              const allElements = tempDiv.getElementsByTagName('*');
+                              for (let el of allElements) {
+                                el.removeAttribute('style');
+                                el.removeAttribute('onclick');
+                                el.removeAttribute('onload');
+                                el.removeAttribute('onerror');
+                              }
+                              
+                              // Return the cleaned HTML
+                              return tempDiv.innerHTML;
+                            };
+                            
+                            // Clean the content before sending
+                            const cleanedContent = cleanHtmlContent(blogData.content);
+                            
                             fd.append("title", blogData.title);
-                            fd.append("content", blogData.content);
+                            fd.append("content", cleanedContent);
                             fd.append("tags", blogData.tags);
                             fd.append("region", initialFormValues.REGION);
                             fd.append("country", initialFormValues.COUNTRYNAME);
                             fd.append("date", new Date().toISOString());
                             fd.append("author", user.full_name);
                             fd.append("user_id", user.id || "");
+                            
                             if (blogData.imageFile) {
                               fd.append("image", blogData.imageFile);
                             }
                             Swal.showLoading();
+                            // Get the JWT token from localStorage
+                            const token = localStorage.getItem('token');
+                            if (!token) {
+                                throw new Error('Authentication required. Please log in again.');
+                            }
+                            
                             fetch("/api/blogposts", {
                               method: "POST",
+                              headers: {
+                                'Authorization': `Bearer ${token}`
+                              },
                               body: fd,
                             })
-                              .then((res) => res.json())
-                              .then(() => {
+                              .then(async (res) => {
+                                const data = await res.json();
+                                if (!res.ok) {
+                                  // If response is not ok, throw an error with the message from the server
+                                  const error = new Error(data.error || 'Failed to publish blog post');
+                                  error.response = data;
+                                  throw error;
+                                }
+                                return data;
+                              })
+                              .then((data) => {
+                                console.log('Blog post created successfully:', data);
                                 Swal.fire({
                                   title: "Published!",
                                   text: "Your event/blog post is now public.",
@@ -487,14 +538,15 @@ async function handlePredictionSubmit(event) {
                                   cancelButtonText: "Close",
                                 }).then((r) => {
                                   if (r.isConfirmed) {
-                                    window.location.href = "blogs.html";
+                                    window.location.href = "blog-management.html";
                                   }
                                 });
                               })
-                              .catch(() => {
+                              .catch((error) => {
+                                console.error('Error creating blog post:', error);
                                 Swal.fire({
                                   title: "Error",
-                                  text: "Failed to publish blog post.",
+                                  html: `Failed to publish blog post.<br><small class="text-muted">${error.message}</small>`,
                                   icon: "error",
                                   confirmButtonColor: "#dc3545",
                                 });

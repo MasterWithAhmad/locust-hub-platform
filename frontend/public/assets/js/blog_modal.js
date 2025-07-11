@@ -127,8 +127,9 @@ function showBlogModal({
         const title = document.getElementById('blog-title').value.trim();
         const tags = document.getElementById('blog-tags').value.trim();
         const quill = Quill.find(document.getElementById('quill-editor'));
-        const content = quill.root.innerHTML.trim();
+        const rawContent = quill.root.innerHTML.trim();
         const plain = quill.getText().trim();
+        
         if (!title || !plain) {
           Swal.showValidationMessage('Please enter both a title and content.');
           return false;
@@ -141,8 +142,37 @@ function showBlogModal({
           Swal.showValidationMessage('Content is too long.');
           return false;
         }
-        // Image
-        return { title, tags, content, imageFile: imageFileState };
+        
+        // Clean the HTML content
+        const cleanHtmlContent = (html) => {
+          if (!html) return '';
+          
+          // Create a temporary div to parse the HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+          
+          // Remove any script tags and event handlers for security
+          const scripts = tempDiv.getElementsByTagName('script');
+          while (scripts[0]) {
+            scripts[0].parentNode.removeChild(scripts[0]);
+          }
+          
+          // Remove any style attributes that might contain dangerous content
+          const allElements = tempDiv.getElementsByTagName('*');
+          for (let el of allElements) {
+            el.removeAttribute('style');
+            el.removeAttribute('onclick');
+            el.removeAttribute('onload');
+            el.removeAttribute('onerror');
+          }
+          
+          // Return the cleaned HTML
+          return tempDiv.innerHTML;
+        };
+        
+        const cleanedContent = cleanHtmlContent(rawContent);
+        
+        return { title, tags, content: cleanedContent, imageFile: imageFileState };
       }
     }).then(async (result) => {
       if (result.isDenied) {

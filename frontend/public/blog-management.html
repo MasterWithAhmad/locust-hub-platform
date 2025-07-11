@@ -38,6 +38,10 @@
     <!-- Main CSS File -->
     <link href="/assets/css/main.css" rel="stylesheet" />
     <link href="/assets/css/blog-management.css" rel="stylesheet" />
+    
+    <!-- Quill Editor CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
@@ -160,6 +164,14 @@
     <!-- Page Specific JS -->
     <script src="/assets/js/blog-management.js"></script>
     
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <!-- Initialize Quill editor -->
+    <script>
+      // Quill will be initialized in blog-management.js
+    </script>
+
     <!-- View Blog Post Modal -->
     <div class="modal fade" id="viewBlogPostModal" tabindex="-1" aria-labelledby="viewBlogPostModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
@@ -336,6 +348,14 @@
           console.error('initializeApp function not found');
         }
       });
+    </script>
+    
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <!-- Initialize Quill editor -->
+    <script>
+      // Quill will be initialized in blog-management.js
     </script>
   </body>
 </html>

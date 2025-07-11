@@ -488,9 +488,9 @@ function populateViewModal(post) {
     
     // Set the date
     const dateElement = document.getElementById('viewPostDate');
-    if (post.created_at) {
-        const postDate = new Date(post.created_at);
-        dateElement.textContent = postDate.toLocaleDateString('en-US', {
+    if (post.date) {
+        const date = new Date(post.date);
+        dateElement.textContent = date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -499,17 +499,177 @@ function populateViewModal(post) {
         dateElement.textContent = '';
     }
     
-    // Set the author
-    const authorElement = document.getElementById('viewPostAuthor');
-    if (post.author) {
-        authorElement.textContent = `By ${post.author}`;
-    } else {
-        authorElement.textContent = '';
+    // Set the location (country and region)
+    const locationElement = document.getElementById('viewPostLocation');
+    if (locationElement) {
+        const locationParts = [];
+        if (post.country) locationParts.push(post.country);
+        if (post.region && post.region !== post.country) locationParts.push(post.region);
+        
+        if (locationParts.length > 0) {
+            locationElement.innerHTML = `<i class="fas fa-map-marker-alt me-1"></i> ${locationParts.join(', ')}`;
+            locationElement.style.display = 'inline-block';
+        } else {
+            locationElement.style.display = 'none';
+        }
     }
     
-    // Set the content
+    // Set the author
+    const authorElement = document.getElementById('viewPostAuthor');
+    if (authorElement) {
+        if (post.author) {
+            authorElement.textContent = `By ${post.author}`;
+        } else {
+            authorElement.textContent = '';
+        }
+    }
+    
+    // Set the content - handle both HTML and plain text content
     const contentElement = document.getElementById('viewPostContentBody');
-    contentElement.innerHTML = post.content || '<p>No content available.</p>';
+    if (!contentElement) {
+        console.error('Content element not found');
+        return;
+    }
+    
+    if (!post.content) {
+        contentElement.innerHTML = '<p class="text-muted">No content available.</p>';
+        return;
+    }
+
+    // Function to clean and sanitize HTML content
+    const cleanAndSanitizeHtml = (html) => {
+        if (!html) return '';
+        
+        // Create a temporary div to parse the HTML
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        
+        // Remove any script tags and other potentially dangerous elements
+        const scripts = temp.getElementsByTagName('script');
+        while (scripts[0]) {
+            scripts[0].parentNode.removeChild(scripts[0]);
+        }
+        
+        // Remove any style tags and links
+        const styles = temp.getElementsByTagName('style');
+        while (styles[0]) {
+            styles[0].parentNode.removeChild(styles[0]);
+        }
+        
+        const links = temp.getElementsByTagName('link');
+        while (links[0]) {
+            links[0].parentNode.removeChild(links[0]);
+        }
+        
+        // Define allowed HTML tags
+        const allowedTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 's', 'blockquote', 
+                            'ul', 'ol', 'li', 'a', 'img', 'br', 'hr', 'div', 'span', 'pre', 'code', 'table', 
+                            'thead', 'tbody', 'tr', 'th', 'td'];
+        
+        // Define allowed attributes for specific tags
+        const allowedAttributes = {
+            'a': ['href', 'title', 'target'],
+            'img': ['src', 'alt', 'title', 'width', 'height', 'class'],
+            'code': ['class'],
+            'table': ['class', 'border', 'cellspacing', 'cellpadding'],
+            'th': ['scope', 'colspan', 'rowspan'],
+            'td': ['colspan', 'rowspan']
+        };
+        
+        // Process all elements in the content
+        const processNode = (node) => {
+            // Process child nodes first (depth-first)
+            for (let i = node.childNodes.length - 1; i >= 0; i--) {
+                const child = node.childNodes[i];
+                
+                // Remove comments
+                if (child.nodeType === Node.COMMENT_NODE) {
+                    node.removeChild(child);
+                    continue;
+                }
+                
+                // Process element nodes
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    const tagName = child.tagName.toLowerCase();
+                    
+                    // Remove disallowed tags but keep their content
+                    if (!allowedTags.includes(tagName)) {
+                        const fragment = document.createDocumentFragment();
+                        while (child.firstChild) {
+                            fragment.appendChild(child.firstChild);
+                        }
+                        node.replaceChild(fragment, child);
+                        continue;
+                    }
+                    
+                    // Process attributes
+                    const allowedAttrs = allowedAttributes[tagName] || [];
+                    const attrs = child.attributes;
+                    for (let i = attrs.length - 1; i >= 0; i--) {
+                        const attr = attrs[i];
+                        const attrName = attr.name.toLowerCase();
+                        
+                        // Remove disallowed attributes
+                        if (!allowedAttrs.includes(attrName)) {
+                            child.removeAttribute(attr.name);
+                            continue;
+                        }
+                        
+                        // Sanitize specific attributes
+                        if (attrName === 'href' || attrName === 'src') {
+                            // Only allow http, https, and relative URLs
+                            const url = attr.value.trim();
+                            if (!/^(https?:\/\/|\/|#)/i.test(url)) {
+                                child.removeAttribute(attr.name);
+                            } else if (url.startsWith('javascript:')) {
+                                child.removeAttribute(attr.name);
+                            }
+                        }
+                    }
+                    
+                    // Process child nodes
+                    processNode(child);
+                }
+            }
+        };
+        
+        // Start processing from the root
+        processNode(temp);
+        
+        // Return the sanitized HTML
+        return temp.innerHTML || 'No content available.';
+    };
+    
+    // Set the cleaned and sanitized content
+    const cleanedContent = cleanAndSanitizeHtml(post.content);
+    contentElement.innerHTML = cleanedContent;
+    
+    // Initialize any plugins or components within the blog content
+    initializeBlogContent(contentElement);
+}
+
+/**
+ * Initialize any plugins or components within the blog content
+ * @param {HTMLElement} container - The container element to initialize components in
+ */
+function initializeBlogContent(container) {
+    if (!container) return;
+    
+    // Initialize any tooltips within the content
+    const tooltipTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize any popovers within the content
+    const popoverTriggerList = [].slice.call(container.querySelectorAll('[data-bs-toggle="popover"]'));
+    popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+    
+    // Add any other plugin initializations here
+}
+    
     
     // Set the tags
     const tagsElement = document.getElementById('viewPostTags');
@@ -529,7 +689,7 @@ function populateViewModal(post) {
     } else {
         tagsElement.innerHTML = '<span class="text-muted">No tags</span>';
     }
-}
+
 
 /**
  * Edit a blog post
@@ -668,7 +828,8 @@ function populateEditForm(post) {
             
             <div class="mb-3">
                 <label for="editPostContent" class="form-label">Content <span class="text-danger">*</span></label>
-                <textarea class="form-control" id="editPostContent" rows="10" required>${escapeHtml(post.content || '')}</textarea>
+                <div id="editor-container" style="height: 300px;">${post.content || ''}</div>
+                <textarea id="editPostContent" class="d-none" required></textarea>
             </div>
             
             <div class="row g-3">
@@ -681,7 +842,7 @@ function populateEditForm(post) {
                 <div class="col-md-6">
                     <label for="editPostCountry" class="form-label">Country</label>
                     <input type="text" class="form-control" id="editPostCountry" 
-                           value="escapeHtml(post.country || '')}" 
+                           value="${escapeHtml(post.country || '')}" 
                            placeholder="e.g., United States">
                 </div>
             </div>
@@ -728,11 +889,40 @@ function setupEditFormEventListeners(post) {
     const imagePreview = document.getElementById('editPostImagePreview');
     const removeImageBtn = document.getElementById('removeImageBtn');
     const saveChangesBtn = document.getElementById('saveChangesBtn');
+    const editorContainer = document.getElementById('editor-container');
+    const contentInput = document.getElementById('editPostContent');
     
-    if (!editForm || !imageInput || !imagePreview || !removeImageBtn || !saveChangesBtn) {
+    if (!editForm || !imageInput || !imagePreview || !removeImageBtn || !saveChangesBtn || !editorContainer || !contentInput) {
         console.error('Required form elements not found');
         return;
     }
+    
+    // Initialize Quill editor
+    const quill = new Quill('#editor-container', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Write your blog post here...',
+    });
+    
+    // Set the initial content
+    if (post.content) {
+        quill.clipboard.dangerouslyPasteHTML(post.content);
+    }
+    
+    // Update the hidden textarea with the HTML content when the form is submitted
+    editForm.onsubmit = function(e) {
+        e.preventDefault();
+        contentInput.value = quill.root.innerHTML;
+        // Handle form submission here
+    };
     
     // Handle image preview
     imageInput.addEventListener('change', function(e) {
@@ -931,9 +1121,16 @@ async function handleEditFormSubmit(e) {
     const form = document.getElementById('editBlogPostForm');
     if (!form) return;
     
+    // Get the Quill editor instance
+    const quill = Quill.find(document.querySelector('#editor-container'));
+    if (!quill) {
+        console.error('Quill editor not found');
+        return;
+    }
+    
     const postId = form.dataset.postId;
     const title = document.getElementById('editPostTitle')?.value.trim();
-    const content = document.getElementById('editPostContent')?.value.trim();
+    const content = quill.root.innerHTML; // Get HTML content from Quill
     const region = document.getElementById('editPostRegion')?.value.trim();
     const country = document.getElementById('editPostCountry')?.value.trim();
     const tags = document.getElementById('editPostTags')?.value.trim();
@@ -1004,22 +1201,32 @@ async function handleEditFormSubmit(e) {
             }
         }
         
-        // Prepare the post data
-        const postData = {
+        // Process tags - ensure it's a string of comma-separated values
+        let processedTags = '';
+        if (tags) {
+            if (Array.isArray(tags)) {
+                processedTags = tags.join(',');
+            } else if (typeof tags === 'string') {
+                processedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag).join(',');
+            }
+        }
+
+        // Prepare the update data
+        const updateData = {
             title,
             content,
             region: region || null,
             country: country || null,
-            tags: tags || null
+            tags: processedTags
         };
         
-        // Only include image_url if it was changed
-        if (imageUrl !== null) {
-            postData.image_url = imageUrl;
+        // Only include image_url if we have one
+        if (imageUrl) {
+            updateData.image_url = imageUrl;
         }
         
         // Update the blog post
-        const response = await window.api.blog.updatePost(postId, postData);
+        const response = await window.api.blog.updatePost(postId, updateData);
         
         // Show success message
         Swal.fire({

@@ -13,7 +13,58 @@ import pandas as pd
 import json
 import joblib
 import datetime
+import re
 from functools import lru_cache
+from bs4 import BeautifulSoup
+
+def clean_html_content(html_content):
+    """
+    Clean HTML content by removing potentially dangerous elements and attributes
+    while preserving basic formatting.
+    """
+    if not html_content:
+        return ''
+    
+    # List of allowed HTML tags
+    ALLOWED_TAGS = [
+        'p', 'br', 'strong', 'em', 'u', 's', 'blockquote', 'ul', 'ol', 'li',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a'
+    ]
+    
+    # List of allowed attributes
+    ALLOWED_ATTRS = {
+        'a': ['href', 'title', 'target'],
+        'p': ['style'],
+        'span': ['style']
+    }
+    
+    # Clean using BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Remove all script tags and other potentially dangerous elements
+    for tag in soup.find_all(True):
+        # Remove disallowed tags
+        if tag.name not in ALLOWED_TAGS:
+            tag.unwrap()  # Remove the tag but keep its contents
+            continue
+            
+        # Remove disallowed attributes
+        attrs = list(tag.attrs.keys())
+        for attr in attrs:
+            if tag.name in ALLOWED_ATTRS and attr in ALLOWED_ATTRS[tag.name]:
+                # Only allow specific attributes for specific tags
+                continue
+            del tag.attrs[attr]
+    
+    # Convert back to string and clean up any remaining issues
+    cleaned = str(soup)
+    
+    # Additional cleaning for common issues
+    cleaned = re.sub(r'<p[^>]*>\s*<br\s*/?>\s*</p>', '', cleaned)  # Empty paragraphs
+    cleaned = re.sub(r'\s+', ' ', cleaned)  # Collapse multiple spaces
+    cleaned = cleaned.replace('&nbsp;', ' ')  # Replace non-breaking spaces
+    
+    return cleaned.strip()
 
 # Load environment variables
 load_dotenv()
@@ -1520,7 +1571,7 @@ def create_blog_post():
         if request.is_json:
             data = request.get_json()
             title = data.get('title')
-            content = data.get('content')
+            raw_content = data.get('content')
             tags = data.get('tags')
             region = data.get('region')
             country = data.get('country')
@@ -1528,7 +1579,7 @@ def create_blog_post():
             image_url = data.get('image_url')
         else:
             title = request.form.get('title')
-            content = request.form.get('content')
+            raw_content = request.form.get('content')
             tags = request.form.get('tags')
             region = request.form.get('region')
             country = request.form.get('country')
@@ -1547,6 +1598,17 @@ def create_blog_post():
                 image_file.save(img_path)
                 image_url = f"/assets/blog_images/{img_name}"
                 print(f"[BLOG IMAGE] Saved to: {img_path}")
+        
+        # Clean the HTML content before saving
+        content = clean_html_content(raw_content) if raw_content else ''
+        
+        # Process tags - ensure it's a string of comma-separated values
+        processed_tags = ''
+        if tags:
+            if isinstance(tags, list):
+                processed_tags = ','.join([str(tag).strip() for tag in tags if str(tag).strip()])
+            else:
+                processed_tags = str(tags).strip()
 
         if not title or not content:
             return jsonify({'error': 'Title and content are required'}), 400
@@ -1565,7 +1627,7 @@ def create_blog_post():
             INSERT INTO blog_posts 
             (user_id, title, content, region, country, author, tags, image_url) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (current_user_id, title, content, region, country, author, tags, image_url))
+        """, (current_user_id, title, content, region, country, author, processed_tags, image_url))
         
         post_id = cursor.lastrowid
         conn.commit()
@@ -1623,12 +1685,23 @@ def update_blog_post(post_id):
         # Get update data
         data = request.get_json() if request.is_json else request.form
         
+        # Clean the content if it's being updated
+        if 'content' in data and data['content']:
+            data['content'] = clean_html_content(data['content'])
+            
+        # Process tags if they're being updated
+        if 'tags' in data and data['tags'] is not None:
+            if isinstance(data['tags'], list):
+                data['tags'] = ','.join([str(tag).strip() for tag in data['tags'] if str(tag).strip()])
+            else:
+                data['tags'] = str(data['tags']).strip()
+        
         # Build dynamic update query
         update_fields = []
         update_values = []
         
         for field in ['title', 'content', 'tags', 'region', 'country']:
-            if field in data:
+            if field in data and data[field] is not None:
                 update_fields.append(f"{field} = %s")
                 update_values.append(data[field])
         
