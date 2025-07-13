@@ -114,11 +114,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             const lastPredictionCard = document.querySelectorAll('.stat-card.primary')[1];
             lastPredictionCard.querySelector('.card-text').textContent = predictionValue;
             
-            // Update trend indicator
+            // Update trend indicator based on prediction result
             const trendIcon = lastPredictionCard.querySelector('i');
-            trendIcon.className = `bi ${weekOverWeekChange >= 0 ? 'bi-arrow-up-circle-fill text-success' : 'bi-arrow-down-circle-fill text-danger'} me-1`;
+            const isPositive = predictionValue.toLowerCase() === 'yes';
+            trendIcon.className = `bi ${isPositive ? 'bi-arrow-up-circle-fill text-danger' : 'bi-arrow-down-circle-fill text-success'} me-1`;
             lastPredictionCard.querySelector('.small span').textContent =
-              `${Math.abs(weekOverWeekChange)}% from last week`;
+              isPositive ? 'Locusts detected' : 'No locusts detected';
           }
 
           // Last Updated Card

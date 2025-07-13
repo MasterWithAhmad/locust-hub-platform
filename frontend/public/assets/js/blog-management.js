@@ -1056,12 +1056,33 @@ function setupEditFormEventListeners(post) {
     
     // Handle remove image button
     removeImageBtn.addEventListener('click', function() {
-        imagePreview.src = 'https://via.placeholder.com/800x400?text=No+Image';
+        // Clear the image preview completely (don't show any image)
+        imagePreview.removeAttribute('src');
+        imagePreview.style.display = 'none';
         imageInput.value = ''; // Clear the file input
-        removeImageBtn.disabled = true;
         
-        // Set a flag to indicate the image was removed
+        // Set flags to indicate the image was removed
+        removeImageBtn.disabled = false; // Keep the button enabled
         removeImageBtn.dataset.imageRemoved = 'true';
+        
+        // Show a message that image will be removed
+        const imageContainer = imagePreview.parentElement;
+        const noImageText = document.createElement('div');
+        noImageText.className = 'no-image-message';
+        noImageText.textContent = 'Image will be removed when you save changes';
+        noImageText.style.textAlign = 'center';
+        noImageText.style.padding = '20px';
+        noImageText.style.border = '1px dashed #ccc';
+        noImageText.style.borderRadius = '4px';
+        noImageText.style.marginTop = '10px';
+        
+        // Remove any existing message
+        const existingMessage = imageContainer.querySelector('.no-image-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        imageContainer.appendChild(noImageText);
     });
     
     // Handle form submission
@@ -1247,16 +1268,19 @@ async function handleEditFormSubmit(e) {
                 }
                 return;
             }
-        } else if (removeImageBtn && removeImageBtn.disabled) {
-            // Image was removed
+        } else if (removeImageBtn && removeImageBtn.dataset.imageRemoved === 'true') {
+            // Image was explicitly removed by the user
             imageUrl = '';
             console.log('Image was removed from the post');
+            
+            // Reset the flag
+            removeImageBtn.dataset.imageRemoved = 'false';
         }
         
-        // Prepare the post data
+        // Prepare the post data as a plain object
         const postData = {
-            title,
-            content,
+            title: title || '',
+            content: content || '',
             region: region || null,
             country: country || null,
             tags: tags || null
@@ -1267,8 +1291,24 @@ async function handleEditFormSubmit(e) {
             postData.image_url = imageUrl;
         }
         
-        // Update the blog post
-        await window.api.blog.updatePost(postId, postData);
+        console.log('Sending update with data:', postData);
+        
+        // Update the blog post - ensure we're sending JSON
+        const response = await fetch(`${window.API_BASE_URL}/api/blogposts/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(postData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to update blog post');
+        }
+        
+        const result = await response.json();
         
         // Get the modal element before doing anything else
         const modalElement = document.getElementById('editBlogPostModal');
@@ -1278,11 +1318,22 @@ async function handleEditFormSubmit(e) {
         if (form) form.reset();
         const imagePreview = document.getElementById('editPostImagePreview');
         if (imagePreview) {
-            imagePreview.src = '/assets/img/placeholder-blog.jpg';
+            imagePreview.removeAttribute('src');
+            imagePreview.style.display = 'none';
+            
+            // Clear any existing message
+            const imageContainer = imagePreview.parentElement;
+            const existingMessage = imageContainer.querySelector('.no-image-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
         }
+        
         if (removeImageBtn) {
             removeImageBtn.disabled = true;
+            removeImageBtn.dataset.imageRemoved = 'false';
         }
+        
         selectedImageFile = null;
         window.newImageFile = null;
         
