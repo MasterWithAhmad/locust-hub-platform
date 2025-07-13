@@ -69,6 +69,45 @@ def clean_html_content(html_content):
 # Load environment variables
 load_dotenv()
 
+# Initialize Flask app
+app = Flask(__name__)
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Configure file uploads
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'blog_images')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config.update(
+    UPLOAD_FOLDER=UPLOAD_FOLDER,
+    MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
+    MAX_CONTENT_PATH=16 * 1024 * 1024,    # 16MB max file size
+    UPLOAD_EXTENSIONS=ALLOWED_EXTENSIONS,
+    UPLOAD_PATH=UPLOAD_FOLDER,
+    # Increase buffer size for large files
+    MAX_BUFFER_SIZE=16 * 1024 * 1024,  # 16MB
+    # Configure Flask to handle large file uploads
+    JSONIFY_PRETTYPRINT_REGULAR=True,
+    JSON_SORT_KEYS=False,
+    # Configure request timeout (in seconds)
+    REQUEST_TIMEOUT=300  # 5 minutes
+)
+
+# Configure werkzeug to handle large file uploads
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app)
+
 # Database configuration
 db_config = {
     'host': 'localhost',
@@ -1430,6 +1469,18 @@ def reset_password():
             conn.close()
 
 # --- BLOG POSTS API ---
+@app.route('/api/uploads/blog_images/<filename>')
+def serve_blog_image(filename):
+    """Serve uploaded blog images"""
+    try:
+        return send_from_directory(
+            app.config['UPLOAD_FOLDER'],
+            filename,
+            as_attachment=False
+        )
+    except FileNotFoundError:
+        return jsonify({'error': 'Image not found'}), 404
+
 @app.route('/api/blogposts/upload', methods=['POST'])
 @jwt_required()
 def upload_blog_image():
@@ -1447,7 +1498,7 @@ def upload_blog_image():
         name: image
         type: file
         required: true
-        description: The image file to upload
+        description: The image file to upload (max 16MB)
     responses:
       200:
         description: Image uploaded successfully
@@ -1461,67 +1512,93 @@ def upload_blog_image():
         description: No file part or invalid file
       401:
         description: Unauthorized
+      413:
+        description: File too large (max 16MB)
     """
     try:
-        print("Upload request received. Files:", request.files)  # Debug log
-        
         # Check if the post request has the file part
         if 'image' not in request.files:
-            print("No 'image' in request.files")  # Debug log
-            return jsonify({'error': 'No file part', 'details': 'No image field in the request'}), 400
-        
+            app.logger.warning('No file part in the request')
+            return jsonify({'error': 'No file part'}), 400
+            
         file = request.files['image']
-        print("File object:", file)  # Debug log
-        
-        # If user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            print("No file selected")  # Debug log
+        if not file or file.filename == '':
+            app.logger.warning('No selected file')
             return jsonify({'error': 'No selected file'}), 400
-        
-        if file and allowed_file(file.filename):
-            # Generate a secure filename with timestamp
-            from datetime import datetime
-            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            filename = secure_filename(file.filename)
-            filename = f"{timestamp}_{filename}"
             
-            # Ensure upload directory exists
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            
-            # Save the file
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            print(f"Saving file to: {filepath}")  # Debug log
-            file.save(filepath)
-            
-            # Verify file was saved
-            if not os.path.exists(filepath):
-                print(f"Failed to save file: {filepath}")  # Debug log
-                return jsonify({'error': 'Failed to save file'}), 500
-            
-            # Return the URL where the file can be accessed
-            file_url = f"/assets/images/blog/{filename}"
-            
-            print(f"File uploaded successfully: {file_url}")  # Debug log
-            return jsonify({
-                'message': 'File uploaded successfully',
-                'url': file_url,
-                'filename': filename,
-                'imageUrl': file_url  # Add this line to match frontend expectation
-            }), 200
-        else:
-            print(f"File not allowed: {file.filename if file else 'No file'}")  # Debug log
+        # Check file extension
+        if not allowed_file(file.filename):
+            app.logger.warning(f'File type not allowed: {file.filename}')
             return jsonify({
                 'error': 'File type not allowed',
                 'allowed': list(ALLOWED_EXTENSIONS)
             }), 400
             
+        try:
+            # Generate a secure filename with timestamp and UUID
+            from datetime import datetime
+            import uuid
+            
+            # Get file extension
+            file_ext = os.path.splitext(file.filename)[1].lower()
+            # Create a unique filename
+            filename = f"{uuid.uuid4().hex}{file_ext}"
+            
+            # Ensure upload directory exists
+            upload_dir = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Check available disk space (at least 50MB free space required)
+            import shutil
+            total, used, free = shutil.disk_usage(upload_dir)
+            if free < 50 * 1024 * 1024:  # 50MB
+                app.logger.error(f'Insufficient disk space: {free/1024/1024:.2f}MB free')
+                return jsonify({'error': 'Insufficient disk space'}), 507
+            
+            # Save the file in chunks to prevent memory issues
+            filepath = os.path.join(upload_dir, filename)
+            chunk_size = 1024 * 1024  # 1MB chunks
+            
+            with open(filepath, 'wb') as f:
+                while True:
+                    chunk = file.stream.read(chunk_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            
+            # Verify the file was saved correctly
+            if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+                raise Exception('Failed to save file')
+            
+            # Create a URL that points to the uploaded file
+            file_url = f"/api/uploads/blog_images/{filename}"
+            
+            app.logger.info(f'File uploaded successfully: {file_url} ({os.path.getsize(filepath)/1024:.2f} KB)')
+            return jsonify({
+                'message': 'File uploaded successfully',
+                'url': file_url,
+                'filename': filename,
+                'imageUrl': file_url
+            }), 200
+            
+        except Exception as e:
+            app.logger.error(f'Error processing file upload: {str(e)}', exc_info=True)
+            # Clean up partially uploaded file if it exists
+            if 'filepath' in locals() and os.path.exists(filepath):
+                try:
+                    os.remove(filepath)
+                except Exception as cleanup_error:
+                    app.logger.error(f'Error cleaning up file {filepath}: {str(cleanup_error)}')
+            
+            return jsonify({
+                'error': 'Failed to process file upload',
+                'details': str(e)
+            }), 500
+            
     except Exception as e:
-        print(f"Error uploading image: {str(e)}")
-        import traceback
-        traceback.print_exc()  # Print full traceback
+        app.logger.error(f'Unexpected error in upload_blog_image: {str(e)}', exc_info=True)
         return jsonify({
-            'error': 'Failed to upload image',
+            'error': 'An unexpected error occurred',
             'details': str(e)
         }), 500
 
@@ -1766,6 +1843,12 @@ def update_blog_post(post_id):
         update_fields = []
         update_values = []
         
+        # Handle image_url separately as it might come from file upload
+        if 'image_url' in data and data['image_url'] is not None:
+            update_fields.append("image_url = %s")
+            update_values.append(data['image_url'])
+        
+        # Handle other fields
         for field in ['title', 'content', 'tags', 'region', 'country']:
             if field in data and data[field] is not None:
                 update_fields.append(f"{field} = %s")
@@ -1779,6 +1862,7 @@ def update_blog_post(post_id):
         
         # Execute update
         query = f"UPDATE blog_posts SET {', '.join(update_fields)} WHERE id = %s"
+        print(f"Executing query: {query} with values: {update_values}")  # Debug log
         cursor.execute(query, update_values)
         conn.commit()
         

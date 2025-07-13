@@ -676,24 +676,124 @@ window.api = {
         
         // Upload an image for a blog post
         uploadImage: async (file) => {
+            if (!file) {
+                console.error('No file provided for upload');
+                throw new Error('No file provided for upload');
+            }
+            
+            // Validate file size (server also validates, but we'll check client-side first)
+            const maxSize = 15 * 1024 * 1024; // 15MB (slightly less than server limit)
+            if (file.size > maxSize) {
+                const error = new Error(`File is too large. Maximum size is ${maxSize / 1024 / 1024}MB`);
+                error.code = 'FILE_TOO_LARGE';
+                throw error;
+            }
+            
+            console.log('Preparing to upload file:', file.name, 'Size:', file.size, 'bytes');
+            
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('image', file, file.name);
             
             // Get auth headers but remove Content-Type to let the browser set it with the correct boundary
             const headers = getAuthHeader();
             delete headers['Content-Type'];
             
+            // Add a timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutMs = 120000; // 2 minutes for large files
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/blogposts/upload`, {
-                    method: 'POST',
-                    headers: headers,
-                    credentials: 'include',
-                    body: formData
+                console.log(`Sending upload request to server (timeout: ${timeoutMs/1000}s)...`);
+                
+                // Show upload progress if possible
+                const xhr = new XMLHttpRequest();
+                
+                const uploadPromise = new Promise((resolve, reject) => {
+                    xhr.open('POST', `${API_BASE_URL}/api/blogposts/upload`, true);
+                    
+                    // Set request headers
+                    Object.entries(headers).forEach(([key, value]) => {
+                        xhr.setRequestHeader(key, value);
+                    });
+                    
+                    xhr.withCredentials = true;
+                    
+                    xhr.upload.onprogress = (event) => {
+                        if (event.lengthComputable) {
+                            const percentComplete = Math.round((event.loaded / event.total) * 100);
+                            console.log(`Upload progress: ${percentComplete}%`);
+                            // You can update a progress bar here if needed
+                        }
+                    };
+                    
+                    xhr.onload = function() {
+                        clearTimeout(timeoutId);
+                        
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                console.log('Upload successful:', response);
+                                resolve(response);
+                            } catch (e) {
+                                console.error('Error parsing upload response:', e);
+                                reject(new Error('Invalid server response'));
+                            }
+                        } else {
+                            let errorMessage = `Upload failed with status ${xhr.status}`;
+                            try {
+                                const errorData = JSON.parse(xhr.responseText);
+                                errorMessage = errorData.error || errorData.message || errorMessage;
+                            } catch (e) {
+                                // Couldn't parse error response
+                            }
+                            console.error('Upload failed:', errorMessage);
+                            const error = new Error(errorMessage);
+                            error.status = xhr.status;
+                            reject(error);
+                        }
+                    };
+                    
+                    xhr.onerror = function() {
+                        clearTimeout(timeoutId);
+                        console.error('Network error during upload');
+                        reject(new Error('Network error. Please check your connection and try again.'));
+                    };
+                    
+                    xhr.ontimeout = function() {
+                        console.error('Upload timed out');
+                        controller.abort();
+                        reject(new Error('Upload timed out. The server took too long to respond.'));
+                    };
+                    
+                    // Send the form data
+                    xhr.send(formData);
                 });
-                return await handleResponse(response);
+                
+                // Return the upload promise
+                return await uploadPromise;
+                
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error('Upload error:', error);
-                throw error;
+                
+                // Handle specific error cases
+                if (error.name === 'AbortError' || error.code === 'ABORT_ERR') {
+                    throw new Error('Upload was cancelled or timed out. Please try again.');
+                } else if (error.code === 'FILE_TOO_LARGE') {
+                    throw error; // Already has a good message
+                } else if (error.message.includes('NetworkError')) {
+                    throw new Error('Network error. Please check your connection and try again.');
+                } else if (error.status === 413) {
+                    throw new Error('File is too large. Please choose a smaller file.');
+                } else if (error.status === 415) {
+                    throw new Error('File type not supported. Please upload an image file (JPEG, PNG, GIF, or WebP).');
+                } else if (error.status === 507) {
+                    throw new Error('Server is out of storage space. Please try again later or contact support.');
+                }
+                
+                // For other errors, use the server's error message or a generic one
+                throw new Error(error.message || 'Failed to upload file. Please try again.');
             }
         }
     }

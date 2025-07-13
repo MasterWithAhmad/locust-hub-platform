@@ -42,8 +42,9 @@
     <!-- Quill Editor CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link href="https://cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   </head>
 
   <body class="starter-page-page">
@@ -174,12 +175,34 @@
           window.initializeBlogManagement();
         } else {
           console.error('Blog management initialization function not found');
-          // Show error to user
-          Swal.fire({
-            icon: 'error',
-            title: 'Initialization Error',
-            text: 'Failed to initialize the blog management system. Please refresh the page and try again.',
-            confirmButtonText: 'OK'
+          // Show error using toast
+          const toast = document.createElement('div');
+          toast.className = 'toast align-items-center text-white bg-danger border-0';
+          toast.setAttribute('role', 'alert');
+          toast.setAttribute('aria-live', 'assertive');
+          toast.setAttribute('aria-atomic', 'true');
+          toast.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Failed to initialize the blog management system. Please refresh the page and try again.
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          `;
+          
+          const toastContainer = document.getElementById('toastContainer') || document.body;
+          toastContainer.appendChild(toast);
+          
+          const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: 5000
+          });
+          bsToast.show();
+          
+          // Remove toast after it's hidden
+          toast.addEventListener('hidden.bs.toast', function() {
+            toast.remove();
           });
         }
       });
@@ -375,5 +398,11 @@
     <script>
       // Quill will be initialized in blog-management.js
     </script>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+    
+    <!-- Bootstrap Icons (if not already included) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   </body>
 </html>

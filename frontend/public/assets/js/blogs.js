@@ -138,7 +138,9 @@ function createPostElement(post, index) {
   const avatar = getAuthorAvatar(post.author);
   const formattedDate = formatDate(post.date);
   const tag = post.country || post.region || 'General';
-  const image = post.image_url || post.imageUrl || '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp';
+  // Use a local fallback image if the main image fails to load
+  const fallbackImage = '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp';
+  const image = post.image_url || post.imageUrl || fallbackImage;
 
   // Prepare tags as badges
   let tagsHtml = '';
@@ -153,7 +155,7 @@ function createPostElement(post, index) {
   col.innerHTML = `
     <div class="blog-post-card card mb-4 fade-in h-100">
       <div class="card-img-container position-relative" style="height: 200px; overflow: hidden;">
-        <img src="${image}" class="card-img-top h-100 w-100" alt="${post.title}" style="object-fit: cover;">
+        <img src="${image}" class="card-img-top h-100 w-100" alt="${post.title}" style="object-fit: cover;" onerror="this.onerror=null; this.src='${fallbackImage}'">
         <div class="img-gradient-overlay"></div>
         <span class="badge bg-primary position-absolute top-0 start-0 m-3">${tag}</span>
         <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
@@ -200,7 +202,7 @@ function createPostElement(post, index) {
           <div class="modal-body py-4">
             ${post.image_url ? `
               <div class="text-center mb-4">
-                <img src="${post.image_url}" class="img-fluid rounded-3 shadow" alt="${post.title}">
+                <img src="${post.image_url}" class="img-fluid rounded-3 shadow" alt="${post.title}" onerror="this.onerror=null; this.src='${fallbackImage}'">
               </div>
             ` : ''}
             
@@ -612,12 +614,23 @@ function renderBlogCard(post) {
   const {
     title, content, image_url, author, date, country, region
   } = post;
-  const excerpt = content.replace(/<[^>]+>/g, '').slice(0, 120) + (content.replace(/<[^>]+>/g, '').length > 120 ? '...' : '');
-  const readingTime = getReadingTime(content);
+  const excerpt = content ? (content.replace(/<[^>]+>/g, '').slice(0, 120) + (content.replace(/<[^>]+>/g, '').length > 120 ? '...' : '')) : 'No content';
   const avatar = getAuthorAvatar(author);
-  const formattedDate = formatDate(date);
+  const formattedDate = date ? formatDate(date) : 'No date';
   const tag = country || region || 'General';
-  const image = image_url || '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp';
+  
+  // Handle image URL - if it's a relative path, ensure it's correct
+  let image = '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp'; // Default image
+  
+  if (image_url) {
+    if (image_url.startsWith('http') || image_url.startsWith('/')) {
+      // Use the URL as is if it's absolute or already a root-relative path
+      image = image_url;
+    } else {
+      // Prepend the API path if it's just a filename
+      image = `/api/uploads/blog_images/${image_url}`;
+    }
+  }
   return `
     <div class="blog-post-card card mb-4 fade-in">
       <div class="card-img-container position-relative">
@@ -633,8 +646,6 @@ function renderBlogCard(post) {
           <span class="ms-2">${author || 'Unknown'}</span>
           <span class="mx-2">·</span>
           <span class="blog-post-date"><i class="bi bi-calendar"></i> ${formattedDate}</span>
-          <span class="mx-2">·</span>
-          <span class="blog-post-reading-time"><i class="bi bi-clock"></i> ${readingTime} min read</span>
         </div>
         <div class="blog-post-actions d-flex align-items-center mt-3">
           <button class="btn btn-link p-0 me-3" title="Like"><i class="bi bi-heart"></i></button>

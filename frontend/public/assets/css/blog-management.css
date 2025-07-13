@@ -1,3 +1,35 @@
+/* Toast Notifications */
+#toastContainer {
+    z-index: 1100;
+}
+
+.toast {
+    min-width: 300px;
+    margin-bottom: 1rem;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.toast.hide {
+    opacity: 0;
+}
+
+.toast:not(.show) {
+    display: block;
+    opacity: 0;
+}
+
+.toast-body {
+    display: flex;
+    align-items: center;
+}
+
+.toast .bi {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
 /* Custom styles from dashboard.html sidebar */
 :root {
   --primary-color: #4e73df;

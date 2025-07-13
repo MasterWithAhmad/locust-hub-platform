@@ -3,6 +3,60 @@
  * Handles all blog-related functionality including CRUD operations
  */
 
+/**
+ * Shows a toast notification
+ * @param {string} message - The message to display
+ * @param {string} type - Type of toast (success, error, warning, info)
+ * @param {number} [duration=3000] - How long to show the toast in milliseconds
+ */
+function showToast(message, type = 'info', duration = 3000) {
+    const toastContainer = document.getElementById('toastContainer') || document.body;
+    const toastId = 'toast-' + Date.now();
+    const iconClass = {
+        success: 'bi-check-circle',
+        error: 'bi-exclamation-triangle',
+        warning: 'bi-exclamation-circle',
+        info: 'bi-info-circle'
+    }[type] || 'bi-info-circle';
+
+    const bgClass = {
+        success: 'bg-success',
+        error: 'bg-danger',
+        warning: 'bg-warning',
+        info: 'bg-primary'
+    }[type] || 'bg-primary';
+
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" 
+             role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi ${iconClass} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    
+    const toastElement = document.createElement('div');
+    toastElement.innerHTML = toastHtml;
+    const toastNode = toastElement.firstElementChild;
+    toastContainer.appendChild(toastNode);
+    
+    const toast = new bootstrap.Toast(toastNode, {
+        autohide: true,
+        delay: duration
+    });
+    toast.show();
+    
+    // Clean up after toast is hidden
+    toastNode.addEventListener('hidden.bs.toast', function() {
+        toastNode.remove();
+    });
+}
+
 // Wait for the API to be fully loaded with a timeout
 function waitForAPI() {
     return new Promise((resolve, reject) => {
@@ -65,6 +119,9 @@ window.initializeBlogManagement = async function() {
 async function initializeApp() {
     console.log('Initializing blog management...');
     
+    // Initialize image upload functionality
+    initializeImageUpload();
+    
     try {
         // Wait for the DOM to be fully loaded
         if (document.readyState === 'loading') {
@@ -118,8 +175,18 @@ async function initializeApp() {
 /**
  * Initialize the page
  */
-function initPage() {
+async function initPage() {
     try {
+        console.log('Initializing blog management page...');
+        
+        // Check if we're on the blog management page by looking for the blog posts grid
+        const blogPostsGrid = document.getElementById('blogPostsGrid');
+        if (!blogPostsGrid) {
+            console.log('Blog posts grid not found, not on blog management page');
+            return;
+        }
+        
+        // Load user data
         const user = window.api.auth.getCurrentUser();
         if (user) {
             // Update user info in the header
@@ -131,9 +198,19 @@ function initPage() {
             if (userInitials) userInitials.textContent = initials;
             if (userName) userName.textContent = user.full_name;
             if (userFullName) userFullName.textContent = user.full_name;
+            
+            // Load blog posts
+            console.log('Loading blog posts...');
+            await loadUserBlogPosts();
+        } else {
+            console.log('No user logged in, redirecting to login...');
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = `/login.html?returnUrl=${returnUrl}`;
         }
     } catch (error) {
         console.error('Error initializing page:', error);
+        // Show error to user
+        showToast('Failed to initialize the blog management system. Please refresh the page and try again.', 'error', 5000);
     }
 }
 
@@ -235,8 +312,13 @@ function createBlogPostCard(post) {
  * Load the current user's blog posts
  */
 async function loadUserBlogPosts() {
+    console.log('loadUserBlogPosts function called');
+    
     const blogPostsGrid = document.getElementById('blogPostsGrid');
     const noPostsMessage = document.getElementById('noPostsMessage');
+    
+    console.log('Blog posts grid element:', blogPostsGrid);
+    console.log('No posts message element:', noPostsMessage);
     
     // Make sure elements exist before proceeding
     if (!blogPostsGrid || !noPostsMessage) {
@@ -245,7 +327,7 @@ async function loadUserBlogPosts() {
     }
     
     try {
-        console.log('Loading user blog posts...');
+        console.log('Starting to load user blog posts...');
         
         // Show loading state
         blogPostsGrid.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
@@ -262,13 +344,20 @@ async function loadUserBlogPosts() {
 
         try {
             console.log('Fetching blog posts for current user...');
-            const response = await fetch('/api/users/me/blogposts', {
+            const apiUrl = '/api/users/me/blogposts';
+            const authHeader = getAuthHeader();
+            
+            console.log('Making API call to:', apiUrl);
+            console.log('Auth headers:', authHeader);
+            
+            const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers: getAuthHeader(),
+                headers: authHeader,
                 credentials: 'include'
             });
 
             console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
             
             if (response.status === 401) {
                 // Token expired or invalid, log out and redirect to login
@@ -306,14 +395,18 @@ async function loadUserBlogPosts() {
                 throw new Error(errorMessage);
             }
 
-            const posts = await response.json();
-            console.log('Received posts:', posts);
+            const responseData = await response.json();
+            console.log('Raw API response data:', responseData);
+            
+            // Handle case where response might be an object with a data property
+            const posts = Array.isArray(responseData) ? responseData : (responseData.data || []);
+            console.log('Processed posts data:', posts);
             
             // Clear loading state
             blogPostsGrid.innerHTML = '';
             
             if (!Array.isArray(posts) || posts.length === 0) {
-                console.log('No blog posts found');
+                console.log('No blog posts found in the response');
                 noPostsMessage.style.display = 'flex';
                 return;
             }
@@ -839,16 +932,28 @@ function populateEditForm(post) {
     
     // Update the image preview (right side)
     if (imagePreview) {
+        const defaultImage = '/assets/blog_images/blog_c958fcef91374d64ad27ea17feebdce2.webp';
+        
         if (post.image_url) {
-            imagePreview.src = post.image_url;
+            let imageUrl = post.image_url;
+            
+            // Handle different URL formats
+            if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                // If it's just a filename, construct the full URL
+                imageUrl = `/api/uploads/blog_images/${imageUrl}`;
+            }
+            
+            imagePreview.src = imageUrl;
             imagePreview.onerror = function() {
-                this.src = 'https://via.placeholder.com/800x400?text=Image+Not+Found';
+                this.src = defaultImage; // Fallback to local default image
+                this.onerror = null; // Prevent infinite loop if default image also fails
             };
+            
             if (removeImageBtn) {
                 removeImageBtn.disabled = false;
             }
         } else {
-            imagePreview.src = 'https://via.placeholder.com/800x400?text=No+Image';
+            imagePreview.src = defaultImage; // Use local default image
             if (removeImageBtn) {
                 removeImageBtn.disabled = true;
             }
@@ -987,9 +1092,103 @@ function setupEditFormEventListeners(post) {
  * Handle edit form submission
  * @param {Event} e - The form submission event
  */
+// Global variable to store the selected image file
+let selectedImageFile = null;
+
+/**
+ * Initialize image upload functionality
+ */
+function initializeImageUpload() {
+    const imageInput = document.getElementById('editPostImage');
+    const imagePreview = document.getElementById('editPostImagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+
+    if (!imageInput || !imagePreview) {
+        console.error('Required image upload elements not found');
+        return;
+    }
+
+    // Set default image if none is set
+    if (!imagePreview.src || imagePreview.src.includes('placeholder')) {
+        imagePreview.src = '/assets/img/placeholder-blog.jpg'; // Use a local placeholder
+    }
+
+    // Handle file selection
+    const handleFileSelect = (e) => {
+        const file = e?.target?.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            showToast('Please select a valid image file (JPEG, PNG, etc.)', 'error', 3000);
+            return;
+        }
+
+        // Validate file size (5MB max)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            showToast('Image size should be less than 5MB', 'error', 3000);
+            return;
+        }
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                imagePreview.src = e.target.result;
+                selectedImageFile = file;
+                if (removeImageBtn) removeImageBtn.disabled = false;
+            } catch (error) {
+                console.error('Error creating image preview:', error);
+                showToast('Error processing image', 'error', 3000);
+            }
+        };
+        reader.onerror = () => {
+            console.error('Error reading file');
+            showToast('Error reading image file', 'error', 3000);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Handle remove image
+    const handleRemoveImage = () => {
+        try {
+            if (imageInput) imageInput.value = '';
+            imagePreview.src = '/assets/img/placeholder-blog.jpg';
+            selectedImageFile = null;
+            if (removeImageBtn) removeImageBtn.disabled = true;
+        } catch (error) {
+            console.error('Error removing image:', error);
+        }
+    };
+
+    // Add event listeners
+    imageInput.addEventListener('change', handleFileSelect);
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', handleRemoveImage);
+    }
+
+    // Cleanup function
+    return () => {
+        imageInput.removeEventListener('change', handleFileSelect);
+        if (removeImageBtn) {
+            removeImageBtn.removeEventListener('click', handleRemoveImage);
+        }
+    };
+}
+
+/**
+ * Handle edit form submission
+ * @param {Event} e - The form submission event
+ */
 async function handleEditFormSubmit(e) {
+    e.preventDefault();
+    
     const form = document.getElementById('editBlogPostForm');
-    if (!form) return;
+    if (!form) {
+        console.error('Edit form not found');
+        return;
+    }
     
     const postId = form.dataset.postId;
     const title = document.getElementById('editPostTitle')?.value.trim();
@@ -997,18 +1196,7 @@ async function handleEditFormSubmit(e) {
     const region = document.getElementById('editPostRegion')?.value.trim();
     const country = document.getElementById('editPostCountry')?.value.trim();
     const tags = document.getElementById('editPostTags')?.value.trim();
-    const imageInput = document.getElementById('editPostImage');
     const removeImageBtn = document.getElementById('removeImageBtn');
-    
-    // Validate required fields
-    if (!title || !content) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Validation Error',
-            text: 'Title and content are required.'
-        });
-        return;
-    }
     
     // Show loading state
     const saveBtn = document.getElementById('saveChangesBtn');
@@ -1022,20 +1210,47 @@ async function handleEditFormSubmit(e) {
     }
     
     try {
-        let imageUrl = '';
+        let imageUrl = undefined;
         
         // Handle image upload if a new file was selected
-        if (newImageFile) {
+        if (selectedImageFile) {
             try {
-                const uploadResponse = await window.api.blog.uploadImage(newImageFile);
-                imageUrl = uploadResponse.imageUrl;
+                // Show loading state
+                if (saveBtn && saveBtnSpinner && saveBtnText) {
+                    saveBtn.disabled = true;
+                    saveBtnSpinner.classList.remove('d-none');
+                    saveBtnText.textContent = ' Uploading Image...';
+                }
+
+                // Create FormData for the file upload
+                const formData = new FormData();
+                formData.append('image', selectedImageFile);
+                
+                // Upload the image
+                const uploadResponse = await window.api.blog.uploadImage(selectedImageFile);
+                
+                if (uploadResponse && (uploadResponse.url || uploadResponse.imageUrl)) {
+                    imageUrl = uploadResponse.url || uploadResponse.imageUrl;
+                    console.log('Image uploaded successfully:', imageUrl);
+                } else {
+                    throw new Error('Invalid response from server');
+                }
             } catch (error) {
                 console.error('Error uploading image:', error);
-                throw new Error('Failed to upload image. Please try again.');
+                showToast(error.message || 'Failed to upload image. Please try again.', 'error', 5000);
+                
+                // Reset button state on error
+                if (saveBtn && saveBtnSpinner && saveBtnText) {
+                    saveBtn.disabled = false;
+                    saveBtnSpinner.classList.add('d-none');
+                    saveBtnText.textContent = 'Save Changes';
+                }
+                return;
             }
         } else if (removeImageBtn && removeImageBtn.disabled) {
             // Image was removed
             imageUrl = '';
+            console.log('Image was removed from the post');
         }
         
         // Prepare the post data
@@ -1053,186 +1268,46 @@ async function handleEditFormSubmit(e) {
         }
         
         // Update the blog post
-        const response = await window.api.blog.updatePost(postId, postData);
+        await window.api.blog.updatePost(postId, postData);
         
-        // Show success message
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Blog post updated successfully!',
-            timer: 2000,
-            showConfirmButton: false
-        });
+        // Get the modal element before doing anything else
+        const modalElement = document.getElementById('editBlogPostModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        
+        // Reset the form and image preview
+        if (form) form.reset();
+        const imagePreview = document.getElementById('editPostImagePreview');
+        if (imagePreview) {
+            imagePreview.src = '/assets/img/placeholder-blog.jpg';
+        }
+        if (removeImageBtn) {
+            removeImageBtn.disabled = true;
+        }
+        selectedImageFile = null;
+        window.newImageFile = null;
+        
+        // Show success toast
+        showToast('Blog post updated successfully!', 'success', 2000);
         
         // Close the modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editBlogPostModal'));
-        if (modal) modal.hide();
-        
-        // Reload the posts
-        loadUserBlogPosts();
-        
-    } catch (error) {
-        console.error('Error updating blog post:', error);
-        
-        // Show error message
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to update blog post. Please try again.'
-        });
-    } finally {
-        // Reset button state
-        if (saveBtn && saveBtnSpinner && saveBtnText) {
-            saveBtn.disabled = false;
-            saveBtnSpinner.classList.add('d-none');
-            saveBtnText.textContent = 'Save Changes';
-        }
-    }
-}
-
-
-/**
- * Handle edit form submission
- * @param {Event} e - The form submission event
- */
-async function handleEditFormSubmit(e) {
-    e.preventDefault();
-    
-    const form = document.getElementById('editBlogPostForm');
-    if (!form) return;
-    
-    // Get the Quill editor instance
-    const quill = Quill.find(document.querySelector('#editor-container'));
-    if (!quill) {
-        console.error('Quill editor not found');
-        return;
-    }
-    
-    const postId = form.dataset.postId;
-    const title = document.getElementById('editPostTitle')?.value.trim();
-    const content = quill.root.innerHTML; // Get HTML content from Quill
-    const region = document.getElementById('editPostRegion')?.value.trim();
-    const country = document.getElementById('editPostCountry')?.value.trim();
-    const tags = document.getElementById('editPostTags')?.value.trim();
-    const imageInput = document.getElementById('editPostImage');
-    const removeImageBtn = document.getElementById('removeImageBtn');
-    
-    // Show loading state
-    const saveBtn = document.getElementById('saveChangesBtn');
-    const saveBtnSpinner = saveBtn?.querySelector('.spinner-border');
-    const saveBtnText = saveBtn?.querySelector('span:not(.spinner-border)');
-    
-    if (saveBtn && saveBtnSpinner && saveBtnText) {
-        saveBtn.disabled = true;
-        saveBtnSpinner.classList.remove('d-none');
-        saveBtnText.textContent = ' Saving...';
-    }
-    
-    try {
-        // Validate required fields
-        if (!title || !content) {
-            throw new Error('Title and content are required');
-        }
-        
-        let imageUrl = null;
-        
-        // Handle image upload if a new file was selected
-        const file = imageInput?.files[0];
-        if (file) {
-            try {
-                console.log('Uploading file:', file.name, 'Size:', file.size, 'bytes');
-                const uploadResponse = await window.api.blog.uploadImage(file);
-                console.log('Upload response:', uploadResponse);
-                
-                // Make sure we have a valid URL (handle both response formats)
-                imageUrl = uploadResponse.url || uploadResponse.imageUrl;
-                if (!imageUrl) {
-                    throw new Error('No URL returned from server');
-                }
-                
-                console.log('Image uploaded successfully. URL:', imageUrl);
-                
-                // Update the preview immediately
-                const preview = document.getElementById('editPostImagePreview');
-                if (preview) {
-                    preview.src = imageUrl;
-                    preview.classList.remove('d-none');
-                }
-                
-                // Enable the remove image button if it exists
-                if (removeImageBtn) {
-                    removeImageBtn.disabled = false;
-                }
-                
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                throw new Error('Failed to upload image. Please try again.');
-            }
-        } else if (removeImageBtn && removeImageBtn.disabled) {
-            // Image was removed
-            console.log('Image was removed');
-            imageUrl = '';
+        if (modal) {
+            // Listen for the hidden event to ensure the modal is fully hidden before reloading
+            const handleHidden = () => {
+                modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+                // Reload the posts after the modal is fully hidden
+                loadUserBlogPosts();
+            };
             
-            // Clear the preview
-            const preview = document.getElementById('editPostImagePreview');
-            if (preview) {
-                preview.src = '#';
-                preview.classList.add('d-none');
-            }
+            modalElement.addEventListener('hidden.bs.modal', handleHidden);
+            modal.hide();
+        } else {
+            // If we can't get the modal instance, just reload immediately
+            loadUserBlogPosts();
         }
-        
-        // Process tags - ensure it's a string of comma-separated values
-        let processedTags = '';
-        if (tags) {
-            if (Array.isArray(tags)) {
-                processedTags = tags.join(',');
-            } else if (typeof tags === 'string') {
-                processedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag).join(',');
-            }
-        }
-
-        // Prepare the update data
-        const updateData = {
-            title,
-            content,
-            region: region || null,
-            country: country || null,
-            tags: processedTags
-        };
-        
-        // Only include image_url if we have one
-        if (imageUrl) {
-            updateData.image_url = imageUrl;
-        }
-        
-        // Update the blog post
-        const response = await window.api.blog.updatePost(postId, updateData);
-        
-        // Show success message
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Blog post updated successfully!',
-            timer: 2000,
-            showConfirmButton: false
-        });
-        
-        // Close the modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editBlogPostModal'));
-        if (modal) modal.hide();
-        
-        // Reload the posts
-        loadUserBlogPosts();
         
     } catch (error) {
         console.error('Error updating blog post:', error);
-        
-        // Show error message
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'Failed to update blog post. Please try again.'
-        });
+        showToast(error.message || 'Failed to update blog post. Please try again.', 'error', 5000);
     } finally {
         // Reset button state
         if (saveBtn && saveBtnSpinner && saveBtnText) {
@@ -1242,6 +1317,7 @@ async function handleEditFormSubmit(e) {
         }
     }
 }
+
 
 /**
  * Confirm blog post deletion
@@ -1249,21 +1325,75 @@ async function handleEditFormSubmit(e) {
  * @param {string} postTitle - The title of the post (for confirmation)
  */
 function confirmDeleteBlogPost(postId, postTitle) {
-    Swal.fire({
-        title: 'Delete Blog Post',
-        html: `Are you sure you want to delete <strong>${escapeHtml(postTitle)}</strong>?<br>This action cannot be undone.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true,
-        focusCancel: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            deleteBlogPost(postId, postTitle);
+    // Create a confirmation message
+    const message = `Are you sure you want to delete the post "${postTitle}"? This action cannot be undone.`;
+    
+    // Create a container for the confirmation dialog
+    const container = document.createElement('div');
+    container.className = 'delete-confirmation-dialog';
+    container.innerHTML = `
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add the modal to the document
+    document.body.appendChild(container);
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(container.querySelector('#deleteConfirmationModal'));
+    modal.show();
+    
+    // Handle the delete button click
+    const confirmBtn = container.querySelector('#confirmDeleteBtn');
+    confirmBtn.addEventListener('click', async () => {
+        try {
+            // Show loading state
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting...';
+            
+            // Call the API to delete the post
+            await window.api.blog.deletePost(postId);
+            
+            // Show success message
+            showToast('Blog post deleted successfully!', 'success', 3000);
+            
+            // Close the modal
+            modal.hide();
+            
+            // Remove the modal from the DOM
+            container.remove();
+            
+            // Reload the posts
+            loadUserBlogPosts();
+            
+        } catch (error) {
+            console.error('Error deleting blog post:', error);
+            showToast(error.message || 'Failed to delete blog post. Please try again.', 'error', 5000);
+            
+            // Reset the button state
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Delete';
         }
+    });
+    
+    // Clean up the modal when it's closed
+    container.querySelector('#deleteConfirmationModal').addEventListener('hidden.bs.modal', () => {
+        container.remove();
     });
 }
 
@@ -1273,80 +1403,107 @@ function confirmDeleteBlogPost(postId, postTitle) {
  * @param {string} postTitle - The title of the post (for confirmation dialog)
  */
 async function deleteBlogPost(postId, postTitle) {
-    try {
-        // Show confirmation dialog
-        const result = await Swal.fire({
-            title: 'Delete Blog Post',
-            html: `Are you sure you want to delete <strong>${escapeHtml(postTitle)}</strong>?<n>This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true,
-            focusCancel: true,
-            showLoaderOnConfirm: true,
-            preConfirm: async () => {
-                try {
-                    console.log('Deleting post with ID:', postId);
-                    const response = await window.api.blog.deletePost(postId);
-                    console.log('Delete successful:', response);
-                    return response;
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    Swal.showValidationMessage(
-                        `Error: ${error.message || 'Failed to delete blog post'}`
-                    );
-                    return false;
-                }
-            },
-            allowOutsideClick: () => !Swal.isLoading()
-        });
+    // Create a confirmation modal
+    const modalId = 'deleteConfirmationModal';
+    const modalHtml = `
+        <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${modalId}Label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="${modalId}Label">Delete Blog Post</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete <strong>${escapeHtml(postTitle)}</strong>?<br>This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span class="btn-text">Delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
-        if (result.isConfirmed && result.value) {
-            // Show success message
-            const successMessage = result.value.message || 'The blog post has been deleted.';
-            console.log('Deletion successful:', successMessage);
-            
-            await Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: successMessage,
-                timer: 2000,
-                showConfirmButton: false
-            });
+    // Add modal to the document
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
 
-            // Remove the deleted post card from the UI
-            const deletedCard = document.querySelector(`[data-post-id="${postId}"]`);
-            if (deletedCard) {
-                deletedCard.style.opacity = '0';
-                setTimeout(() => {
-                    deletedCard.remove();
-                    // Check if no posts are left
-                    const blogPostsGrid = document.getElementById('blogPostsGrid');
-                    if (blogPostsGrid && blogPostsGrid.children.length === 0) {
-                        const noPostsMessage = document.getElementById('noPostsMessage');
-                        if (noPostsMessage) {
-                            noPostsMessage.style.display = 'flex';
+    // Show the modal
+    const modalElement = document.getElementById(modalId);
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+
+    // Handle delete button click
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const spinner = confirmBtn.querySelector('.spinner-border');
+    const btnText = confirmBtn.querySelector('.btn-text');
+
+    return new Promise((resolve) => {
+        confirmBtn.addEventListener('click', async () => {
+            try {
+                // Show loading state
+                confirmBtn.disabled = true;
+                spinner.classList.remove('d-none');
+                btnText.textContent = 'Deleting...';
+
+                console.log('Deleting post with ID:', postId);
+                const response = await window.api.blog.deletePost(postId);
+                console.log('Delete successful:', response);
+                
+                // Show success message
+                const successMessage = response?.message || 'The blog post has been deleted.';
+                showToast(successMessage, 'success', 2000);
+
+                // Close the modal
+                modal.hide();
+                
+                // Remove the deleted post card from the UI
+                const deletedCard = document.querySelector(`[data-post-id="${postId}"]`);
+                if (deletedCard) {
+                    deletedCard.style.opacity = '0';
+                    setTimeout(() => {
+                        deletedCard.remove();
+                        // Check if no posts are left
+                        const blogPostsGrid = document.getElementById('blogPostsGrid');
+                        if (blogPostsGrid && blogPostsGrid.children.length === 0) {
+                            const noPostsMessage = document.getElementById('noPostsMessage');
+                            if (noPostsMessage) {
+                                noPostsMessage.style.display = 'flex';
+                            }
                         }
-                    }
-                }, 300);
-            } else {
-                // If we can't find the specific card, reload all posts
-                console.log('Card not found, reloading all posts');
-                await loadUserBlogPosts();
+                    }, 300);
+                } else {
+                    // If we can't find the specific card, reload all posts
+                    console.log('Card not found, reloading all posts');
+                    await loadUserBlogPosts();
+                }
+                
+                resolve(true);
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast(error.message || 'Failed to delete blog post', 'error', 5000);
+                
+                // Reset button state
+                confirmBtn.disabled = false;
+                spinner.classList.add('d-none');
+                btnText.textContent = 'Delete';
+                
+                resolve(false);
             }
-        }
-    } catch (error) {
-        console.error('Error in delete confirmation:', error);
-        await Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'An unexpected error occurred. Please try again.',
-            confirmButtonText: 'OK'
         });
-    }
+        
+        // Clean up the modal when it's closed
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            modal.dispose();
+            modalContainer.remove();
+            resolve(false);
+        });
+    });
 }
 
 
