@@ -1127,21 +1127,55 @@ def get_user_details():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute('SELECT id, full_name, email, created_at FROM users WHERE id = %s', (current_user_id,))
+        # Fetch user details
+        cursor.execute(
+            """
+            SELECT id, full_name, email, 
+                   DATE_FORMAT(created_at, '%Y-%m-%d') as created_at
+            FROM users 
+            WHERE id = %s
+            """, 
+            (current_user_id,)
+        )
         user = cursor.fetchone()
 
         if not user:
             return jsonify({'error': 'User not found'}), 404
-
-        # Format created_at to string
-        if user.get('created_at') and hasattr(user['created_at'], 'isoformat'):
-            user['created_at'] = user['created_at'].isoformat()
-
-        return jsonify({'status': 'success', 'data': user}), 200
-
+            
+        # Get user stats
+        cursor.execute(
+            """
+            SELECT 
+                COUNT(*) as total_predictions,
+                SUM(CASE WHEN feedback = 'correct' THEN 1 ELSE 0 END) as correct_predictions
+            FROM predictions 
+            WHERE user_id = %s
+            """,
+            (current_user_id,)
+        )
+        stats = cursor.fetchone()
+        
+        # Close database connection
+        cursor.close()
+        conn.close()
+        
+        # Prepare response
+        response = {
+            'id': user['id'],
+            'full_name': user['full_name'],
+            'email': user['email'],
+            'created_at': user['created_at'],
+            'total_predictions': stats['total_predictions'] or 0,
+            'correct_predictions': stats['correct_predictions'] or 0,
+            'accuracy': round((stats['correct_predictions'] / stats['total_predictions'] * 100), 2) 
+                        if stats['total_predictions'] > 0 else 0
+        }
+        
+        return jsonify(response), 200
+        
     except Exception as e:
         print(f"Error fetching user details: {str(e)}")
-        return jsonify({'error': 'Error fetching user details', 'details': str(e)}), 500
+        return jsonify({'error': 'Failed to fetch user details'}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
@@ -1467,6 +1501,9 @@ def reset_password():
             cursor.close()
         if conn:
             conn.close()
+
+# --- USER API ---
+# This function was moved to the USER API section below
 
 # --- BLOG POSTS API ---
 @app.route('/api/uploads/blog_images/<filename>')

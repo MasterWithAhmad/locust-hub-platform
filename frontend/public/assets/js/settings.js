@@ -198,40 +198,39 @@ document.addEventListener('DOMContentLoaded', function () {
           // Use the existing API function to fetch authenticated user profile
           const response = await api.user.getUserDetails();
 
-          // Check if the response has status 'success' and contains data
-          if (response && response.status === 'success' && response.data) {
-            const fullUser = response.data;
+          // The response is the user data directly
+          const fullUser = response;
+          
+          // Populate profile information from backend data
+          document.getElementById('profileFullName').innerText = fullUser.full_name || 'N/A';
+          document.getElementById('profileEmail').innerText = fullUser.email || 'N/A';
 
-            // Populate profile information from backend data
-            document.getElementById('profileFullName').innerText = fullUser.full_name || 'N/A';
-            document.getElementById('profileEmail').innerText = fullUser.email || 'N/A';
-
-            // Format and display the created_at date if available
-            if (fullUser.created_at) {
-              // Handle potential different date formats (ISO string or Date object)
-              const dateValue = typeof fullUser.created_at === 'string'
-                ? new Date(fullUser.created_at)
-                : (fullUser.created_at instanceof Date ? fullUser.created_at : null);
-
-              if (dateValue && !isNaN(dateValue)) {
+          // Format and display the created_at date if available
+          if (fullUser.created_at) {
+            // The date is already formatted as 'YYYY-MM-DD' from the backend
+            const dateParts = fullUser.created_at.split('-');
+            if (dateParts.length === 3) {
+              const dateValue = new Date(
+                parseInt(dateParts[0]), // year
+                parseInt(dateParts[1]) - 1, // month (0-indexed in JavaScript)
+                parseInt(dateParts[2]) // day
+              );
+              
+              if (!isNaN(dateValue)) {
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 document.getElementById('profileCreatedAt').innerText = dateValue.toLocaleDateString(undefined, options);
               } else {
-                console.error('Invalid created_at date format:', fullUser.created_at);
-                document.getElementById('profileCreatedAt').innerText = 'Invalid date format';
+                document.getElementById('profileCreatedAt').innerText = fullUser.created_at; // Fallback to raw value
               }
             } else {
-              document.getElementById('profileCreatedAt').innerText = 'Date not available';
+              document.getElementById('profileCreatedAt').innerText = fullUser.created_at; // Fallback to raw value
             }
-
-            // Optionally update localStorage with full user data if needed for other pages
-            // localStorage.setItem('user', JSON.stringify(fullUser));
-
           } else {
-            console.error('Failed to fetch full user profile: Invalid response format or status', response);
-            // Keep initial data or set to error
-            document.getElementById('profileCreatedAt').innerText = response?.message || 'Error loading date';
+            document.getElementById('profileCreatedAt').innerText = 'Date not available';
           }
+
+          // Optionally update localStorage with full user data if needed for other pages
+          // localStorage.setItem('user', JSON.stringify(fullUser));
         } catch (error) {
           console.error('Error fetching user profile:', error);
           document.getElementById('profileCreatedAt').innerText = 'Error loading date';

@@ -505,7 +505,7 @@ window.api = {
     user: {
         getUserDetails: async function () {
             console.log('Calling getUserDetails API...');
-            const response = await fetch(`${API_BASE_URL}/user`, {
+            const response = await fetch(`${API_BASE_URL}/api/user`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
