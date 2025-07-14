@@ -459,34 +459,57 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Update charts with real data
     function updateChartsWithData(predictions) {
+      console.log("Updating charts with predictions:", predictions);
+      
       // Weekly data
       const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const weekData = new Array(7).fill(0);
+      
+      // Get current date and set to start of day
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Get the start of the current week (Monday)
       const currentWeekStart = new Date(today);
-      currentWeekStart.setDate(today.getDate() - today.getDay() + 1); // Start from Monday
+      currentWeekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+      currentWeekStart.setHours(0, 0, 0, 0);
+      
+      console.log("Current week starts on:", currentWeekStart.toDateString());
       
       predictions.forEach(pred => {
-        const predDate = new Date(pred.created_at);
+        // Use prediction_date if available, otherwise fall back to created_at
+        const predDate = new Date(pred.prediction_date || pred.created_at);
+        predDate.setHours(0, 0, 0, 0); // Normalize time part
+        
+        // Check if prediction is within the current week
         if (predDate >= currentWeekStart) {
-          const dayIndex = (predDate.getDay() + 6) % 7; // Convert to Mon=0, Sun=6
-          weekData[dayIndex]++;
+          const dayDiff = Math.floor((predDate - currentWeekStart) / (1000 * 60 * 60 * 24));
+          if (dayDiff >= 0 && dayDiff < 7) {
+            weekData[dayDiff]++;
+            console.log(`Added prediction to ${weekDays[dayDiff]} (day ${dayDiff}):`, predDate.toDateString());
+          }
         }
       });
       
-      weeklyChart.data.datasets[0].data = weekData;
-      weeklyChart.update();
+      console.log("Weekly data:", weekData);
+      
+      // Update weekly chart if it exists
+      if (window.weeklyChart) {
+        weeklyChart.data.labels = weekDays;
+        weeklyChart.data.datasets[0].data = weekData;
+        weeklyChart.update();
+      }
       
       // Monthly data
       const monthlyData = {};
       predictions.forEach(pred => {
-        const date = new Date(pred.created_at);
+        const date = new Date(pred.prediction_date || pred.created_at);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = { locust: 0, noLocust: 0 };
         }
         
-        if (pred.prediction_result === 1 || pred.prediction_result === '1') {
+        if (pred.prediction_result === 1 || pred.prediction_result === '1' || pred.prediction_result === true) {
           monthlyData[monthKey].locust++;
         } else {
           monthlyData[monthKey].noLocust++;
@@ -494,13 +517,15 @@ document.addEventListener('DOMContentLoaded', async function () {
       });
       
       const sortedMonths = Object.keys(monthlyData).sort().slice(-6); // Last 6 months
-      monthlyChart.data.labels = sortedMonths.map(m => {
-        const [year, month] = m.split('-');
-        return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      });
-      monthlyChart.data.datasets[0].data = sortedMonths.map(m => monthlyData[m].locust);
-      monthlyChart.data.datasets[1].data = sortedMonths.map(m => monthlyData[m].noLocust);
-      monthlyChart.update();
+      if (window.monthlyChart) {
+        monthlyChart.data.labels = sortedMonths.map(m => {
+          const [year, month] = m.split('-');
+          return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        });
+        monthlyChart.data.datasets[0].data = sortedMonths.map(m => monthlyData[m].locust);
+        monthlyChart.data.datasets[1].data = sortedMonths.map(m => monthlyData[m].noLocust);
+        monthlyChart.update();
+      }
       
       // Regional data
       const regionalData = {};
@@ -509,9 +534,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         regionalData[region] = (regionalData[region] || 0) + 1;
       });
       
-      regionalChart.data.labels = Object.keys(regionalData);
-      regionalChart.data.datasets[0].data = Object.values(regionalData);
-      regionalChart.update();
+      if (window.regionalChart) {
+        regionalChart.data.labels = Object.keys(regionalData);
+        regionalChart.data.datasets[0].data = Object.values(regionalData);
+        regionalChart.update();
+      }
     }
 
     // View prediction details
