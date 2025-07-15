@@ -314,8 +314,8 @@ function createBlogPostCard(post) {
 async function loadUserBlogPosts() {
     console.log('loadUserBlogPosts function called');
     
-    const blogPostsGrid = document.getElementById('blogPostsGrid');
-    const noPostsMessage = document.getElementById('noPostsMessage');
+    const blogPostsGrid = document.querySelector('#blogPostsGrid');
+    const noPostsMessage = document.querySelector('#noPostsMessage');
     
     console.log('Blog posts grid element:', blogPostsGrid);
     console.log('No posts message element:', noPostsMessage);
@@ -332,10 +332,12 @@ async function loadUserBlogPosts() {
         // Show loading state
         blogPostsGrid.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
         
-        // Get current user
+        // Get current user and token
         const user = window.api?.auth?.getCurrentUser?.();
-        if (!user?.id) {
-            console.warn('User not authenticated, redirecting to login...');
+        const token = localStorage.getItem('token');
+        
+        if (!user?.id || !token) {
+            console.warn('User not authenticated or no token found');
             // Store current URL to redirect back after login
             const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
             window.location.href = `/login.html?returnUrl=${returnUrl}`;
@@ -388,8 +390,7 @@ async function loadUserBlogPosts() {
                         return;
                     }
                 } catch (e) {
-                    const errorText = await response.text();
-                    console.error('Error parsing error response:', e, 'Response:', errorText);
+                    console.error('Error parsing response:', e, 'Status:', response.status);
                     errorMessage = `${errorMessage} (Status: ${response.status})`;
                 }
                 throw new Error(errorMessage);
@@ -1293,7 +1294,29 @@ async function handleEditFormSubmit(e) {
         
         console.log('Sending update with data:', postData);
         
-        // Update the blog post - ensure we're sending JSON
+        // Update the blog post using the API wrapper
+        try {
+            const updatedPost = await window.api.blog.updatePost(postId, postData);
+            console.log('Post updated successfully:', updatedPost);
+            
+            // Close the modal after successful update
+            const modalElement = document.getElementById('editBlogPostModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Reload the posts to show the update
+            await loadUserBlogPosts();
+            
+            // Show success message
+            showToast('Blog post updated successfully!', 'success', 3000);
+            
+            return updatedPost;
+        } catch (error) {
+            console.error('Error updating post:', error);
+            throw error;
+        }
         const response = await fetch(`${window.API_BASE_URL}/api/blogposts/${postId}`, {
             method: 'PUT',
             headers: {

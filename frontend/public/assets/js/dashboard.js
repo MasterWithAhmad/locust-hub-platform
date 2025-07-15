@@ -17,8 +17,16 @@ document.addEventListener('DOMContentLoaded', async function () {
       document.getElementById('userInitials').innerText = initials;
       document.getElementById('userName').innerText = user.full_name;
 
+      // Fetch blog stats
+      try {
+        await fetchBlogStats();
+      } catch (error) {
+        console.error('Error fetching blog stats:', error);
+      }
 
-      
+      // Fetch prediction stats
+      await fetchPredictionStats();
+
       // Helper function to get start and end of current week
       function getWeekRange() {
         const now = new Date();
@@ -176,81 +184,74 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       }
 
-      // Fetch and display blog statistics
       async function fetchBlogStats() {
         console.log('1. Starting fetchBlogStats...');
         
         try {
-          // Get current user
+          // Get current user and token
           const user = window.api?.auth?.getCurrentUser?.();
-          if (!user?.id) {
-            console.warn('User not authenticated, cannot fetch blog posts');
-            return;
-          }
+          const token = localStorage.getItem('token');
           
-          console.log('2. Fetching blog posts from /api/users/me/blogposts');
-          const response = await fetch('/api/users/me/blogposts', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${window.localStorage.getItem('token')}`
-            },
-            credentials: 'include'
-          });
-          
-          console.log('3. Response status:', response.status);
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Failed to fetch blog posts:', response.status, errorText);
+          if (!user?.id || !token) {
+            console.warn('User not authenticated or no token found');
             return [];
           }
           
-          const blogs = await response.json();
-          console.log('4. Found blog posts:', blogs);
-          
-          // Update the blog count
-          const blogCountElement = document.getElementById('blogCount');
-          const blogTrendElement = document.querySelector('#blogStatsCard #blogTrend');
-          
-          if (blogCountElement) {
-            const count = Array.isArray(blogs) ? blogs.length : 0;
-            blogCountElement.textContent = count;
-            console.log('5. Updated blog count to:', count);
-          } else {
-            console.error('Blog count element not found');
-          }
-          
-          if (blogTrendElement) {
-            const thisWeekCount = Array.isArray(blogs) ? blogs.length : 0;
-            const trendText = `${thisWeekCount} ${thisWeekCount === 1 ? 'post' : 'posts'}`;
-            blogTrendElement.textContent = trendText;
-            console.log('6. Updated blog trend text to:', trendText);
-          } else {
-            console.error('Blog trend element not found');
-          }
-          
-          return Array.isArray(blogs) ? blogs : [];
-          
-        } catch (error) {
-          console.error('Error in fetchBlogStats:', error);
-          console.error('Error details:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-          });
-          
-          // Update UI to show error state
-          const blogCountElement = document.getElementById('blogCount');
-          const blogTrendElement = document.getElementById('blogTrend');
-          
-          if (blogCountElement) blogCountElement.textContent = '0';
-          if (blogTrendElement) {
-            blogTrendElement.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Error loading';
-          }
-          return [];
-        }
-      }
+          console.log('2. Fetching blog posts using API wrapper');
+          const response = await window.api.blog.getPosts();
+          console.log('3. Successfully fetched blog posts:', response);
+           
+           // Update the blog count
+           const blogCountElement = document.getElementById('blogCount');
+           const blogTrendElement = document.getElementById('blogTrend');
+           
+           if (blogCountElement && blogTrendElement) {
+             const count = Array.isArray(response) ? response.length : 0;
+             blogCountElement.textContent = count;
+             
+             // Calculate trend
+             const weekStart = new Date();
+             weekStart.setDate(weekStart.getDate() - 7);
+             
+             const postsThisWeek = response.filter(post => {
+               const postDate = new Date(post.date || post.created_at);
+               return postDate >= weekStart;
+             }).length;
+             
+             blogTrendElement.textContent = `${postsThisWeek} this week`;
+             
+             console.log('4. Updated blog count to:', count);
+           } else {
+             console.error('Blog stats elements not found');
+           }
+           
+           return response;
+         } catch (error) {
+           console.error('Error in fetchBlogStats:', error);
+           console.error('Error details:', {
+             message: error.message,
+             name: error.name,
+             stack: error.stack
+           });
+           
+           // Check if it's a 401 error (unauthorized)
+           if (error?.response?.status === 401) {
+             console.error('Unauthorized access. Token may be expired.');
+             // Optionally, you could redirect to login here
+             // window.location.href = '/login.html';
+           }
+           
+           // Update UI to show error state
+           const blogCountElement = document.getElementById('blogCount');
+           const blogTrendElement = document.getElementById('blogTrend');
+           
+           if (blogCountElement) blogCountElement.textContent = '0';
+           if (blogTrendElement) {
+             blogTrendElement.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Error loading';
+           }
+           return [];
+         }
+       }
 
       // Call the fetch functions
       fetchPredictionStats();

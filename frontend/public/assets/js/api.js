@@ -583,9 +583,8 @@ window.api = {
     },
     blog: {
         // Get all blog posts (authenticated user only)
-        getPosts: async () => {
-            const response = await fetch(`${API_BASE_URL}/api/blogposts`, {
-                method: 'GET',
+        getPosts: async function() {
+            const response = await fetch(`${API_BASE_URL}/api/users/me/blogposts`, {
                 headers: getAuthHeader(),
                 credentials: 'include'
             });
