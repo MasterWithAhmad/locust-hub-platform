@@ -135,7 +135,7 @@ A comprehensive Locust Prediction System developed as a final year thesis projec
 
 - [Backend Documentation](/backend/README.md) - API documentation and setup guide
 - [Frontend Documentation](/frontend/README.md) - Frontend development and setup
-- [Thesis Documentation](/thesis-project/README.md) - Research and methodology details
+- [ML Documentation](/ml/README.md) - Research and methodology details
 
 ## 🤝 Contributing
 

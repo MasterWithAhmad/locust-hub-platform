@@ -98,7 +98,7 @@ python reports/generate_reports.py
 - **Implemented Algorithms**:
   - Random Forest Classifier
   - XGBoost
-  - Time Series Forecasting (ARIMA)
+  - Decision Tree and more
 - **Model Persistence**: All trained models are saved in `models/saved_models/`
 - **Evaluation**: Performance metrics and comparison reports in `reports/`
 

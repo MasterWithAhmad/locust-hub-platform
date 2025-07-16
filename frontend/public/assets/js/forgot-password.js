@@ -3,6 +3,12 @@ const API_BASE_URL = "http://127.0.0.1:5000";
 let currentStep = 1;
 let userEmail = "";
 let securityQuestion = "";
+let emailVerifyBtn = null;
+let progressBar = null;
+let newPasswordInput = null;
+let confirmPasswordInput = null;
+let passwordStrength = null;
+let passwordStrengthText = null;
 
 // Initialize SweetAlert2 with theme
 const Toast = Swal.mixin({
@@ -16,13 +22,6 @@ const Toast = Swal.mixin({
     toast.addEventListener("mouseleave", Swal.resumeTimer);
   },
 });
-
-// DOM Elements
-const progressBar = document.getElementById('progress-bar');
-const newPasswordInput = document.getElementById('newPassword');
-const confirmPasswordInput = document.getElementById('confirmPassword');
-const passwordStrength = document.getElementById('password-strength');
-const passwordStrengthText = document.querySelector('#password-strength-text span');
 
 // Password strength checker
 function checkPasswordStrength(password) {
@@ -163,9 +162,17 @@ document.addEventListener("DOMContentLoaded", function () {
     confirmPasswordInput.addEventListener('input', validatePasswords);
   }
 
-  // Show initial step
+  // Initialize form state
   showStep(1);
   updateProgressBar();
+
+  // Expose functions to global scope
+  window.checkEmail = checkEmail;
+  window.verifyAnswer = verifyAnswer;
+  window.resetPassword = resetPassword;
+  window.backToStep = backToStep;
+  window.backToStep1 = () => backToStep(1);
+  window.backToStep2 = () => backToStep(2);
 });
 
 // Toggle password visibility with better feedback
@@ -196,6 +203,85 @@ function togglePasswordVisibility(inputId, toggleBtn) {
   // Focus back on the input
   input.focus();
 }
+
+// Check email and proceed to next step
+async function checkEmail(button) {
+  console.log('checkEmail function called with button:', button);
+  
+  // Get email input
+  const email = document.getElementById('email');
+  if (!email) {
+    console.error('Email input element not found');
+    Toast.fire({
+      icon: 'error',
+      title: 'Email input element not found'
+    });
+    return;
+  }
+
+  const emailValue = email.value.trim();
+  if (!emailValue) {
+    console.error('Email field is empty');
+    Toast.fire({
+      icon: 'error',
+      title: 'Please enter your email address'
+    });
+    return;
+  }
+
+  // Store button reference
+  emailVerifyBtn = button;
+
+  // Show loading state
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Verifying...';
+  }
+
+  try {
+    console.log('Sending request to verify email:', emailValue);
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: emailValue })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('API error:', error);
+      throw new Error(error.message || 'Failed to verify email');
+    }
+
+    const data = await response.json();
+    console.log('API response:', data);
+    userEmail = emailValue;
+    securityQuestion = data.security_question;
+
+    // Show success message
+    Toast.fire({
+      icon: 'success',
+      title: 'Email verified successfully'
+    });
+
+    // Proceed to next step
+    showStep(2);
+  } catch (error) {
+    console.error('Error in checkEmail:', error);
+    Toast.fire({
+      icon: 'error',
+      title: error.message || 'Failed to verify email'
+    });
+  } finally {
+    // Reset button state
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = 'Continue <i class="bi bi-arrow-right ms-2"></i>';
+    }
+  }
+}
+
 
 // Validate password match
 function validatePasswords() {
@@ -282,42 +368,6 @@ function showStep(step) {
   // Scroll to top of form
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-// Initialize the form
-document.addEventListener("DOMContentLoaded", () => {
-  showStep(1);
-
-  // Add event listeners for password toggles
-  const toggleNewPassword = document.getElementById("toggleNewPassword");
-  const toggleConfirmPassword = document.getElementById(
-    "toggleConfirmPassword"
-  );
-
-  if (toggleNewPassword) {
-    toggleNewPassword.addEventListener("click", function () {
-      togglePasswordVisibility("newPassword", this);
-    });
-  }
-
-  if (toggleConfirmPassword) {
-    toggleConfirmPassword.addEventListener("click", function () {
-      togglePasswordVisibility("confirmPassword", this);
-    });
-  }
-
-  // Real-time password match validation
-  const confirmPasswordInput = document.getElementById("confirmPassword");
-  if (confirmPasswordInput) {
-    confirmPasswordInput.addEventListener("input", function () {
-      const newPassword = document.getElementById("newPassword");
-      if (newPassword && this.value && newPassword.value !== this.value) {
-        this.setCustomValidity("Passwords do not match");
-      } else {
-        this.setCustomValidity("");
-      }
-    });
-  }
-});
 
 // Show error message
 function showError(message, errorDivId = "error-message") {
@@ -668,26 +718,53 @@ window.backToStep2 = () => backToStep(2);
 
 // Initialize the form
 document.addEventListener("DOMContentLoaded", () => {
+  console.log('Initializing forgot password form');
+  
+  // Query DOM elements
+  progressBar = document.getElementById('progress-bar');
+  console.log('Found progress bar:', progressBar !== null);
+  
+  newPasswordInput = document.getElementById('newPassword');
+  console.log('Found new password input:', newPasswordInput !== null);
+  
+  confirmPasswordInput = document.getElementById('confirmPassword');
+  console.log('Found confirm password input:', confirmPasswordInput !== null);
+  
+  passwordStrength = document.getElementById('password-strength');
+  console.log('Found password strength:', passwordStrength !== null);
+  
+  passwordStrengthText = document.querySelector('#password-strength-text span');
+  console.log('Found password strength text:', passwordStrengthText !== null);
+  
+  // Initialize tooltips
+  const tooltipTriggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  console.log('Found tooltip triggers:', tooltipTriggers.length);
+  tooltipTriggers.forEach(tooltipTriggerEl => {
+    new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
+  // Initialize form state
   showStep(1);
+  updateProgressBar();
 
-  // Allow form submission with Enter key
-  document.getElementById("email").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") checkEmail();
-  });
+  // Expose functions to global scope
+  window.checkEmail = checkEmail;
+  console.log('Exposing checkEmail function:', typeof window.checkEmail === 'function');
+  
+  window.verifyAnswer = verifyAnswer;
+  console.log('Exposing verifyAnswer function:', typeof window.verifyAnswer === 'function');
+  
+  window.resetPassword = resetPassword;
+  console.log('Exposing resetPassword function:', typeof window.resetPassword === 'function');
+  
+  window.backToStep = backToStep;
+  console.log('Exposing backToStep function:', typeof window.backToStep === 'function');
+  
+  window.backToStep1 = () => backToStep(1);
+  console.log('Exposing backToStep1 function:', typeof window.backToStep1 === 'function');
+  
+  window.backToStep2 = () => backToStep(2);
+  console.log('Exposing backToStep2 function:', typeof window.backToStep2 === 'function');
 
-  document
-    .getElementById("securityAnswer")
-    .addEventListener("keypress", (e) => {
-      if (e.key === "Enter") verifyAnswer();
-    });
-
-  document.getElementById("newPassword").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") resetPassword();
-  });
-
-  document
-    .getElementById("confirmPassword")
-    .addEventListener("keypress", (e) => {
-      if (e.key === "Enter") resetPassword();
-    });
+  console.log('Initialization complete');
 });
