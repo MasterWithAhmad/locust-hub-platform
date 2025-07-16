@@ -224,14 +224,14 @@ db_config = {
 }
 
 # Load the model and target encodings
-MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'thesis-project', 'models')
+MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'models')
 MODEL_PATH = os.path.join(MODEL_DIR, 'random_forest.pkl')
 
 # Load target encodings from the training data
 def load_target_encodings():
     try:
         # Load the original training data
-        data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'thesis-project', 'data', 'raw', 'locust_dataset.csv')
+        data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'data', 'raw', 'locust_dataset.csv')
         print(f"Loading dataset from: {data_path}")
         df = pd.read_csv(data_path)
         
@@ -878,8 +878,22 @@ def get_options():
         # guaranteed to be populated correctly or if the data is too large.
         # Let's read only the necessary columns to be efficient.
 
-        data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'thesis-project', 'data', 'raw', 'locust_dataset.csv')
-        df_options = pd.read_csv(data_path, usecols=['REGION', 'COUNTRYNAME'])
+        # Look for dataset in the ml/data/raw directory and other possible locations
+        possible_paths = [
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ml', 'data', 'raw', 'locust_dataset.csv'),  # ml/data/raw/locust_dataset.csv
+            os.path.join(os.path.dirname(__file__), 'data', 'locust_dataset.csv'),  # backend/data/locust_dataset.csv
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'locust_dataset.csv'),  # data/locust_dataset.csv
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locust_dataset.csv')  # root directory
+        ]
+        
+        df_options = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                df_options = pd.read_csv(path, usecols=['REGION', 'COUNTRYNAME'])
+                break
+                
+        if df_options is None:
+            raise FileNotFoundError("Could not find locust_dataset.csv in any expected location")
 
         # Clean and get unique values
         regions = df_options['REGION'].str.strip().str.upper().unique().tolist()
