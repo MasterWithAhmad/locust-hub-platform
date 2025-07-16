@@ -210,23 +210,66 @@ document.addEventListener('DOMContentLoaded', function () {
       // Call the function to load and display analytics data
       loadAnalyticsData();
 
-      async function loadFeedbackAnalytics() {
-        try {
-          const res = await api.analytics.getFeedbackAnalytics();
-          const data = res.data || res;
-
-          // Update summary cards
-          document.getElementById('feedbackTotal').innerText = data.total_feedback;
-          document.getElementById('feedbackCorrectPct').innerText = data.correct_pct + '%';
-          document.getElementById('feedbackIncorrectPct').innerText = data.incorrect_pct + '%';
-
+      // Initialize the interactive feedback table
+      function initFeedbackTable() {
+        const table = document.getElementById('recentFeedbackTable');
+        const tbody = table.querySelector('tbody');
+        const searchInput = document.getElementById('feedbackSearch');
+        const filterSelects = document.querySelectorAll('.filter-select');
+        const sortableHeaders = table.querySelectorAll('th[data-sort]');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const currentPageSpan = document.getElementById('current-page');
+        const startItemSpan = document.getElementById('start-item');
+        const endItemSpan = document.getElementById('end-item');
+        const totalItemsSpan = document.getElementById('total-items');
+        
+        let allFeedbackData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        let sortColumn = 'prediction_date';
+        let sortDirection = 'desc';
+        
+        // Fetch feedback data from the API
+        async function fetchFeedbackData() {
+          try {
+            const res = await api.analytics.getFeedbackAnalytics();
+            const data = res.data || res;
+            
+            // Store the raw feedback data
+            allFeedbackData = data.recent_feedback || [];
+            
+            // Update summary cards
+            document.getElementById('feedbackTotal').innerText = data.total_feedback || 0;
+            document.getElementById('feedbackCorrectPct').innerText = (data.correct_pct || 0) + '%';
+            document.getElementById('feedbackIncorrectPct').innerText = (data.incorrect_pct || 0) + '%';
+            
+            // Initialize charts
+            initFeedbackCharts(data);
+            
+            // Process feedback data for the table
+            processFeedbackData();
+            
+          } catch (error) {
+            console.error('Error fetching feedback data:', error);
+            Toast.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to load feedback data.'
+            });
+          }
+        }
+        
+        // Initialize feedback charts
+        function initFeedbackCharts(data) {
           // Pie Chart: Feedback Distribution
           new Chart(document.getElementById('feedbackPieChart').getContext('2d'), {
             type: 'pie',
             data: {
               labels: ['Correct', 'Incorrect'],
               datasets: [{
-                data: [data.correct_count, data.incorrect_count],
+                data: [data.correct_count || 0, data.incorrect_count || 0],
                 backgroundColor: ['#1cc88a', '#e74a3b']
               }]
             },
@@ -237,18 +280,18 @@ document.addEventListener('DOMContentLoaded', function () {
           new Chart(document.getElementById('feedbackLineChart').getContext('2d'), {
             type: 'line',
             data: {
-              labels: data.feedback_over_time.map(x => x.period),
+              labels: (data.feedback_over_time || []).map(x => x.period),
               datasets: [
                 {
                   label: 'Correct',
-                  data: data.feedback_over_time.map(x => x.correct),
+                  data: (data.feedback_over_time || []).map(x => x.correct || 0),
                   borderColor: '#1cc88a',
                   backgroundColor: 'rgba(28,200,138,0.1)',
                   fill: true
                 },
                 {
                   label: 'Incorrect',
-                  data: data.feedback_over_time.map(x => x.incorrect),
+                  data: (data.feedback_over_time || []).map(x => x.incorrect || 0),
                   borderColor: '#e74a3b',
                   backgroundColor: 'rgba(231,74,59,0.1)',
                   fill: true
@@ -262,46 +305,466 @@ document.addEventListener('DOMContentLoaded', function () {
           new Chart(document.getElementById('feedbackRegionChart').getContext('2d'), {
             type: 'bar',
             data: {
-              labels: data.feedback_by_region.map(x => x.region),
+              labels: (data.feedback_by_region || []).map(x => x.region),
               datasets: [
                 {
                   label: 'Correct',
-                  data: data.feedback_by_region.map(x => x.correct),
+                  data: (data.feedback_by_region || []).map(x => x.correct || 0),
                   backgroundColor: '#1cc88a'
                 },
                 {
                   label: 'Incorrect',
-                  data: data.feedback_by_region.map(x => x.incorrect),
+                  data: (data.feedback_by_region || []).map(x => x.incorrect || 0),
                   backgroundColor: '#e74a3b'
                 }
               ]
             },
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
           });
-
-          // Recent Feedback Table
-          const tbody = document.querySelector('#recentFeedbackTable tbody');
-          tbody.innerHTML = '';
-          data.recent_feedback.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${row.date ? row.date.split('T')[0] : ''}</td>
-              <td>${row.region}</td>
-              <td>${row.country}</td>
-              <td>${row.result}</td>
-              <td>
-                <span class="badge ${row.feedback === 'correct' ? 'bg-success' : 'bg-danger'}">
-                  ${row.feedback.charAt(0).toUpperCase() + row.feedback.slice(1)}
-                </span>
-              </td>
-            `;
-            tbody.appendChild(tr);
-          });
-        } catch (err) {
-          console.error('Error loading feedback analytics:', err);
         }
+        
+        // Process feedback data for the table
+        function processFeedbackData() {
+          // Transform data to match our table structure
+          allFeedbackData = allFeedbackData.map(item => ({
+            prediction_date: item.date,
+            region: item.region || 'Unknown',
+            country_name: item.country || 'Unknown',
+            locust_present: item.result === 'Locust Present',
+            feedback: item.feedback || null
+          }));
+          
+          filteredData = [...allFeedbackData];
+          updateFilterOptions();
+          applyFiltersAndSort();
+        }
+        
+        // Update filter dropdown options based on available data
+        function updateFilterOptions() {
+          const regions = new Set();
+          const countries = new Set();
+          
+          allFeedbackData.forEach(item => {
+            if (item.region) regions.add(item.region);
+            if (item.country_name) countries.add(item.country_name);
+          });
+          
+          // Update region filter
+          const regionSelect = document.querySelector('select[data-column="1"]');
+          updateSelectOptions(regionSelect, Array.from(regions).sort());
+          
+          // Update country filter
+          const countrySelect = document.querySelector('select[data-column="2"]');
+          updateSelectOptions(countrySelect, Array.from(countries).sort());
+        }
+        
+        function updateSelectOptions(select, options) {
+          // Keep the first option ("All...") and remove others
+          while (select.options.length > 1) {
+            select.remove(1);
+          }
+          
+          // Add new options
+          options.forEach(option => {
+            if (option) {  // Skip null/undefined options
+              const optionElement = document.createElement('option');
+              optionElement.value = option;
+              optionElement.textContent = option;
+              select.appendChild(optionElement);
+            }
+          });
+        }
+        
+        // Apply filters, search, and sort to the data
+        function applyFiltersAndSort() {
+          // Apply search
+          const searchTerm = searchInput.value.toLowerCase();
+          
+          // Apply filters
+          filteredData = allFeedbackData.filter(item => {
+            // Search filter
+            const matchesSearch = !searchTerm || 
+              (item.region && item.region.toLowerCase().includes(searchTerm)) ||
+              (item.country_name && item.country_name.toLowerCase().includes(searchTerm)) ||
+              (item.feedback && item.feedback.toLowerCase().includes(searchTerm));
+            
+            // Column filters
+            const matchesFilters = Array.from(filterSelects).every(select => {
+              const columnIndex = parseInt(select.dataset.column);
+              const filterValue = select.value;
+              
+              if (!filterValue) return true;
+              
+              let itemValue;
+              switch (columnIndex) {
+                case 1: itemValue = item.region; break;
+                case 2: itemValue = item.country_name; break;
+                case 3: itemValue = String(item.locust_present); break;
+                case 4: itemValue = item.feedback; break;
+                default: return true;
+              }
+              
+              return itemValue === filterValue;
+            });
+            
+            return matchesSearch && matchesFilters;
+          });
+          
+          // Apply sorting
+          filteredData.sort((a, b) => {
+            let aValue = a[sortColumn];
+            let bValue = b[sortColumn];
+            
+            // Handle different data types for sorting
+            if (sortColumn === 'prediction_date') {
+              aValue = new Date(aValue).getTime();
+              bValue = new Date(bValue).getTime();
+            } else if (typeof aValue === 'string') {
+              aValue = aValue ? aValue.toLowerCase() : '';
+              bValue = bValue ? bValue.toLowerCase() : '';
+            }
+            
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+          });
+          
+          // Reset to first page when filters change
+          currentPage = 1;
+          renderTable();
+        }
+        
+        // Render the table with pagination
+        function renderTable() {
+          const startIndex = (currentPage - 1) * rowsPerPage;
+          const endIndex = Math.min(startIndex + rowsPerPage, filteredData.length);
+          const pageData = filteredData.slice(startIndex, endIndex);
+          
+          // Clear existing rows
+          tbody.innerHTML = '';
+          
+          // Add new rows
+          pageData.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Format date
+            const date = new Date(item.prediction_date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            // Format result
+            const result = item.locust_present ? 
+              '<span class="badge bg-danger">Locust Present</span>' : 
+              '<span class="badge bg-success">No Locust</span>';
+            
+            // Format feedback
+            const feedback = item.feedback ? 
+              `<span class="badge bg-${item.feedback === 'correct' ? 'success' : 'danger'}">
+                ${item.feedback.charAt(0).toUpperCase() + item.feedback.slice(1)}
+              </span>` : 
+              '<span class="badge bg-secondary">No Feedback</span>';
+            
+            row.innerHTML = `
+              <td>${formattedDate}</td>
+              <td>${item.region || '-'}</td>
+              <td>${item.country_name || '-'}</td>
+              <td>${result}</td>
+              <td>${feedback}</td>
+            `;
+            
+            tbody.appendChild(row);
+          });
+          
+          // Update pagination info
+          updatePaginationInfo();
+        }
+        
+        // Update pagination information
+        function updatePaginationInfo() {
+          const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+          const startItem = filteredData.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0;
+          const endItem = Math.min(currentPage * rowsPerPage, filteredData.length);
+          
+          startItemSpan.textContent = startItem;
+          endItemSpan.textContent = endItem;
+          totalItemsSpan.textContent = filteredData.length;
+          currentPageSpan.textContent = currentPage;
+          
+          // Update button states
+          prevPageBtn.disabled = currentPage === 1;
+          nextPageBtn.disabled = currentPage >= totalPages;
+        }
+        
+        // Event Listeners
+        searchInput.addEventListener('input', () => {
+          applyFiltersAndSort();
+        });
+        
+        filterSelects.forEach(select => {
+          select.addEventListener('change', () => {
+            applyFiltersAndSort();
+          });
+        });
+        
+        sortableHeaders.forEach(header => {
+          header.addEventListener('click', (e) => {
+            // Ignore clicks on select elements or their children
+            if (e.target.tagName === 'SELECT' || e.target.closest('select')) {
+              return;
+            }
+            
+            const newSortColumn = header.dataset.sort;
+            
+            // Toggle sort direction if clicking the same column
+            if (sortColumn === newSortColumn) {
+              sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+              sortColumn = newSortColumn;
+              sortDirection = 'asc';
+            }
+            
+            // Update sort indicators
+            sortableHeaders.forEach(h => {
+              const icon = h.querySelector('i');
+              if (h === header) {
+                icon.className = `bi bi-arrow-${sortDirection === 'asc' ? 'up' : 'down'}-short`;
+              } else {
+                icon.className = 'bi bi-arrow-down-up';
+              }
+            });
+            
+            applyFiltersAndSort();
+          });
+        });
+        
+        prevPageBtn.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+          }
+        });
+        
+        nextPageBtn.addEventListener('click', () => {
+          const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderTable();
+          }
+        });
+        
+        // Initial load
+        fetchFeedbackData();
+      }
+      
+      // Call the initialization function
+      initFeedbackTable();
+    });
+  
+    // Update region filter
+    const regionSelect = document.querySelector('select[data-column="1"]');
+    updateSelectOptions(regionSelect, Array.from(regions).sort());
+
+    // Update country filter
+    const countrySelect = document.querySelector('select[data-column="2"]');
+    updateSelectOptions(countrySelect, Array.from(countries).sort());
+  
+
+  function updateSelectOptions(select, options) {
+    // Keep the first option ("All...") and remove others
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+
+    // Add new options
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option;
+      optionElement.textContent = option;
+      select.appendChild(optionElement);
+    });
+  }
+
+  // Apply filters, search, and sort to the data
+  function applyFiltersAndSort() {
+    // Apply search
+    const searchTerm = searchInput.value.toLowerCase();
+
+    // Apply filters
+    filteredData = allFeedbackData.filter(item => {
+      // Search filter
+      const matchesSearch = !searchTerm ||
+        (item.region && item.region.toLowerCase().includes(searchTerm)) ||
+        (item.country_name && item.country_name.toLowerCase().includes(searchTerm)) ||
+        (item.feedback && item.feedback.toLowerCase().includes(searchTerm));
+
+      // Column filters
+      const matchesFilters = Array.from(filterSelects).every(select => {
+        const columnIndex = parseInt(select.dataset.column);
+        const filterValue = select.value;
+
+        if (!filterValue) return true;
+
+        let itemValue;
+        switch (columnIndex) {
+          case 1: itemValue = item.region; break;
+          case 2: itemValue = item.country_name; break;
+          case 3: itemValue = String(item.locust_present); break;
+          case 4: itemValue = item.feedback; break;
+          default: return true;
+        }
+
+        return itemValue === filterValue;
+      });
+
+      return matchesSearch && matchesFilters;
+    });
+
+    // Apply sorting
+    filteredData.sort((a, b) => {
+      let aValue = a[sortColumn];
+      let bValue = b[sortColumn];
+
+      // Handle different data types for sorting
+      if (sortColumn === 'prediction_date') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      } else if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
       }
 
-      // Call this after other analytics loads
-      loadFeedbackAnalytics();
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
     });
+
+    // Reset to first page when filters change
+    currentPage = 1;
+    renderTable();
+  }
+
+  // Render the table with pagination
+  function renderTable() {
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, filteredData.length);
+    const pageData = filteredData.slice(startIndex, endIndex);
+
+    // Clear existing rows
+    tbody.innerHTML = '';
+
+    // Add new rows
+    pageData.forEach(item => {
+      const row = document.createElement('tr');
+
+      // Format date
+      const date = new Date(item.prediction_date);
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Format result
+      const result = item.locust_present ?
+        '<span class="badge bg-danger">Locust Present</span>' :
+        '<span class="badge bg-success">No Locust</span>';
+
+      // Format feedback
+      const feedback = item.feedback ?
+        `<span class="badge bg-${item.feedback === 'correct' ? 'success' : 'danger'}">
+          ${item.feedback.charAt(0).toUpperCase() + item.feedback.slice(1)}
+        </span>` :
+        '<span class="badge bg-secondary">No Feedback</span>';
+
+      row.innerHTML = `
+        <td>${formattedDate}</td>
+        <td>${item.region || '-'}</td>
+        <td>${item.country_name || '-'}</td>
+        <td>${result}</td>
+        <td>${feedback}</td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+    // Update pagination info
+    updatePaginationInfo();
+  }
+
+  // Update pagination information
+  function updatePaginationInfo() {
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+    const startItem = filteredData.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0;
+    const endItem = Math.min(currentPage * rowsPerPage, filteredData.length);
+
+    startItemSpan.textContent = startItem;
+    endItemSpan.textContent = endItem;
+    totalItemsSpan.textContent = filteredData.length;
+    currentPageSpan.textContent = currentPage;
+
+    // Update button states
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage >= totalPages;
+  }
+
+  // Event Listeners
+  searchInput.addEventListener('input', () => {
+    applyFiltersAndSort();
+  });
+
+  filterSelects.forEach(select => {
+    select.addEventListener('change', () => {
+      applyFiltersAndSort();
+    });
+  });
+
+  sortableHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const newSortColumn = header.dataset.sort;
+
+      // Toggle sort direction if clicking the same column
+      if (sortColumn === newSortColumn) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = newSortColumn;
+        sortDirection = 'asc';
+      }
+
+      // Update sort indicators
+      sortableHeaders.forEach(h => {
+        const icon = h.querySelector('i');
+        if (h === header) {
+          icon.className = `bi bi-arrow-${sortDirection === 'asc' ? 'up' : 'down'}-short`;
+        } else {
+          icon.className = 'bi bi-arrow-down-up';
+        }
+      });
+
+      applyFiltersAndSort();
+    });
+  });
+
+  prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable();
+    }
+  });
+
+  nextPageBtn.addEventListener('click', () => {
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTable();
+    }
+  });
+
+  // Initial load
+  fetchFeedbackData();
