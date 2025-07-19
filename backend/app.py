@@ -120,20 +120,15 @@ cors = CORS()
 cors.init_app(
     app,
     resources={
-        r"/*": {  # Apply to all routes
-            "origins": [
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "http://localhost:5000",
-                "http://127.0.0.1:5000"
-            ],
+        r"/*": {
+            "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5000", "http://127.0.0.1:5000"],
+            "methods": ["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+            "allow_headers": ["Content-Type", "Authorization"],
             "supports_credentials": True,
-            "allow_headers": ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            "expose_headers": ["Content-Type", "Authorization", "X-Total-Count"],
-            "max_age": 600  # 10 minutes
+            "expose_headers": ["Content-Type", "Authorization"]
         }
-    }
+    },
+    supports_credentials=True
 )
 
 # Image upload configuration
@@ -1321,6 +1316,8 @@ def delete_account():
             cursor.close()
         if conn and conn.is_connected():
             conn.close()
+
+# User registration endpoint is already defined above
 
 # This route handles the frontend's delete account request
 @app.route('/account/delete', methods=['DELETE'])

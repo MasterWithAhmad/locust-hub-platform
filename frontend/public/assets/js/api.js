@@ -66,7 +66,7 @@ async function handleResponse(response) {
 
 // Authentication functions
 async function register(fullName, email, password, securityQuestion, securityAnswer) {
-    const response = await fetch(`${API_BASE_URL}/register`, {
+    const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
