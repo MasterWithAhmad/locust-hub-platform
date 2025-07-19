@@ -78,9 +78,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 function validateForm() {
   let isValid = true;
   
-  // Validate PPT (250-10299)
+  // Validate PPT (0.00-906.70)
   const pptInput = document.getElementById('PPT');
-  if (!validateNumberInput(pptInput, 250, 10299, 'Precipitation must be between 250mm and 10,299mm')) {
+  if (!validateNumberInput(pptInput, 0, 906.70, 'Precipitation must be between 0.00mm and 906.70mm')) {
     isValid = false;
   }
   
