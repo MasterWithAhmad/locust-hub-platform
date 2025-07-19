@@ -19,6 +19,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // You can add user email if you want:
     // document.querySelector('.profile-card p').innerText = user.email;
 
+    // Initialize charts
+    initializeCharts();
+    
+    // Load user predictions
+    loadUserPredictions();
+    
+    // Set up event listeners for filter changes
+    document.getElementById('fromYear').addEventListener('change', applyFilters);
+    document.getElementById('toYear').addEventListener('change', applyFilters);
+    document.getElementById('regionFilter').addEventListener('change', applyFilters);
+    document.getElementById('countryFilter').addEventListener('change', applyFilters);
+
     // You can add JavaScript here to fetch and display report data later
     console.log("Reports page loaded for user:", user.email);
     
@@ -292,8 +304,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
 
-      // Fetch the prediction details
-      const response = await fetch(`${API_BASE_URL}/predictions/${predictionId}`, {
+      // Fetch the prediction details with the correct API prefix
+      const response = await fetch(`${API_BASE_URL}/api/predictions/${predictionId}`, {
         headers: getAuthHeader()
       });
 
@@ -389,6 +401,10 @@ document.addEventListener('DOMContentLoaded', function() {
     return date.toLocaleString('default', { month: 'long' });
   }
 
+  // Chart instances
+  let timelineChart = null;
+  let regionChart = null;
+
   // Pagination and search state
   let currentPage = 1;
   const rowsPerPage = 5; // Show 5 rows per page
@@ -396,8 +412,6 @@ document.addEventListener('DOMContentLoaded', function() {
   let filteredPredictions = [];
   let selectedPredictions = new Set();
   let bulkSelectMode = false;
-  let timelineChart = null;
-  let regionChart = null;
 
   // Initialize the page
   document.addEventListener('DOMContentLoaded', () => {
@@ -629,6 +643,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize charts
   function initializeCharts() {
+    // Destroy existing chart instances if they exist
+    if (timelineChart) {
+      timelineChart.destroy();
+    }
+    if (regionChart) {
+      regionChart.destroy();
+    }
+    
     // Timeline chart
     const timelineCtx = document.getElementById('timelineChart').getContext('2d');
     timelineChart = new Chart(timelineCtx, {
@@ -689,32 +711,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Update charts with data
   function updateCharts(predictions) {
-    // Update timeline chart
-    const monthlyData = {};
-    predictions.forEach(p => {
-      const date = new Date(p.created_at);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-    });
+    if (!timelineChart || !regionChart) {
+      console.warn('Charts not initialized. Initializing now...');
+      initializeCharts();
+      
+      // If still not initialized after trying, log error and return
+      if (!timelineChart || !regionChart) {
+        console.error('Failed to initialize charts');
+        return;
+      }
+    }
 
-    const sortedMonths = Object.keys(monthlyData).sort();
-    timelineChart.data.labels = sortedMonths.map(m => {
-      const [year, month] = m.split('-');
-      return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    });
-    timelineChart.data.datasets[0].data = sortedMonths.map(m => monthlyData[m]);
-    timelineChart.update();
+    try {
+      // Update timeline chart
+      const monthlyData = {};
+      predictions.forEach(p => {
+        if (p && p.created_at) {
+          const date = new Date(p.created_at);
+          // Check if date is valid
+          if (!isNaN(date.getTime())) {
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+          }
+        }
+      });
 
-    // Update regional chart
-    const regionalData = {};
-    predictions.forEach(p => {
-      const region = p.region_name || 'Unknown';
-      regionalData[region] = (regionalData[region] || 0) + 1;
-    });
+      if (Object.keys(monthlyData).length > 0) {
+        const sortedMonths = Object.keys(monthlyData).sort();
+        
+        if (timelineChart && timelineChart.data) {
+          timelineChart.data.labels = sortedMonths.map(m => {
+            const [year, month] = m.split('-');
+            return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          });
+          
+          if (timelineChart.data.datasets && timelineChart.data.datasets[0]) {
+            timelineChart.data.datasets[0].data = sortedMonths.map(m => monthlyData[m]);
+            timelineChart.update();
+          }
+        }
+      }
 
-    regionChart.data.labels = Object.keys(regionalData);
-    regionChart.data.datasets[0].data = Object.values(regionalData);
-    regionChart.update();
+      // Update regional chart
+      const regionalData = {};
+      predictions.forEach(p => {
+        if (p) {
+          const region = p.region_name || 'Unknown';
+          regionalData[region] = (regionalData[region] || 0) + 1;
+        }
+      });
+
+      if (regionChart && regionChart.data && regionChart.data.datasets && regionChart.data.datasets[0]) {
+        regionChart.data.labels = Object.keys(regionalData);
+        regionChart.data.datasets[0].data = Object.values(regionalData);
+        regionChart.update();
+      }
+    } catch (error) {
+      console.error('Error updating charts:', error);
+      // Try to reinitialize charts on error
+      if (confirm('There was an error updating the charts. Would you like to try reloading the page?')) {
+        window.location.reload();
+      }
+    }
   }
 
   // Store country-region mapping
