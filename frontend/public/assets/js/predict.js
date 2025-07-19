@@ -70,22 +70,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   }
 
-  // Fetch and populate model options
-  try {
-    const response = await fetch('/api/models');
-    const models = await response.json();
-    const modelSelect = document.getElementById('MODEL_NAME');
-    if (models && Array.isArray(models)) {
-      models.forEach(model => {
-        const option = document.createElement('option');
-        option.value = model.value;
-        option.textContent = model.label;
-        modelSelect.appendChild(option);
-      });
-    }
-  } catch (err) {
-    console.error('Failed to load models:', err);
-  }
+  // Model selection is now hardcoded to Random Forest
+  // The MODEL_NAME input is a hidden field in the HTML
 });
 
 // Function to validate all form fields
@@ -184,22 +170,9 @@ async function handlePredictionSubmit(event) {
   // Get values from the form data
   const startYear = parseInt(initialFormValues.STARTYEAR) || new Date().getFullYear();
   const startMonth = parseInt(initialFormValues.STARTMONTH) || 1;
-  const modelSelect = document.getElementById('MODEL_NAME');
-  const modelName = modelSelect ? modelSelect.value : '';
-
-  if (!modelName) {
-    Swal.fire({
-      icon: "error",
-      title: "Model Required",
-      text: "Please select a prediction model.",
-    });
-    // Reset button state
-    predictButton.disabled = false;
-    if (predictButtonText) predictButtonText.classList.remove('d-none');
-    if (predictButtonLoading) predictButtonLoading.classList.add('d-none');
-    if (predictButtonLoadingText) predictButtonLoadingText.classList.add('d-none');
-    return false;
-  }
+  
+  // Always use Random Forest model
+  const modelName = 'random_forest.pkl';
 
   // Prepare prediction data with proper typing
   const predictionData = {
@@ -209,8 +182,7 @@ async function handlePredictionSubmit(event) {
     STARTMONTH: startMonth,
     PPT: parseFloat(initialFormValues.PPT) || 0,
     TMAX: parseFloat(initialFormValues.TMAX) || 0,
-    SOILMOISTURE: parseFloat(initialFormValues.SOILMOISTURE) || 0,
-    MODEL_NAME: modelName
+    SOILMOISTURE: parseFloat(initialFormValues.SOILMOISTURE) || 0
   };
 
   console.log("Prediction data:", predictionData);

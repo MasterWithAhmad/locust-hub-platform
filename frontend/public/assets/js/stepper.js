@@ -63,53 +63,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to validate current tab
     function validateTab(tabIndex) {
-      const currentTab = document.querySelector(`#step${tabIndex + 1}`);
-      if (!currentTab) {
-        console.warn(`Tab ${tabIndex + 1} not found`);
-        return false;
-      }
-      
-      // Get all required inputs in the current tab
-      const inputs = currentTab.querySelectorAll('input[required], select[required], textarea[required]');
-      let valid = true;
-      
-      // Reset custom validation
-      inputs.forEach(input => {
-        input.classList.remove('is-invalid');
-      });
-      
-      // Check each required field
-      inputs.forEach(input => {
-        if (!input.value.trim()) {
-          input.classList.add('is-invalid');
-          valid = false;
-        }
-      });
-      
-      // If any field is invalid, prevent form submission
-      if (!valid) {
-        const form = document.querySelector('form');
-        if (form) {
-          form.addEventListener('submit', function(e) {
-            if (!valid) {
-              e.preventDefault();
-              e.stopPropagation();
+        // Skip validation for the last tab (parameters) since we want to show the submit button there
+        if (tabIndex === 2) return true;
+
+        const currentPane = document.querySelector(`#step${tabIndex + 1}`);
+        if (!currentPane) return true;
+
+        // Get all required inputs in the current tab
+        const requiredInputs = currentPane.querySelectorAll('[required]');
+        let isValid = true;
+
+        // Check each required input
+        requiredInputs.forEach(input => {
+            // Skip hidden inputs for validation
+            if (input.type === 'hidden') return;
+
+            // Check if the input is a select or not
+            if (input.tagName === 'SELECT') {
+                if (!input.value) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            } else {
+                // For other input types (text, number, etc.)
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
             }
-          }, { once: true });
-        }
-      }
-      
-      return valid;
-      inputs.forEach(input => {
-        if (!input.checkValidity()) {
-          input.classList.add('is-invalid');
-          valid = false;
-        } else {
-          input.classList.remove('is-invalid');
-        }
-      });
-      return valid;
+        }); 
+
+        return isValid;
     }
+    
     
     // Function to update navigation buttons
     function updateButtons() {
@@ -206,5 +196,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize
-    updateButtons();
-});
+    updateButtons()});

@@ -124,12 +124,6 @@
                           <div>Parameters</div>
                         </button>
                       </li>
-                      <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="step4-tab" data-bs-toggle="pill" data-bs-target="#step4" type="button" role="tab">
-                          <div class="step-number">4</div>
-                          <div>Model</div>
-                        </button>
-                      </li>
                     </ul>
 
                     <!-- Tab Content -->
@@ -278,49 +272,21 @@
                         <button type="button" class="btn btn-outline-secondary prev-step" data-prev="2">
                           <i class="bi bi-arrow-left me-2"></i> Back
                         </button>
-                        <button type="button" class="btn btn-primary next-step" data-next="4">
-                          Next <i class="bi bi-arrow-right ms-2"></i>
-                        </button>
-                      </div>
-                      </div>
-
-                      <!-- Step 4: Model -->
-                      <div class="tab-pane fade" id="step4" role="tabpanel">
-                        <h5 class="mb-4">Model Selection</h5>
-                        <div class="row">
-                          <div class="col-12">
-                            <div class="input-group mb-3">
-                              <span class="input-group-text bg-light">
-                                <i class="bi bi-cpu text-primary"></i>
-                              </span>
-                              <div class="form-floating flex-grow-1">
-                                <select class="form-select" id="MODEL_NAME" required>
-                                  <option value="">Select Model</option>
-                                  <!-- Options will be populated by JS -->
-                                </select>
-                                <label for="MODEL_NAME">Prediction Model</label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-4">
-                          <button type="button" class="btn btn-outline-secondary prev-step" data-prev="3">
-                            <i class="bi bi-arrow-left me-2"></i> Back
+                        <div>
+                          <button type="button" class="btn btn-outline-danger me-2" id="resetForm">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
                           </button>
-                          <div>
-                            <button type="button" class="btn btn-outline-danger me-2" id="resetForm">
-                              <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                              <i class="bi bi-lightning-charge-fill me-2"></i>
-                              <span id="predictButtonText">Predict</span>
-                              <span id="predictButtonLoading" class="spinner-border spinner-border-sm d-none ms-2"
-                                role="status" aria-hidden="true"></span>
-                              <span id="predictButtonLoadingText" class="d-none">Predicting...</span>
-                            </button>
-                          </div>
+                          <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-lightning-charge-fill me-2"></i>
+                            <span id="predictButtonText">Predict</span>
+                            <span id="predictButtonLoading" class="spinner-border spinner-border-sm d-none ms-2"
+                              role="status" aria-hidden="true"></span>
+                            <span id="predictButtonLoadingText" class="d-none">Predicting...</span>
+                          </button>
                         </div>
                       </div>
+                      <!-- Hidden field for model selection -->
+                      <input type="hidden" id="MODEL_NAME" value="random_forest.pkl">
                     </div>
 
                     <div id="predictionResult" class="mt-4 text-center fw-bold" style="display: none;"></div>

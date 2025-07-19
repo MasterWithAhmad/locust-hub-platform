@@ -244,20 +244,29 @@ def load_target_encodings():
         return pd.Series(), pd.Series()
 
 # Load model and target encodings at startup
+model = None
+country_encodings, region_encodings = pd.Series(), pd.Series()
+
+# Try to load the default model, but don't fail if it's not available
 try:
-    model = joblib.load(MODEL_PATH)
-    print("ML model loaded successfully.")
+    # First try to load the default model
+    if os.path.exists(MODEL_PATH):
+        model = joblib.load(MODEL_PATH)
+        print("Default ML model loaded successfully.")
+    else:
+        print(f"Warning: Default model not found at {MODEL_PATH}")
+        
+    # Always try to load the target encodings
     country_encodings, region_encodings = load_target_encodings()
-    print("Target encodings loaded successfully.")
-except FileNotFoundError:
-    print(f"Error: Model file not found at {MODEL_PATH}")
-    print("Please make sure the 'models' directory and 'random_forest.pkl' exist in the backend folder.")
-    model = None
-    country_encodings, region_encodings = pd.Series(), pd.Series()
+    if not country_encodings.empty and not region_encodings.empty:
+        print("Target encodings loaded successfully.")
+    else:
+        print("Warning: Could not load target encodings or they are empty")
+        
 except Exception as e:
-    print(f"Error loading model or encodings: {e}")
-    model = None
-    country_encodings, region_encodings = pd.Series(), pd.Series()
+    print(f"Warning: Error during model/encoding initialization: {str(e)}")
+    print("The application will continue but some features may not work correctly.")
+    print("Please check the model files in the ml/models directory.")
 
 def init_db():
     """Initialize the database with required tables if they don't exist."""
@@ -472,22 +481,42 @@ ALLOWED_MODELS = {
     'random_forest_tuned.pkl': 'Random Forest (Tuned)',
     'gradient_boosting.pkl': 'Gradient Boosting',
     'lightgbm.pkl': 'LightGBM',
-    'xgboost.pkl': 'XGBoost',
-    'decision_tree.pkl': 'Decision Tree'
+    'xgboost.pkl': 'XGBoost'
 }
 
 @lru_cache(maxsize=8)
 def load_model(model_filename):
+    # Block loading Decision Tree model
+    if 'decision_tree' in model_filename.lower():
+        raise ValueError("Decision Tree model is not available")
+        
     model_path = os.path.join(MODEL_DIR, model_filename)
-    return joblib.load(model_path)
+    
+    # Double-check the model being loaded
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+        
+    # Load the model and verify it's not a Decision Tree
+    model = joblib.load(model_path)
+    model_class = str(type(model).__name__).lower()
+    
+    if 'decisiontree' in model_class:
+        raise ValueError(f"Attempted to load a Decision Tree model: {model_filename}")
+        
+    return model
 
 @app.route('/api/models', methods=['GET'])
 def get_models():
     """Return the list of available models for prediction."""
-    return jsonify([
+    response = jsonify([
         {'value': fname, 'label': label}
         for fname, label in ALLOWED_MODELS.items()
     ])
+    # Add headers to prevent caching
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/api/predict', methods=['POST'])
 def make_prediction():
@@ -495,14 +524,38 @@ def make_prediction():
         # Get data from request
         data = request.get_json()
         print("Received data:", data)
-        model_name = data.get('MODEL_NAME', 'random_forest.pkl')
-        if model_name not in ALLOWED_MODELS:
-            model_name = 'random_forest.pkl'
+        
+        # Hardcode the model name to ensure only Random Forest is used
+        model_name = 'random_forest.pkl'
+        model_path = os.path.join(MODEL_DIR, model_name)
+        
+        # Verify the model file exists
+        if not os.path.exists(model_path):
+            error_msg = f"Random Forest model file not found at {model_path}"
+            print(error_msg)
+            return jsonify({
+                'error': 'Prediction model not available. Please contact support.',
+                'details': error_msg
+            }), 500
+            
         try:
-            model_to_use = load_model(model_name)
+            # Load the model directly without using the load_model function
+            # to ensure no other model can be loaded
+            model_to_use = joblib.load(model_path)
+            print("Using Random Forest model for prediction")
+            
+            # Double-check the loaded model is not a Decision Tree
+            model_class = str(type(model_to_use).__name__).lower()
+            if 'decisiontree' in model_class:
+                raise ValueError(f"Invalid model type loaded: {model_class}")
+                
         except Exception as e:
-            print(f"Error loading model {model_name}: {e}")
-            return jsonify({'error': f'Failed to load model: {model_name}'}), 500
+            error_msg = f"Error loading Random Forest model: {str(e)}"
+            print(error_msg)
+            return jsonify({
+                'error': 'Failed to load the prediction model. Please contact support.',
+                'details': error_msg
+            }), 500
         # Create DataFrame
         input_data = pd.DataFrame({
             'REGION': [data['REGION'].strip().upper()],
