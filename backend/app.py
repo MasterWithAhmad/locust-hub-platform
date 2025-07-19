@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify, send_from_directory, url_for
+from flask import Flask, request, jsonify, send_from_directory, send_file, make_response
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from werkzeug.utils import secure_filename
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt, get_jwt_identity
 import mysql.connector
+from mysql.connector import Error
 import bcrypt
 from datetime import datetime, timedelta
 import os
@@ -70,14 +70,13 @@ def clean_html_content(html_content):
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend/public', static_url_path='')
+
+# Configure CORS
 CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+    r"/account/delete": {"origins": "*", "methods": ["DELETE"], "allow_headers": ["Content-Type", "Authorization"]},
+    r"/api/*": {"origins": "*"}
+}, supports_credentials=True)
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -115,8 +114,6 @@ db_config = {
     'password': '',  # Add password if you have one
     'database': 'ml_project'
 }
-
-app = Flask(__name__, static_folder='../frontend/public', static_url_path='')
 
 # Configure CORS with credentials support
 cors = CORS()
@@ -1273,11 +1270,64 @@ def change_password():
 
     except Exception as e:
         print(f"Error changing password: {str(e)}")
-        if conn: conn.rollback()
-        return jsonify({'error': 'Error changing password', 'details': str(e)}), 500
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'Failed to change password'}), 500
     finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+@app.route('/api/users/me', methods=['DELETE'])
+@jwt_required()
+def delete_account():
+    conn = None
+    cursor = None
+    try:
+        user_id = get_jwt_identity()
+        if not user_id:
+            return jsonify({'error': 'User not authenticated'}), 401
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Delete user's predictions first due to foreign key constraint
+        cursor.execute('DELETE FROM predictions WHERE user_id = %s', (user_id,))
+        
+        # Delete user's account
+        cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'User not found'}), 404
+            
+        conn.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Account and all associated data have been deleted successfully'
+        }), 200
+
+    except mysql.connector.Error as err:
+        if conn:
+            conn.rollback()
+        print(f"Database error: {err}")
+        return jsonify({'error': 'Database error while deleting account'}), 500
+    except Exception as e:
+        print(f"Error deleting account: {str(e)}")
+        return jsonify({'error': 'Failed to delete account'}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+# This route handles the frontend's delete account request
+@app.route('/account/delete', methods=['DELETE'])
+@jwt_required()
+def delete_account_legacy():
+    # Simply call the existing delete_account function
+    return delete_account()
 
 @app.route('/api/user/factory-reset', methods=['POST'])
 @jwt_required()
