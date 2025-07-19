@@ -212,35 +212,56 @@ async function handlePredictionSubmit(event) {
       }
     });
 
-    // Show prediction result
+    // Show prediction result with enhanced styling
+    const isHighRisk = result.prediction === "yes";
+    const predictionText = isHighRisk ? "YES" : "NO";
+    const riskLevel = isHighRisk ? "High" : "Low";
+    const probability = (result.probability * 100).toFixed(1);
+    const riskColor = isHighRisk ? "#dc3545" : "#198754";
+    const iconHtml = isHighRisk 
+      ? '<div class="risk-icon high-risk"><i class="bi bi-exclamation-triangle-fill"></i></div>' 
+      : '<div class="risk-icon low-risk"><i class="bi bi-check-circle-fill"></i></div>';
+
     Swal.fire({
-      title: result.prediction === "yes" ? "⚠️ YES ⚠️" : "✅ NO",
+      title: `<div style="font-size: 2em; font-weight: 800; color: ${riskColor}; margin-bottom: 10px;">${predictionText}</div>`,
       html: `
-                    <div style="text-align: center;">
-                        <div style="font-size: 1.2em; margin: 15px 0;">
-                            ${
-                              result.prediction === "yes"
-                                ? "High Risk of Locust Presence"
-                                : "Low Risk of Locust Presence"
-                            }
-                        </div>
-                        <div style="font-size: 1.1em; margin-bottom: 15px;">
-                            Probability: <strong>${(
-                              result.probability * 100
-                            ).toFixed(1)}%</strong>
-                        </div>
-                    </div>
-                `,
-      icon: result.prediction === "yes" ? "warning" : "success",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#198754",
+        <div class="prediction-result" style="text-align: center;">
+          ${iconHtml}
+          <div class="risk-level" style="font-size: 1.5em; font-weight: 600; color: ${riskColor}; margin: 10px 0;">
+            ${riskLevel} Risk
+          </div>
+          <div class="risk-message" style="font-size: 1.1em; margin-bottom: 15px;">
+            ${isHighRisk ? 'High Risk of Locust Presence' : 'Low Risk of Locust Presence'}
+          </div>
+          <div class="probability-meter" style="margin: 20px 0;">
+            <div class="probability-label" style="margin-bottom: 8px; font-weight: 500;">Confidence Level</div>
+            <div class="progress" style="height: 24px; border-radius: 12px; background-color: #f0f0f0;">
+              <div class="progress-bar ${isHighRisk ? 'bg-danger' : 'bg-success'}" 
+                   role="progressbar" 
+                   style="width: ${probability}%; font-weight: 600; line-height: 24px;" 
+                   aria-valuenow="${probability}" 
+                   aria-valuemin="0" 
+                   aria-valuemax="100">
+                ${probability}%
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      icon: isHighRisk ? "warning" : "success",
+      confirmButtonText: "View Details",
+      confirmButtonColor: riskColor,
       customClass: {
-        title: "prediction-title",
-        htmlContainer: "prediction-content",
-        confirmButton: "btn btn-primary",
+        popup: 'prediction-popup',
+        title: 'prediction-title',
+        htmlContainer: 'prediction-content',
+        confirmButton: 'btn btn-lg',
       },
+      showCloseButton: true,
+      showCancelButton: false,
+      focusConfirm: true,
       allowOutsideClick: false,
-      allowEscapeKey: false,
+      allowEscapeKey: true,
     }).then((swalResult) => {
       if (swalResult.isConfirmed) {
         // After clicking OK, show detailed card
