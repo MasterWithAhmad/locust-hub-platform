@@ -491,8 +491,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const page = parseInt(pageElement.getAttribute('data-page'));
         if (page && page !== currentPage && page > 0 && page <= totalPages) {
           currentPage = page;
-          const searchDate = document.getElementById('dateSearch')?.value || '';
-          filterAndDisplayPredictions(searchDate);
+          displayPredictionsPage(filteredPredictions, currentPage);
+          updatePagination(filteredPredictions);
         }
         
         // Prevent any further events
