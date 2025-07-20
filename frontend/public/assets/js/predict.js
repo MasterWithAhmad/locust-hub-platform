@@ -29,48 +29,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // but if you wanted to personalize it, you could:
   // document.getElementById('welcomeMessage').innerText = `Make a New Prediction, ${user.full_name}!`;
 
-  // Fetch and populate region and country options
-  try {
-    const options = await api.options.getOptions();
-    const regionList = document.getElementById("regionList");
-    const countryList = document.getElementById("countryList");
-    const startYearInput = document.getElementById("STARTYEAR");
-
-    // Clear existing options (except the default)
-    regionList.innerHTML = ""; // datalist doesn't have a default option
-    countryList.innerHTML = ""; // datalist doesn't have a default option
-
-    // Populate regions
-    options.regions.forEach((region) => {
-      const optionElement = document.createElement("option");
-      optionElement.value = region;
-      regionList.appendChild(optionElement);
-    });
-
-    // Populate countries
-    options.countries.forEach((country) => {
-      const optionElement = document.createElement("option");
-      optionElement.value = country;
-      countryList.appendChild(optionElement);
-    });
-
-    // Set the minimum year for the input field based on API options
-    if (options.minYear) {
-      startYearInput.min = options.minYear;
-    }
-    if (options.maxYear) {
-      startYearInput.max = options.maxYear;
-    }
-  } catch (error) {
-    console.error("Error fetching options:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Error loading options",
-      text: "Could not load region and country options. Please try again later.",
-    });
-  }
-
-  // Model selection is now hardcoded to Random Forest
+  // Only use COUNTRYNAME, REGION, and REGION_TEXT for all country/region logic
   // The MODEL_NAME input is a hidden field in the HTML
 });
 
@@ -94,6 +53,32 @@ function validateForm() {
   const soilMoistureInput = document.getElementById('SOILMOISTURE');
   if (!validateNumberInput(soilMoistureInput, 0, 100, 'Soil moisture must be between 0% and 100%')) {
     isValid = false;
+  }
+  
+  // Validate region field based on country
+  const countryInput = document.getElementById('COUNTRYNAME');
+  const regionDropdown = document.getElementById('REGION');
+  const regionTextbox = document.getElementById('REGION_TEXT');
+  if (countryInput.value === 'Somalia') {
+    if (!regionDropdown.value.trim()) {
+      regionDropdown.classList.add('is-invalid');
+      regionDropdown.setCustomValidity('This field is required');
+      regionDropdown.reportValidity();
+      isValid = false;
+    } else {
+      regionDropdown.classList.remove('is-invalid');
+      regionDropdown.setCustomValidity('');
+    }
+  } else if (countryInput.value) {
+    if (!regionTextbox.value.trim()) {
+      regionTextbox.classList.add('is-invalid');
+      regionTextbox.setCustomValidity('This field is required');
+      regionTextbox.reportValidity();
+      isValid = false;
+    } else {
+      regionTextbox.classList.remove('is-invalid');
+      regionTextbox.setCustomValidity('');
+    }
   }
   
   // Check if any required fields are empty
@@ -129,9 +114,16 @@ async function handlePredictionSubmit(event) {
   const form = event.target;
   
   // Manually collect form values to ensure all fields are captured
+  const countryValue = document.getElementById('COUNTRYNAME').value;
+  let regionValue = '';
+  if (countryValue === 'Somalia') {
+    regionValue = document.getElementById('REGION').value;
+  } else {
+    regionValue = document.getElementById('REGION_TEXT').value;
+  }
   const initialFormValues = {
-    COUNTRYNAME: document.getElementById('COUNTRYNAME').value,
-    REGION: document.getElementById('REGION').value,
+    COUNTRYNAME: countryValue,
+    REGION: regionValue,
     STARTYEAR: document.getElementById('STARTYEAR').value,
     STARTMONTH: document.getElementById('STARTMONTH').value,
     PPT: document.getElementById('PPT').value,
@@ -601,116 +593,6 @@ function getMonthName(monthNumber) {
   return date.toLocaleString("default", { month: "long" });
 }
 
-// Global variables to store valid options
-let validCountries = [];
-let validRegions = [];
-// countryRegionMap is now imported from country_region_map.js
-
-// Updates the region datalist based on selected country
-function updateRegionListForCountry(country) {
-  const regionList = document.getElementById("regionList");
-  regionList.innerHTML = "";
-  const regions = countryRegionMap[country.trim().toUpperCase()];
-  if (regions) {
-    regions.forEach((region) => {
-      const option = document.createElement("option");
-      option.value = region;
-      regionList.appendChild(option);
-    });
-  }
-  // If no regions, datalist stays empty, but user can still enter any region
-}
-
-// Function to load valid countries and regions
-async function loadValidOptions() {
-  try {
-    const response = await fetch("/api/options");
-    if (!response.ok) {
-      throw new Error("Failed to load options");
-    }
-    const data = await response.json();
-    // Replace Somaliland with Somalia in the countries list
-    validCountries = data.countries.map((c) => {
-      const trimmed = c.trim().toUpperCase();
-      return trimmed === "SOMALILAND" ? "SOMALIA" : trimmed;
-    });
-    validRegions = data.regions.map((r) => r.trim().toUpperCase());
-
-    // Populate datalists
-    const countryList = document.getElementById("countryList");
-    const regionList = document.getElementById("regionList");
-
-    // Create options for country list
-    validCountries.forEach((country) => {
-      const option = document.createElement("option");
-      option.value = country;
-      option.textContent = country === "SOMALIA" ? "Somalia" : country;
-      countryList.appendChild(option);
-    });
-
-    // Get the country input element
-    const countryInput = document.getElementById("COUNTRYNAME");
-
-    // Add event listener to handle input changes
-    countryInput.addEventListener("input", function () {
-      let value = this.value.trim().toUpperCase();
-      // Normalize Somalia variants
-      if (
-        [
-          "SOMALIA",
-          "SOMALILAND",
-          "SOMALIA REPUBLIC",
-          "SOMALI REPUBLIC",
-        ].includes(value)
-      ) {
-        value = "SOMALIA";
-        this.value = "Somalia";
-      }
-      // Update region datalist suggestions based on selected country
-      console.log(
-        "Country input (normalized):",
-        value,
-        countryRegionMap[value]
-      );
-      updateRegionListForCountry(value);
-    });
-
-    // Add event listener to handle selection from dropdown
-    countryInput.addEventListener("change", function () {
-      let value = this.value.trim().toUpperCase();
-      // Normalize Somalia variants
-      if (
-        [
-          "SOMALIA",
-          "SOMALILAND",
-          "SOMALIA REPUBLIC",
-          "SOMALI REPUBLIC",
-        ].includes(value)
-      ) {
-        value = "SOMALIA";
-        this.value = "Somalia";
-      }
-      // Update region datalist suggestions based on selected country
-      console.log(
-        "Country change (normalized):",
-        value,
-        countryRegionMap[value]
-      );
-      updateRegionListForCountry(value);
-    });
-
-    // Initially, show all regions or leave region datalist empty
-    regionList.innerHTML = "";
-  } catch (error) {
-    console.error("Error loading options:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Failed to load country and region options. Please refresh the page.",
-    });
-  }
-}
-
 // Function to validate dropdown/select inputs against allowed values
 function validateInput(input, validValues, fieldName) {
   const value = input.value.trim().toUpperCase();
@@ -805,7 +687,6 @@ function resetPredictionForm() {
 
 // Initialize the application
 async function initializeApp() {
-  await loadValidOptions();
   
   // Add event listener to the form
   const form = document.getElementById("predictionForm");
@@ -826,7 +707,7 @@ async function initializeApp() {
     countryInput.addEventListener("change", function () {
       const country = this.value.trim();
       if (country) {
-        updateRegionListForCountry(country);
+        // No longer updating region list based on country input
       }
     });
   }
@@ -844,7 +725,7 @@ async function initializeApp() {
   // Add event listeners for country and region validation
   document.getElementById('COUNTRYNAME')?.addEventListener('change', function() {
     const country = this.value.trim();
-    updateRegionListForCountry(country);
+    // No longer updating region list based on country input
     
     // Clear region input when country changes
     const regionInput = document.getElementById('REGION');

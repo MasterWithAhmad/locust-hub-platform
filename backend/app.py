@@ -2234,7 +2234,7 @@ def get_feedback_analytics():
         # Recent feedback entries
         cursor.execute('''
             SELECT id as prediction_id, feedback_timestamp as date, region, country_name as country, 
-                   CASE WHEN locust_present = 1 THEN 'Yes' ELSE 'No' END as result, feedback
+                   locust_present, feedback
             FROM predictions
             WHERE user_id = %s AND feedback IS NOT NULL
             ORDER BY feedback_timestamp DESC

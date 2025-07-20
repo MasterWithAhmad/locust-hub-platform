@@ -326,13 +326,30 @@ document.addEventListener('DOMContentLoaded', function () {
         // Process feedback data for the table
         function processFeedbackData() {
           // Transform data to match our table structure
-          allFeedbackData = allFeedbackData.map(item => ({
-            prediction_date: item.date,
-            region: item.region || 'Unknown',
-            country_name: item.country || 'Unknown',
-            locust_present: item.result === 'Locust Present',
-            feedback: item.feedback || null
-          }));
+          allFeedbackData = allFeedbackData.map(item => {
+            // Use the exact same logic as reports.js for the Result column
+            const locustPresent = item.locust_present;
+            let resultText = '';
+            let resultClass = '';
+            if (locustPresent === 1 || locustPresent === '1') {
+              resultText = 'Locust Present';
+              resultClass = 'bg-danger';
+            } else if (locustPresent === 0 || locustPresent === '0') {
+              resultText = 'No Locust';
+              resultClass = 'bg-success';
+            } else {
+              resultText = String(locustPresent);
+              resultClass = 'bg-secondary';
+            }
+            return {
+              prediction_date: item.date,
+              region: item.region || 'Unknown',
+              country_name: item.country || 'Unknown',
+              resultText,
+              resultClass,
+              feedback: item.feedback || null
+            };
+          });
           
           filteredData = [...allFeedbackData];
           updateFilterOptions();
@@ -343,19 +360,34 @@ document.addEventListener('DOMContentLoaded', function () {
         function updateFilterOptions() {
           const regions = new Set();
           const countries = new Set();
-          
+          const results = new Set();
+          const feedbacks = new Set();
           allFeedbackData.forEach(item => {
             if (item.region) regions.add(item.region);
             if (item.country_name) countries.add(item.country_name);
+            if (item.resultText) results.add(item.resultText);
+            if (item.feedback) feedbacks.add(item.feedback.charAt(0).toUpperCase() + item.feedback.slice(1));
           });
-          
           // Update region filter
           const regionSelect = document.querySelector('select[data-column="1"]');
           updateSelectOptions(regionSelect, Array.from(regions).sort());
-          
           // Update country filter
           const countrySelect = document.querySelector('select[data-column="2"]');
           updateSelectOptions(countrySelect, Array.from(countries).sort());
+          // Update result filter
+          const resultSelect = document.querySelector('select[data-column="3"]');
+          // Always show 'All Results', 'Locust Present', 'No Locust' in this order
+          resultSelect.innerHTML = '';
+          const allOption = document.createElement('option');
+          allOption.value = '';
+          allOption.textContent = 'All Results';
+          resultSelect.appendChild(allOption);
+          ['Locust Present', 'No Locust'].forEach(val => {
+            const option = document.createElement('option');
+            option.value = val;
+            option.textContent = val;
+            resultSelect.appendChild(option);
+          });
         }
         
         function updateSelectOptions(select, options) {
@@ -397,10 +429,10 @@ document.addEventListener('DOMContentLoaded', function () {
               
               let itemValue;
               switch (columnIndex) {
-                case 1: itemValue = item.region; break;
-                case 2: itemValue = item.country_name; break;
-                case 3: itemValue = String(item.locust_present); break;
-                case 4: itemValue = item.feedback; break;
+                case 1: itemValue = item.region || '-'; break;
+                case 2: itemValue = item.country_name || '-'; break;
+                case 3: itemValue = item.resultText; break;
+                case 4: itemValue = item.feedback ? (item.feedback.charAt(0).toUpperCase() + item.feedback.slice(1)) : 'No Feedback'; break;
                 default: return true;
               }
               
@@ -456,27 +488,19 @@ document.addEventListener('DOMContentLoaded', function () {
               hour: '2-digit',
               minute: '2-digit'
             });
-            
-            // Format result
-            const result = item.locust_present ? 
-              '<span class="badge bg-danger">Locust Present</span>' : 
-              '<span class="badge bg-success">No Locust</span>';
-            
             // Format feedback
             const feedback = item.feedback ? 
               `<span class="badge bg-${item.feedback === 'correct' ? 'success' : 'danger'}">
                 ${item.feedback.charAt(0).toUpperCase() + item.feedback.slice(1)}
               </span>` : 
               '<span class="badge bg-secondary">No Feedback</span>';
-            
             row.innerHTML = `
               <td>${formattedDate}</td>
               <td>${item.region || '-'}</td>
               <td>${item.country_name || '-'}</td>
-              <td>${result}</td>
+              <td><span class="badge ${item.resultClass}">${item.resultText}</span></td>
               <td>${feedback}</td>
             `;
-            
             tbody.appendChild(row);
           });
           
@@ -565,14 +589,6 @@ document.addEventListener('DOMContentLoaded', function () {
       initFeedbackTable();
     });
   
-    // Update region filter
-    const regionSelect = document.querySelector('select[data-column="1"]');
-    updateSelectOptions(regionSelect, Array.from(regions).sort());
-
-    // Update country filter
-    const countrySelect = document.querySelector('select[data-column="2"]');
-    updateSelectOptions(countrySelect, Array.from(countries).sort());
-  
 
   function updateSelectOptions(select, options) {
     // Keep the first option ("All...") and remove others
@@ -611,10 +627,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let itemValue;
         switch (columnIndex) {
-          case 1: itemValue = item.region; break;
-          case 2: itemValue = item.country_name; break;
-          case 3: itemValue = String(item.locust_present); break;
-          case 4: itemValue = item.feedback; break;
+          case 1: itemValue = item.region || '-'; break;
+          case 2: itemValue = item.country_name || '-'; break;
+          case 3: itemValue = item.resultText; break;
+          case 4: itemValue = item.feedback ? (item.feedback.charAt(0).toUpperCase() + item.feedback.slice(1)) : 'No Feedback'; break;
           default: return true;
         }
 
@@ -671,11 +687,20 @@ document.addEventListener('DOMContentLoaded', function () {
         minute: '2-digit'
       });
 
-      // Format result
-      const result = item.locust_present ?
-        '<span class="badge bg-danger">Locust Present</span>' :
-        '<span class="badge bg-success">No Locust</span>';
-
+      // Get the exact model result value from reports.js logic
+      const modelResult = item.prediction_result;
+      let resultText = '';
+      let resultClass = '';
+      if (modelResult === 1 || modelResult === '1') {
+        resultText = 'Locust Present';
+        resultClass = 'bg-danger';
+      } else if (modelResult === 0 || modelResult === '0') {
+        resultText = 'No Locust';
+        resultClass = 'bg-success';
+      } else {
+        resultText = String(modelResult);
+        resultClass = 'bg-secondary';
+      }
       // Format feedback
       const feedback = item.feedback ?
         `<span class="badge bg-${item.feedback === 'correct' ? 'success' : 'danger'}">
@@ -687,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <td>${formattedDate}</td>
         <td>${item.region || '-'}</td>
         <td>${item.country_name || '-'}</td>
-        <td>${result}</td>
+        <td><span class="badge ${resultClass}">${resultText}</span></td>
         <td>${feedback}</td>
       `;
 
