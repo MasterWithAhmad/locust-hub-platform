@@ -138,12 +138,12 @@
                                 <i class="bi bi-globe text-primary"></i>
                               </span>
                               <div class="form-floating flex-grow-1">
-                                <input type="text" class="form-control" id="COUNTRYNAME" list="countryList"
-                                  placeholder="Select Country" pattern="[A-Za-z\s]+" title="Please enter only letters and spaces" onkeypress="return /[A-Za-z\s]/.test(event.key)" required>
+                                <select class="form-select" id="COUNTRYNAME" required>
+                                  <option value="">Select Country</option>
+                                  <!-- Options will be populated by JS -->
+                                </select>
                                 <label for="COUNTRYNAME">Country</label>
                               </div>
-                              <datalist id="countryList">
-                              </datalist>
                             </div>
                           </div>
                           <div class="col-12">
@@ -152,12 +152,13 @@
                                 <i class="bi bi-geo-alt text-primary"></i>
                               </span>
                               <div class="form-floating flex-grow-1">
-                                <input type="text" class="form-control" id="REGION" list="regionList"
-                                  placeholder="Select Region" pattern="[A-Za-z\s]+" title="Please enter only letters and spaces" onkeypress="return /[A-Za-z\s]/.test(event.key)" required>
+                                <select class="form-select" id="REGION" style="display:none" required>
+                                  <option value="">Select Region</option>
+                                  <!-- Somali regions will be populated by JS -->
+                                </select>
+                                <input type="text" class="form-control" id="REGION_TEXT" placeholder="Enter Region" style="display:none" required>
                                 <label for="REGION">Region</label>
                               </div>
-                              <datalist id="regionList">
-                              </datalist>
                             </div>
                           </div>
                         </div>
@@ -320,6 +321,67 @@
   <script src="assets/js/stepper.js"></script>
   <script src="assets/js/blog_modal.js"></script>
   <script src="assets/js/predict.js" type="module"></script>
+  <script>
+    // List of African countries
+    const africanCountries = [
+      "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde",
+      "Cameroon", "Central African Republic", "Chad", "Comoros", "Congo", "Côte d'Ivoire",
+      "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia", "Gabon",
+      "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Kenya", "Lesotho", "Liberia", "Libya",
+      "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique",
+      "Namibia", "Niger", "Nigeria", "Rwanda", "Sao Tome and Principe", "Senegal", "Seychelles",
+      "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan", "Tanzania", "Togo",
+      "Tunisia", "Uganda", "Zambia", "Zimbabwe"
+    ];
+    const somaliRegions = [
+      "Awdal", "Bakool", "Banaadir", "Bari", "Bay", "Galguduud", "Gedo", "Hiiraan",
+      "Jubbada Dhexe", "Jubbada Hoose", "Mudug", "Nugaal", "Sanaag", "Shabeellaha Dhexe",
+      "Shabeellaha Hoose", "Sool", "Togdheer", "Woqooyi Galbeed"
+    ];
+    document.addEventListener('DOMContentLoaded', function() {
+      // Populate country dropdown
+      const countrySelect = document.getElementById('COUNTRYNAME');
+      africanCountries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countrySelect.appendChild(option);
+      });
+      // Region fields
+      const regionSelect = document.getElementById('REGION');
+      const regionText = document.getElementById('REGION_TEXT');
+      // On country change
+      countrySelect.addEventListener('change', function() {
+        if (this.value === 'Somalia') {
+          // Show region dropdown
+          regionSelect.style.display = '';
+          regionText.style.display = 'none';
+          // Populate Somali regions
+          regionSelect.innerHTML = '<option value="">Select Region</option>';
+          somaliRegions.forEach(region => {
+            const option = document.createElement('option');
+            option.value = region;
+            option.textContent = region;
+            regionSelect.appendChild(option);
+          });
+          regionSelect.required = true;
+          regionText.required = false;
+        } else if (this.value) {
+          // Show region textbox
+          regionSelect.style.display = 'none';
+          regionText.style.display = '';
+          regionSelect.required = false;
+          regionText.required = true;
+        } else {
+          // Hide both if no country selected
+          regionSelect.style.display = 'none';
+          regionText.style.display = 'none';
+          regionSelect.required = false;
+          regionText.required = false;
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>
